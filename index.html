@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="icon" href="data:,"><title>碰碰改装车 · 等距原型</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<canvas id="cv"></canvas>
+<div id="hud" class="hide">
+ <div id="hudTop"><div id="avatar"><canvas width="96" height="96"></canvas><span id="lvTag">Lv.1</span></div>
+  <div id="hpWrap"><div id="hpName">霓虹毒牙</div><div id="hpBar"><div id="hpLag"></div><div id="hpFill"></div><span id="hpTxt">100</span></div></div>
+  <div id="stats"><div class="chip">🚗 <b id="aliveN">8</b></div><div class="chip">💥 <b id="killN">0</b></div><div class="chip">⏱ <b id="timeN">0</b></div></div></div>
+ <div id="zoneWarn" class="hide">⚡ 电网收缩中</div>
+ <div id="joy"><div id="joyRing"></div><div id="knob"></div></div>
+ <div id="dash"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" class="bg"/><circle id="dashCd" cx="50" cy="50" r="46" class="cd"/></svg><span>冲刺</span></div>
+</div>
+<div id="menu" class="panel"><div class="logo"><span>碰碰</span>改装车<small>ARENA SMASH · 原型</small></div><div id="cards"></div>
+ <div id="help">📱 左下摇杆控制方向 · 右下冲刺　⌨️ WASD/方向键 · 空格冲刺<br>💡 用<b>车头</b>撞对手<b>侧面</b>打出暴击！护好自己的侧面。</div></div>
+<div id="result" class="panel hide"><div class="rcard"><div id="rRank"></div><div id="rTitle"></div><div id="rStats"></div>
+ <div class="xpRow"><span id="rLv"></span><div class="xpBar"><div id="rXp"></div></div><span id="rXpTxt"></span></div>
+ <div id="rShards"></div><div class="btns"><button id="again" class="btn">再来一局</button><button id="back" class="btn ghost">换车</button></div></div></div>
+<div id="loading" class="panel">加载中…</div>
+<script src="game.js"></script></body></html>
