@@ -39,7 +39,7 @@ const RAR_OF={spike:'w',plow:'w',lightArmor:'w',cage:'w',stdEngine:'w',turbo:'w'
 const ICO=['spike','plow','ram','dozer','saw','lightArmor','cage','heavyArmor','reactive','spikeArmor','stdEngine','turbo','rageEngine','nitro','electric','road','offTire','wide','chains','tracks'];
 // 图标：sprites/icons.png（8×3，每格 128）；部件 0-19、金币 20、通用碎片 21
 function ico(n,cls,cnt,title){const c=n%8,r=n/8|0;return`<span class="ic ${cls||''}" title="${title||''}"><i style="background-position:${c/7*100}% ${r/2*100}%"></i>${cnt!==undefined?`<b>${cnt}</b>`:''}</span>`}
-const icPart=(id,cnt,shard)=>ico(ICO.indexOf(id),'r-'+PARTS[id].r+(shard?' sh':''),cnt,PARTS[id].n+(shard?' 碎片':'')),icCoin=cnt=>ico(20,'cur',cnt,'金币'),icUni=cnt=>ico(21,'cur',cnt,'通用碎片');
+const icPart=(id,cnt,shard,noLbl)=>{const h=ico(ICO.indexOf(id),'r-'+PARTS[id].r+(shard?' sh':''),cnt,PARTS[id].n+(shard?'碎片':''));return noLbl?h:`<span class="icw">${h}<em class="lbl">${PARTS[id].n}${shard?'碎片':''}</em></span>`},icCoin=cnt=>ico(20,'cur',cnt,'金币'),icUni=cnt=>ico(21,'cur',cnt,'通用碎片');
 for(const id in PARTS){const p=PARTS[id];p.r=RAR_OF[id];p.need={w:10,b:20,p:30,g:40}[p.r];p.desc=Object.entries(p.mod).map(([k,v])=>k==='thorns'?`反伤 ${v*100}%`:k==='terr'?(v===0?'无视地形减速':`地形减速 −${Math.round((1-v)*100)}%`):k==='iceGrip'?'油污抓地 ×3':`${MODN[k]} ${v>=1?'+':'−'}${Math.round(Math.abs(v-1)*100)}%`).join(' · ')}
 const NAME2ID={};for(const id in PARTS)NAME2ID[PARTS[id].n]=id;
 const SLOTS={front:'车头',armor:'装甲',engine:'引擎',tire:'轮胎'};
@@ -50,7 +50,7 @@ const ZMUL={front:.6,side:1.5,rear:1.2};
 const SAVE_KEY='carbrawl_save',SAVE_V=2;
 const clampInt=(v,a,b,d)=>{v=Math.floor(Number(v));return isFinite(v)?Math.max(a,Math.min(b,v)):d};
 const defCar=()=>({lv:1,xp:0,pts:{hp:0,mass:0,spd:0,acc:0,turn:0,dmg:0},equip:{front:null,armor:null,engine:null,tire:null},paint:{color:'gray',livery:null}});
-const defSave=()=>({v:SAVE_V,cars:{tyrant:defCar(),fang:defCar(),beast:defCar()},shards:{},owned:{},uni:0,coins:0,colors:{gray:true},livs:{},tutorialDone:false,
+const defSave=()=>({v:SAVE_V,cars:{tyrant:defCar(),fang:defCar(),beast:defCar()},shards:{},owned:{},uni:0,coins:0,colors:{gray:true},livs:{},tutorialDone:false,nick:'',
  settings:{vol:.7,mute:false,music:true,sfx:true,vibrate:true,quality:'auto',diff:'normal'}});
 function sanitize(o){const d=defSave();if(!o||typeof o!=='object'||!o.cars)throw new Error('bad');
  if(!o.v||o.v<2){for(const k of KEYS){const c=o.cars[k];if(c){d.cars[k].lv=clampInt(c.lv,1,MAXLV,1);d.cars[k].xp=clampInt(c.xp,0,1e6,0)}}
@@ -59,7 +59,7 @@ function sanitize(o){const d=defSave();if(!o||typeof o!=='object'||!o.cars)throw
   for(const s in t.pts)t.pts[s]=clampInt(c.pts&&c.pts[s],0,PT_MAX,0);if(Object.values(t.pts).reduce((a,b)=>a+b,0)>t.lv-1)for(const s in t.pts)t.pts[s]=0;
   for(const sl in t.equip){const id=c.equip&&c.equip[sl];t.equip[sl]=(id&&PARTS[id]&&PARTS[id].slot===sl&&o.owned&&o.owned[id])?id:null}}
  for(const id in PARTS){d.shards[id]=clampInt(o.shards&&o.shards[id],0,9999,0);if(o.owned&&o.owned[id])d.owned[id]=true}
- d.uni=clampInt(o.uni,0,99999,0);d.coins=clampInt(o.coins,0,9999999,0);for(const c in o.colors||{})if(COLORS[c])d.colors[c]=true;for(const l in o.livs||{})if(LIVS[l])d.livs[l]=true;if(o.daily&&typeof o.daily==='object')d.daily={d:String(o.daily.d||''),free:clampInt(o.daily.free,0,3,3),adSpin:clampInt(o.daily.adSpin,0,9,0),chest:clampInt(o.daily.chest,0,9,0),fill:clampInt(o.daily.fill,0,9,0)};if(o.wish&&PARTS[o.wish])d.wish=o.wish;d.pity=clampInt(o.pity,0,99,0);
+ if(typeof o.nick==='string'&&o.nick.trim())d.nick=[...o.nick.replace(/[<>\s]/g,'')].slice(0,12).join('');d.uni=clampInt(o.uni,0,99999,0);d.coins=clampInt(o.coins,0,9999999,0);for(const c in o.colors||{})if(COLORS[c])d.colors[c]=true;for(const l in o.livs||{})if(LIVS[l])d.livs[l]=true;if(o.daily&&typeof o.daily==='object')d.daily={d:String(o.daily.d||''),free:clampInt(o.daily.free,0,3,3),adSpin:clampInt(o.daily.adSpin,0,9,0),chest:clampInt(o.daily.chest,0,9,0),fill:clampInt(o.daily.fill,0,9,0)};if(o.wish&&PARTS[o.wish])d.wish=o.wish;d.pity=clampInt(o.pity,0,99,0);
  for(const k of KEYS){const pp=(o.cars[k]||{}).paint||{};d.cars[k].paint={color:COLORS[pp.color]&&d.colors[pp.color]?pp.color:'gray',livery:LIVS[pp.livery]&&d.livs[pp.livery]?pp.livery:null}}d.tutorialDone=!!o.tutorialDone;const s=o.settings||{};
  if(typeof s.vol==='number'&&isFinite(s.vol))d.settings.vol=Math.max(0,Math.min(1,s.vol));['mute','music','sfx','vibrate'].forEach(k=>{if(typeof s[k]==='boolean')d.settings[k]=s[k]});
  if(['auto','high','low'].includes(s.quality))d.settings.quality=s.quality;if(['easy','normal','hard'].includes(s.diff))d.settings.diff=s.diff;return d}
@@ -137,11 +137,12 @@ function aiCs(lv,sk){const cs=defCar();cs.lv=lv;const ids=Object.keys(PARTS).sor
 function makeCar(k,isP,cs,sk){const st=carStats(k,cs),sm=isP?1:.86+sk*.2;return{id:ids++,k,s:CARS[k],isP,lv:cs.lv,sk:sk||0,skin:compose(k,cs.paint.color,cs.paint.livery),eq:Object.values(cs.equip).filter(Boolean),x:0,z:0,h:0,vx:0,vz:0,fwd:0,steer:0,yaw:0,hp:st.hp,maxhp:st.hp,spd:st.spd*sm,acc:st.acc*sm,turn:st.turn,dmg:st.dmg,mass:st.mass,push:st.push,sideBonus:st.sideBonus,rearRes:st.rearRes,critRes:st.critRes,thorns:st.thorns,dashCd:st.dashCd,dashPow:st.dashPow,terr:st.terr,iceGrip:st.iceGrip,r:1.8,
  dash:0,dcd:0,alive:true,flash:0,deadT:0,smokeT:0,dustT:0,roll:0,sus:{px:0,py:0,vx:0,vy:0},bump:0,lastA:0,lastL:0,ai:{t:null,re:0,pers:['莽夫','刺客','苟王'][Math.random()*3|0]}}}
 function start(k,opt){opt=opt||{};playerKey=k;cars=[];fts=[];parts=[];pairCD.clear();skx.clearRect(0,0,skid.width,skid.height);paused=false;
- const cs=save.cars[k];player=makeCar(k,true,cs);cars.push(player);tut=null;
- if(opt.tutorial){tut={step:0,t:0};const d=makeCar('tyrant',false,defCar(),0);d.dummy=true;d.hp=d.maxhp=9999;cars.push(d);
+ const cs=save.cars[k];player=makeCar(k,true,cs);if(!save.nick){save.nick=randNick();persist()}player.nick=save.nick;player.frame='#ffc300';cars.push(player);tut=null;
+ if(opt.tutorial){tut={step:0,t:0};const d=makeCar('tyrant',false,defCar(),0);d.dummy=true;d.nick='训练假人';d.frame='#9aa0b4';d.hp=d.maxhp=9999;cars.push(d);
   player.x=-8*SC;player.z=-22*SC;player.h=Math.PI/4;d.x=2*SC;d.z=-14*SC;props=props.filter(p=>!p.solid||p.wall||Math.hypot(p.x-d.x,p.z-d.z)>9&&Math.hypot(p.x-player.x,p.z-player.z)>6);d.h=-Math.PI/4;zone0=zoneR=AR;updZone();nCars=2}
  else{const ro=roster(cs.lv);nCars=ro.n;if(AR!==arenaR(ro.n))buildArena(mapKey,arenaR(ro.n));zone0=zoneR=AR;ro.r=AR;
-  for(let i=1;i<ro.n;i++){const lv=Math.max(1,Math.min(MAXLV,cs.lv+((Math.random()*3|0)-1))),sk=aiSkill(lv);cars.push(makeCar(KEYS[Math.random()*3|0],false,aiCs(lv,sk),sk))}
+  const opps=opt.opps||Array.from({length:ro.n-1},()=>{const lv=Math.max(1,Math.min(MAXLV,cs.lv+((Math.random()*3|0)-1))),sk=aiSkill(lv);return{k:KEYS[Math.random()*3|0],lv,sk,cs:aiCs(lv,sk),nick:randNick(),frame:FRAMES[Math.random()*FRAMES.length|0]}});
+  for(const o of opps){const c=makeCar(o.k,false,o.cs,o.sk);c.nick=o.nick;c.frame=o.frame;cars.push(c)}
   const sp=spawnPts(ro.n);cars.forEach((c,i)=>{c.x=sp[i][0];c.z=sp[i][1];c.h=Math.atan2(ZC[0]-c.x,ZC[1]-c.z)});updZone()}
  time=0;kills=0;activeT=0;deadTime=0;shake=0;hitstop=0;running=true;introT=opt.tutorial?0:2.2;
  hideAll();show('hud',1);$('hpName').textContent=CARS[k].name;$('lvTag').textContent='Lv.'+cs.lv;drawThumb(document.querySelector('#avatar canvas'),k,3,.42);
@@ -290,8 +291,8 @@ function spawnPts(n){let cl=4.5,c=[];for(;cl>=2;cl-=.5){c=[];for(let j=0;j<GRID.
 // ================= 撞击规则（concept.md：角度伤害）=================
 function zoneOf(c,ox,oz){let a=Math.atan2(ox-c.x,oz-c.z)-c.h;a=Math.atan2(Math.sin(a),Math.cos(a));const d=Math.abs(a);return d<Math.PI/4?'front':d>Math.PI*3/4?'rear':'side'}
 function nearP(x,z){return player?Math.max(0,1-Math.hypot(x-player.x,z-player.z)/34):0}
-function hurt(c,d,by){if(!c.alive)return;if(c.dummy){c.flash=.12;return}c.hp-=d;c.flash=.12;if(c.hp<=0){c.hp=0;c.alive=false;c.deadT=0;boom(c.x,c.z,c.s.col);ft(c.x,c.z,3,'撞毁！','#ff4d4d',34,true);hitstop=Math.max(hitstop,.12);
- if(nearP(c.x,c.z)>0)sfx('boom');if(c.isP||by===player){shake=Math.max(shake,14);vib('boom')}if(by===player&&c!==player)kills++;if(c===player){aliveAtDeath=cars.filter(q=>q.alive).length+1;deadTime=time}}}
+function hurt(c,d,by){if(!c.alive)return;if(by&&by!==c&&!c.isP&&c.ai&&d>4){if(Math.random()<.6+c.sk*.3){c.ai.t=by;c.ai.re=.8+Math.random();c.ai.grudge=4}bubble(c,'hurt')}if(by&&by!==c&&!by.isP&&d>12)bubble(by,'hitGood');if(c.dummy){c.flash=.12;return}c.hp-=d;c.flash=.12;if(c.hp<=0){c.hp=0;c.alive=false;c.deadT=0;boom(c.x,c.z,c.s.col);ft(c.x,c.z,3,'撞毁！','#ff4d4d',34,true);hitstop=Math.max(hitstop,.12);
+ if(nearP(c.x,c.z)>0)sfx('boom');if(c.isP||by===player){shake=Math.max(shake,14);vib('boom')}if(by&&by!==c){by.kc=(by.kc||0)+1;bubble(by,'kill',true)}c.place=cars.filter(q=>q.alive&&!q.dummy).length+1;bubble(c,'die');if(by===player&&c!==player)kills++;if(c===player){aliveAtDeath=cars.filter(q=>q.alive).length+1;deadTime=time}}}
 function bounce(a,b,nx,nz,rv,push){const tm=a.mass+b.mass,j=rv*1.25;a.vx-=nx*j*b.mass/tm;a.vz-=nz*j*b.mass/tm;b.vx+=nx*j*a.mass/tm*push;b.vz+=nz*j*a.mass/tm*push}
 function collide(a,b){const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz),min=a.r+b.r;if(dist>=min||dist===0)return;
  const nx=dx/dist,nz=dz/dist,ov=min-dist,tm=a.mass+b.mass;a.x-=nx*ov*b.mass/tm;a.z-=nz*ov*b.mass/tm;b.x+=nx*ov*a.mass/tm;b.z+=nz*ov*a.mass/tm;
@@ -314,6 +315,10 @@ function collide(a,b){const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz),min=a.r
  bounce(a,b,nx,nz,rv,push)}
 // ================= AI（难度 = 设置档位 + 等级）=================
 function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
+ // 人性化：犹豫 / 转向失误 / 反应延迟
+ ai.hz=(ai.hz||0)-dt;if(ai.hz>0)return[0,0,false];if(Math.random()<dt*(.08+.12*(1-sk))){ai.hz=.25+Math.random()*.6;return[0,0,false]}
+ ai.mis=(ai.mis||0)-dt;if(ai.mis<=0&&Math.random()<dt*(.05+.2*(1-sk))){ai.mis=.4+Math.random()*.5;ai.misA=(Math.random()<.5?-1:1)*(.5+Math.random()*.7)}
+ if(Math.random()<dt*.03)bubble(c,'idle');
  if(ai.re<=0||!ai.t||!ai.t.alive){ai.re=1.9-sk*1.4+Math.random()*.6;const o=cars.filter(q=>q!==c&&q.alive);if(!o.length)return[0,0,false];
   o.sort((p,q)=>ai.pers==='刺客'?p.hp-q.hp:Math.hypot(p.x-c.x,p.z-c.z)-Math.hypot(q.x-c.x,q.z-c.z));ai.t=o[Math.random()<.7?0:Math.min(o.length-1,1+(Math.random()*2|0))];ai.err=rnd(-1,1)*(1-sk)*.7}
  const t=ai.t;let tx=t.x,tz=t.z;const sx=Math.cos(t.h),sz=-Math.sin(t.h),side=((c.x-t.x)*sx+(c.z-t.z)*sz)>0?1:-1,D=Math.hypot(t.x-c.x,t.z-c.z);
@@ -324,7 +329,7 @@ function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
  if(!los(c.x,c.z,tx,tz)){ai.pt=(ai.pt||0)-dt;if(ai.pt<=0||!ai.path){ai.pt=.5;ai.path=findPath(c.x,c.z,tx,tz)}
   if(ai.path&&ai.path.length){while(ai.path.length>1&&Math.hypot(ai.path[0][0]-c.x,ai.path[0][1]-c.z)<2.5)ai.path.shift();let w=0;for(let k=Math.min(ai.path.length-1,6);k>0;k--)if(los(c.x,c.z,ai.path[k][0],ai.path[k][1])){w=k;break}tx=ai.path[w][0];tz=ai.path[w][1]}}else ai.path=null
  for(const p of props)if(p.solid){const d=Math.hypot(p.x-c.x,p.z-c.z);if(d<p.r+2.6){tx+=(c.x-p.x)*.8;tz+=(c.z-p.z)*.8}}
- let a=Math.atan2(tx-c.x,tz-c.z)+ai.err;const fa=a-c.h,ok=Math.abs(Math.atan2(Math.sin(fa),Math.cos(fa)))<.3;
+ let a=Math.atan2(tx-c.x,tz-c.z)+ai.err+(ai.mis>0?ai.misA:0);const fa=a-c.h,ok=Math.abs(Math.atan2(Math.sin(fa),Math.cos(fa)))<.3;
  return[Math.sin(a),Math.cos(a),ok&&D<9&&Math.random()<.015+sk*.07]}
 // ================= 车辆物理（惯性 / 抓地 / 侧滑 / 悬挂）=================
 function terrainAt(x,z){for(const g of gzones)if(Math.hypot(g.x-x,g.z-z)<g.r)return MAP.zone.k;return null}
@@ -413,9 +418,10 @@ function finish(){running=false;const win=player.alive,rank=win?1:aliveAtDeath,s
   $('rStats').innerHTML=`<div><b>${kills}</b>撞毁</div><div><b>${surv.toFixed(0)}s</b>存活</div><div><b>+${xp}</b>经验${afk?'<br><small>挂机判定</small>':''}</div><div><b>+${coins}</b>金币</div>`;
   $('rLv').textContent=CARS[playerKey].name+' Lv.'+sc.lv+(sc.lv>lv0?' ⬆':'');$('rXpTxt').textContent=sc.lv>=MAXLV?'MAX':sc.xp+'/'+need(sc.lv);$('rXp').style.width='0';
   lastGot=got;$('rDouble').disabled=false;$('rDouble').innerHTML='📺 看视频 碎片翻倍';const dshow=AB.double&&Object.keys(got).length>0;show('rDouble',dshow);if(dshow)track('ad_entry_show',{placement:'result_double'});
-  $('rShards').innerHTML=`<span class="drop" style="animation-delay:.2s">${icCoin('+'+coins)}<small>金币</small></span>`+Object.entries(got).map(([k,v],i)=>k==='uni'?`<span class="drop" style="animation-delay:${.3+i*.12}s">${icUni('+'+v)}<small>通用</small></span>`:`<span class="drop" style="animation-delay:${.3+i*.12}s">${icPart(k,'+'+v,true)}<small>${save.shards[k]}/${PARTS[k].need}</small></span>`).join('');
+  $('rShards').innerHTML=`<span class="drop" style="animation-delay:.2s">${icCoin('+'+coins)}<small>金币</small></span>`+Object.entries(got).map(([k,v],i)=>k==='uni'?`<span class="drop" style="animation-delay:${.3+i*.12}s">${icUni('+'+v)}<small>通用碎片</small></span>`:`<span class="drop" style="animation-delay:${.3+i*.12}s">${icPart(k,'+'+v,true)}<small>${save.shards[k]}/${PARTS[k].need}</small></span>`).join('');
   const fp=ptsFree(sc),can=Object.keys(PARTS).some(id=>!save.owned[id]&&canCraft(id));
   $('rHint').innerHTML=(sc.lv>lv0?`<b>升级！</b>`:'')+(fp>0?` 有 <b>${fp}</b> 点属性可分配`:'')+(can?' · 有部件可<b>合成</b>':'');$('rHint').classList.toggle('hide',!(fp>0||can));
+  const board=cars.filter(c=>!c.dummy).map(c=>({c,p:c.alive?1:c.place||nCars})).sort((a,b)=>a.p-b.p);$('rBoard').innerHTML=board.map(({c,p})=>`<div class="brow ${c.isP?'me':''}"><span class="bp">${p===1?'👑':'#'+p}</span><span class="bf" style="--f:${c.frame||'#fff'}"></span><b>${esc(c.nick||'')}</b><small>${c.s.name} Lv.${c.lv}</small><span class="bk">💥${c.kc||0}</span></div>`).join('');
   show('result',1);if(sc.lv>lv0)sfx('good');requestAnimationFrame(()=>requestAnimationFrame(()=>$('rXp').style.width=(sc.lv>=MAXLV?100:sc.xp/need(sc.lv)*100)+'%'))},win?600:300)}
 // ================= 渲染 =================
 function frameOf(h){let i=Math.round(h/(Math.PI*2)*DIRS)%DIRS;if(i<0)i+=DIRS;return i}
@@ -436,10 +442,10 @@ function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx
  for(const c of cars){const [sx,sy]=iso(c.x,c.z);shadow(sx+4,sy+4,46,25,c.alive?.5:.3)}
  for(const it of list){if(it.p)drawProp(it.p);else drawCar(it.c)}
  if(fence)drawFencePoly(false);
- drawParts();for(const q of TLQ)tailLights(...q);TLQ.length=0;for(const c of cars)if(c.alive&&!c.isP&&!c.dummy)hpBar(c);drawFts();
+ drawParts();for(const q of TLQ)tailLights(...q);TLQ.length=0;drawTags();drawFts();
  if(tut&&tut.step===3){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
  if(player&&player.alive){const[sx,sy]=iso(player.x,player.z);ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.globalAlpha=.8+.2*Math.sin(time*8);ctx.beginPath();ctx.ellipse(sx,sy,42,21,0,0,7);ctx.stroke();ctx.globalAlpha=1;
-  ctx.fillStyle='#ffd23f';ctx.strokeStyle='#1b1420';ctx.lineWidth=3;const ty2=sy-100+Math.sin(time*5)*3;ctx.beginPath();ctx.moveTo(sx,ty2+12);ctx.lineTo(sx-9,ty2);ctx.lineTo(sx+9,ty2);ctx.closePath();ctx.stroke();ctx.fill()}
+  }
  ctx.setTransform(DPR,0,0,DPR,0,0);if(hitstop>0.07){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(0,0,W,H)}
  if(player&&player.alive&&fence&&sdist(ZPOLY,player.x,player.z).s>.3){ctx.strokeStyle='rgba(125,249,255,.5)';ctx.lineWidth=16;ctx.strokeRect(0,0,W,H)}}
 function drawFencePoly(back){// 外法线朝向镜头外的边先画（背面），其余后画
@@ -461,8 +467,19 @@ function tailLights(c,ox,oy){const[tz,tx,ty]=TAIL[c.k],fx=Math.sin(c.h),fz=Math.
  const vis=fx+fz<.35;if(!vis)return;// 车尾朝镜头时才看得到
  ctx.save();for(const[x,y] of pts){const R=c.rev?14:11,g=ctx.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,'rgba(255,40,40,.75)');g.addColorStop(1,'rgba(255,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,R,0,7);ctx.fill();
   ctx.fillStyle='#1b1420';ctx.fillRect(x-5,y-3.5,10,7);ctx.fillStyle='#ff2a2a';ctx.fillRect(x-4,y-2.5,8,5);ctx.fillStyle=c.rev?'#fff':'#ffb0b0';ctx.fillRect(x-1.5,y-1.5,3,3)}ctx.restore()}
-function hpBar(c){const [sx,sy]=iso(c.x,c.z),y=sy-88,w=46,f=c.hp/c.maxhp;ctx.fillStyle='#1b1420';rr(sx-w/2-2,y-2,w+4,10,5);ctx.fill();ctx.fillStyle='#3a2f45';rr(sx-w/2,y,w,6,3);ctx.fill();ctx.fillStyle=f<.35?'#ff4d4d':f<.6?'#ffb703':'#7bd94f';rr(sx-w/2,y,w*f,6,3);ctx.fill();ctx.fillStyle='#ffffff55';ctx.fillRect(sx-w/2+2,y+1,Math.max(0,w*f-4),1.5);
- ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#1b1420';ctx.strokeText('Lv'+c.lv,sx-w/2-10,y+7);ctx.fillStyle='#ffd23f';ctx.fillText('Lv'+c.lv,sx-w/2-10,y+7)}
+function fitText(t,max){if(ctx.measureText(t).width<=max)return t;const a=[...t];while(a.length>1&&ctx.measureText(a.join('')+'…').width>max)a.pop();return a.join('')+'…'}
+function drawTags(){const tg=[];for(const c of cars){if(!c.alive)continue;const[sx,sy]=iso(c.x,c.z);tg.push({c,x:sx,y:sy-92})}
+ tg.sort((a,b)=>a.y-b.y);for(let i=0;i<tg.length;i++)for(let j=0;j<i;j++){const A=tg[i],B=tg[j];if(Math.abs(A.x-B.x)<74&&Math.abs(A.y-B.y)<24)A.y=Math.min(A.y,B.y-24)}// 简单防重叠：上推
+ for(const t of tg)tagOf(t.c,t.x,t.y)}
+function tagOf(c,sx,y){const w=50,f=c.hp/c.maxhp,isP=c.isP;
+ ctx.fillStyle='#1b1420';rr(sx-w/2-2,y-2,w+4,9,4.5);ctx.fill();ctx.fillStyle='#3a2f45';rr(sx-w/2,y,w,5,2.5);ctx.fill();ctx.fillStyle=f<.35?'#ff4d4d':f<.6?'#ffb703':isP?'#ffd23f':'#7bd94f';rr(sx-w/2,y,w*Math.max(0,f),5,2.5);ctx.fill();
+ ctx.font='800 11px system-ui';const nm=fitText(c.nick||'',78)+' ',lv='Lv'+c.lv;const tw=ctx.measureText(nm).width,lw=ctx.measureText(lv).width,W2=tw+lw+8,x0=sx-W2/2,ty=y-6;
+ ctx.fillStyle='rgba(27,20,32,.72)';rr(x0-3,ty-11,W2+6,14,7);ctx.fill();ctx.strokeStyle=c.frame||'#fff';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle=isP?'#ffd23f':c.dummy?'#c9c9d6':'#ffffff';ctx.fillText(nm,x0+2,ty);ctx.fillStyle=isP?'#fff3a8':'#9be7ff';ctx.fillText(lv,x0+2+tw,ty);
+ if(isP){const b=Math.sin(time*5)*2;ctx.fillStyle='#ffd23f';ctx.strokeStyle='#1b1420';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(sx,ty-14+b+8);ctx.lineTo(sx-6,ty-14+b);ctx.lineTo(sx+6,ty-14+b);ctx.closePath();ctx.stroke();ctx.fill()}
+ if(c.bub&&c.bub.t>0){c.bub.t-=1/60;ctx.font='800 12px system-ui';const bw=ctx.measureText(c.bub.txt).width+14,by=ty-22;ctx.globalAlpha=Math.min(1,c.bub.t*3);ctx.fillStyle='#fff';rr(sx-bw/2,by-16,bw,20,10);ctx.fill();ctx.strokeStyle='#1b1420';ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.moveTo(sx-4,by+4);ctx.lineTo(sx,by+9);ctx.lineTo(sx+4,by+4);ctx.fill();ctx.fillStyle='#1b1420';ctx.textAlign='center';ctx.fillText(c.bub.txt,sx,by-1);ctx.globalAlpha=1}}
+function hpBar(c){tagOf(c,...(()=>{const[sx,sy]=iso(c.x,c.z);return[sx,sy-92]})())}
+
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)}
 function drawParts(){for(const p of parts){const [sx,sy0]=iso(p.x,p.z),sy=sy0-p.y*HK,k=p.t/p.life;
  if(p.k==='spark'){ctx.strokeStyle=p.col;ctx.lineWidth=2.5*(1-k)+.5;ctx.beginPath();ctx.moveTo(sx,sy);const e=iso(p.x-p.vx*.03,p.z-p.vz*.03);ctx.lineTo(e[0],e[1]-(p.y-p.vy*.03)*HK);ctx.stroke()}
@@ -482,7 +499,7 @@ function hud(){if(!player||!running)return;const f=Math.max(0,player.hp/player.m
  $('hpFill').style.width=f*100+'%';$('hpFill').classList.toggle('low',f<.3);$('hpLag').style.width=f*100+'%';$('hpTxt').textContent=Math.ceil(player.hp)+' / '+Math.round(player.maxhp);
  $('aliveN').textContent=cars.filter(c=>c.alive&&!c.dummy).length+'/'+nCars;$('killN').textContent=kills;$('timeN').textContent=time.toFixed(0);$('zoneWarn').classList.toggle('hide',!(!tut&&time>25&&zoneR>10));
  const e=$('dashCd'),cd=Math.max(0,player.dcd/3);e.setAttribute('r',23);e.style.stroke='#1b142077';e.style.strokeWidth=46;e.style.fill='none';e.style.strokeDasharray=`${cd*2*Math.PI*23} 999`}
-const PANELS=['daily','menu','result','hud','garage','settings','pause','maps','tutBox','intro'];
+const PANELS=['match','daily','menu','result','hud','garage','settings','pause','maps','tutBox','intro'];
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
 function hideAll(){PANELS.forEach(p=>show(p,0))}
 let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.add('hide'),2200)}
@@ -508,9 +525,9 @@ function renderGarage(){const cs=save.cars[gKey],st=carStats(gKey,cs),b=CARS[gKe
   const rows=keys.map(k=>{const va=a[k],vb=n[k];if(Math.abs(va-vb)<1e-6)return'';const up=vb>va,good=k in low?!up:up,fmt=v=>k==='hp'?Math.round(v):k==='thorns'?Math.round(v*100)+'%':['push','sideBonus','rearRes','critRes','dashCd','dashPow','terr','iceGrip'].includes(k)?Math.round(v*100)+'%':v.toFixed(2);
    return`<span class="cmp ${good?'g':'b'}">${MODN[k]} ${fmt(va)}→<b>${fmt(vb)}</b> ${up?'▲':'▼'}</span>`}).join('');
   const own=!id||save.owned[id],act=id===cur?(cur?`<button class="btn sm ghost" data-eq="${sl}" data-id="">卸下</button>`:'<span class="owned">当前</span>'):own?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-eq="${sl}" data-id="${id||''}">${id?(cur?'装备（替换 '+PARTS[cur].n+'）':'装备'):'卸下 '+PARTS[cur].n}</button>`:'<span class="lack">未拥有 · 去下方合成</span>';
-  return`<div class="cmpbox">${id?icPart(id):''}<b>${id?PARTS[id].n:'空槽'}</b> <small>${id?PARTS[id].desc:'不装部件（素车）'}</small><div class="cmps">${id===cur?'<span class="cmp">当前装备中</span>':rows||'<span class="cmp">属性无变化</span>'}</div>${act}</div>`};
+  return`<div class="cmpbox">${id?icPart(id,undefined,false,true):''}<b>${id?PARTS[id].n:'空槽'}</b> <small>${id?PARTS[id].desc:'不装部件（素车）'}</small><div class="cmps">${id===cur?'<span class="cmp">当前装备中</span>':rows||'<span class="cmp">属性无变化</span>'}</div>${act}</div>`};
  const slots=Object.keys(SLOTS).map(sl=>{const opts=Object.keys(PARTS).filter(id=>PARTS[id].slot===sl);const cur=cs.equip[sl],sel=gSel&&gSel.sl===sl?gSel.id:undefined;
-  return`<div class="slot"><span class="sn">${SLOTS[sl]}<em>${cur?PARTS[cur].n:'空'}</em></span><button class="pchip ipc x ${!cur?'on':''} ${sel===null?'sel':''}" data-sel="${sl}" data-id=""><span class="ic empty"><i></i></span><small>空槽</small></button>${opts.map(id=>`<button class="pchip ipc ${cur===id?'on':''} ${sel===id?'sel':''} ${save.owned[id]?'':'lock'}" data-sel="${sl}" data-id="${id}">${icPart(id)}${save.owned[id]?'':'<em class="lk">🔒</em>'}<small>${PARTS[id].n}</small></button>`).join('')}${sel!==undefined?cmpRow(sl,sel):cur?`<small>${PARTS[cur].desc}</small>`:''}</div>`}).join('');
+  return`<div class="slot"><span class="sn">${SLOTS[sl]}<em>${cur?PARTS[cur].n:'空'}</em></span><button class="pchip ipc x ${!cur?'on':''} ${sel===null?'sel':''}" data-sel="${sl}" data-id=""><span class="ic empty"><i></i></span><small>空槽</small></button>${opts.map(id=>`<button class="pchip ipc ${cur===id?'on':''} ${sel===id?'sel':''} ${save.owned[id]?'':'lock'}" data-sel="${sl}" data-id="${id}">${icPart(id,undefined,false,true)}${save.owned[id]?'':'<em class="lk">🔒</em>'}<small>${PARTS[id].n}</small></button>`).join('')}${sel!==undefined?cmpRow(sl,sel):cur?`<small>${PARTS[cur].desc}</small>`:''}</div>`}).join('');
  const fillShown=[];const craft=Object.keys(PARTS).map(id=>{const p=PARTS[id],have=save.shards[id]||0,own=save.owned[id],gap=Math.max(0,p.need-have),uniNeed=gap*UNI[p.r];
   const dl=daily(),canFill=AB.fill&&!own&&gap>0&&gap<=Math.ceil(p.need*AB.fillPct)&&(dl.fill||0)<3&&have<p.need;if(canFill)fillShown.push(id);
   const btn=canFill?`<span class="bcol"><button class="btn sm adbtn" data-fill="${id}">📺 补齐 ${gap}</button><small>今日 ${3-(dl.fill||0)}/3</small></span>`:own?'<span class="owned">已拥有</span>':have>=p.need?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-craft="${id}">合成</button>`:save.uni>=uniNeed?`<button class="btn sm ghost" data-craft="${id}">${icUni('−'+uniNeed)} 补齐</button>`:`<span class="lack">差 ${gap}</span>`;
@@ -544,7 +561,7 @@ let mapCar='beast';
 function openMaps(k){mapCar=k;hideAll();show('maps',1);const box=$('mapList');box.innerHTML='';const cs=save.cars[k],ro=roster(cs.lv);
  $('mapsSub').textContent=`${CARS[k].name} Lv.${cs.lv} · 本局 ${ro.n} 辆车 · 场地 ${ro.n===4?'标准':ro.n===6?'2 倍':'3 倍'}大小`;
  [...MAPK,'random'].forEach(mk=>{const d=document.createElement('div');d.className='mapc';if(mk==='random'){d.innerHTML='<div class="rnd">？</div><b>随机</b><small>三选一</small>'}else{const M=MAPS[mk];d.appendChild(mapThumb(mk));d.insertAdjacentHTML('beforeend',`<b>${M.name}</b><small>${M.shape}<br>${M.desc}</small>`)}
-  d.onclick=()=>{const m=mk==='random'?MAPK[Math.random()*3|0]:mk;buildArena(m,arenaR(ro.n));start(k)};box.appendChild(d)})}
+  d.onclick=()=>{const m=mk==='random'?MAPK[Math.random()*3|0]:mk;matchThenStart(k,m)};box.appendChild(d)})}
 $('mapsBack').onclick=()=>menu();
 // ================= 设置 / 暂停 =================
 let settingsFrom='menu';
@@ -564,6 +581,37 @@ $('sClose').onclick=()=>{show('settings',0)};$('sTut').onclick=()=>{show('settin
 function togglePause(){if(!running)return;paused=!paused;show('pause',paused);if(!paused)show('settings',0)}
 $('pauseBtn').onclick=togglePause;$('pResume').onclick=togglePause;$('pSet').onclick=()=>openSettings('pause');$('pQuit').onclick=()=>{paused=false;running=false;tut=null;cars=[];player=null;menu()};
 
+// ================= 昵称 / 匹配 =================
+const NA=['小','老','阿','大','暴躁','佛系','快乐','无敌','秋名山','深夜','路口','隔壁','甩尾','漂移','飙车','追风','铁头','咸鱼','奶茶','柠檬','橘子','月下','南城','北巷','夏天的','不吃香菜的','爱吃辣的','会飞的','迷路的','早睡的'];
+const NB=['车神','老司机','小飞侠','铁皮','旋风','排气管','螺丝钉','方向盘','轮胎','油门','刹车片','后视镜','小卡车','皮卡丘丘','大G','老爷车','碰碰车','涡轮','火花塞','加油站','停车场','洗车工','交警队长','驾校学员','小绵羊'];
+const NSUF=['','','','','','666','520','007','2026','_','丶','~','哈','呀','嘻嘻','✨','😎','🔥','⚡','🚗','💨','yyds','Pro','v2','99'];
+const EN=['Tom','Jack','Kiki','momo','Leo','Amy','Max','Coco','Ray','Zed','Nana','Ken','Lucky','Sunny','Ace','Neo','Bobo','Yuki','Vivi','Sam'];
+const PY=['xiaoming','dage','laowang','ahua','zhuzhu','qiuqiu','miaomiao','tuzi','dudu','yangyang'];
+const ABBR=['zzz','xswl','yyds','awsl','QAQ','orz','GG','nb','ok','hhh','TT','LOL','666','2333','emmm'];
+const SEP=['_','·','~','','',''];
+const NICKS=(()=>{const set=new Set(),P=a=>a[Math.random()*a.length|0],N=()=>String(Math.random()<.5?Math.floor(Math.random()*100):[666,888,520,1314,2026,99,7,233,1024][Math.random()*9|0]);
+ const styles=[()=>P(['阿','小','老'])+P(['强','飞','明','杰','花','宝','龙','白','七','九']),// 阿强
+  ()=>P(EN)+P(SEP)+P(NB),()=>P(NA)+P(NB)+(Math.random()<.5?N():''),()=>P(ABBR),()=>P(PY)+(Math.random()<.6?N():''),()=>P(EN)+N(),()=>P(NB)+P(['丶','~','_','']),
+  ()=>P(NA)+P(['王','哥','姐','侠','怪','君']),()=>P(PY)+P(SEP)+P(EN),()=>P(ABBR)+P(SEP)+P(NB),()=>P(['🔥','⚡','😎','🚗','✨','💨',''])+P(NB)+P(['🔥','⚡','😎','']),()=>P(EN).toLowerCase()+P(['_','.',''])+P(PY)];
+ let k=0;while(set.size<1300&&k<60000){k++;const n=P(styles)();if(n.length>=2&&[...n].length<=12)set.add(n)}
+ ['嘟嘟嘟','别撞我啊','一路向北','晚风','阿呆','小陈同学','DriftKing','Turbo','鱼丸粗面','芝士奶盖','起风了','山海','深夜飙车王666','Tom_小飞侠','不想上班的周末去兜风','车技一般般','撞墙专业户','zzz','秋名山·老司机','x_x'].forEach(x=>{if([...x].length>=1)set.add(x)});return[...set]})();
+const FRAMES=['#7bd94f','#4dabf7','#b26bff','#ffc300','#ff6b9d','#ff8a2a','#39f3ff','#e8edf2'];
+const RN_K='carbrawl_recentNicks';function randNick(){let r=[];try{r=JSON.parse(localStorage.getItem(RN_K)||'[]')}catch(e){}if(!Array.isArray(r))r=[];const used=new Set(r);used.add(save&&save.nick);
+ let n,t=0;do{n=NICKS[Math.random()*NICKS.length|0];t++}while(used.has(n)&&t<200);r.push(n);if(r.length>400)r=r.slice(-400);try{localStorage.setItem(RN_K,JSON.stringify(r))}catch(e){}return n}
+const BUBBLE={hitGood:['666','漂亮！','吃我一撞！','哈哈哈','稳！'],hurt:['给我等着！','啊这…','你别跑！','疼疼疼','记住你了'],kill:['拿下！','GG','下一个！','太简单了'],idle:['冲冲冲','谁来单挑','别躲了','🙂','👀','…'],die:['我还会回来的','GG','不服！','😭']};
+let bubT=0;
+function bubble(c,kind,force){if(!c||c.isP||c.dummy||!running)return;if(!force&&(time<bubT||Math.random()>.45))return;bubT=time+2.2+Math.random()*2;const L=BUBBLE[kind];c.bub={t:2,txt:L[Math.random()*L.length|0]}}
+// 匹配对手（开局前 2-4 秒动画）
+function matchThenStart(k,m){const cs=save.cars[k],ro=roster(cs.lv),opps=[];
+ for(let i=1;i<ro.n;i++){const lv=Math.max(1,Math.min(MAXLV,cs.lv+((Math.random()*3|0)-1))),sk=aiSkill(lv);opps.push({k:KEYS[Math.random()*3|0],lv,sk,cs:aiCs(lv,sk),nick:randNick(),frame:FRAMES[Math.random()*FRAMES.length|0]})}
+ hideAll();show('match',1);const el=$('match');const dur=1000+Math.random()*2000;lastMatch={dur,at:[]};
+ el.innerHTML=`<div class="mt">匹配对手中<span class="dots"></span></div><div class="msub">${MAPS[m].name} · ${ro.n} 辆车</div><div class="mcards"><div class="mcard me" style="--f:#ffc300"><canvas width="96" height="72"></canvas><b>${esc(save.nick)}</b><small>Lv.${cs.lv}</small></div>${opps.map(()=>'<div class="mcard wait"><div class="spin"></div><b>…</b></div>').join('')}</div><div class="mtip">提示：用车头撞对手侧面打出暴击</div>`;
+ drawFull(el.querySelector('.me canvas').getContext('2d'),k,cs,3,48,52,.32);
+ const cards=[...el.querySelectorAll('.mcard.wait')];const ts=opps.map(()=>dur*(.08+Math.random()*.8)).sort((a,b)=>a-b);lastMatch.at=ts;opps.forEach((o,i)=>setTimeout(()=>{const c=cards[i];c.className='mcard in';c.style.setProperty('--f',o.frame);c.innerHTML=`<canvas width="96" height="72"></canvas><b>${esc(o.nick)}</b><small>Lv.${o.lv}</small>`;drawFull(c.querySelector('canvas').getContext('2d'),o.k,o.cs,3,48,52,.32);sfx('ui')},ts[i]));
+ matchTimer=setTimeout(()=>{el.querySelector('.mt').innerHTML='匹配成功！';sfx('good');setTimeout(()=>{show('match',0);buildArena(m,arenaR(ro.n));start(k,{opps})},600)},dur)}
+let matchTimer=null,lastMatch=null;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function editNick(){const v=prompt('修改昵称（1-12 个字，可中英文/数字/符号）',save.nick);if(v==null)return;const n=[...v.replace(/[<>\s]/g,'')].slice(0,12).join('');if(!n){toast('昵称不能为空');return}save.nick=n;persist();menu();toast('昵称已修改')}
 // ================= 激励视频（模拟广告模块）=================
 // ---- 埋点 + A/B ----
 const AB=(()=>{let g=localStorage.getItem('carbrawl_ab_group');if(!g){g=Math.random()<.5?'A':'B';localStorage.setItem('carbrawl_ab_group',g)}
@@ -579,7 +627,7 @@ function showRewardedAd(cb0,placement){placement=placement||'unknown';track('ad_
 let lastGot=null;
 function grantShards(id,n,got){const p=PARTS[id];for(let i=0;i<n;i++){if(save.owned[id]){save.uni+=UNI[p.r];got.uni=(got.uni||0)+UNI[p.r]}else{save.shards[id]=(save.shards[id]||0)+1;got[id]=(got[id]||0)+1}}}
 function rollPart(){const q=Math.random(),r=q<.6?'w':q<.88?'b':q<.97?'p':'g',pl=Object.keys(PARTS).filter(id=>PARTS[id].r===r);return pl[Math.random()*pl.length|0]}
-const gotHTML=got=>(got._pity?'<div class="dbl">★ 心愿保底触发</div>':'')+Object.entries(got).filter(([k])=>k!=='_pity').map(([k,v],i)=>`<span class="drop" style="animation-delay:${.15+i*.1}s">${k==='coins'?icCoin('+'+v):k==='uni'?icUni('+'+v):k.startsWith('liv:')?`<span class="ic r-g livic"><i></i><em>🎨</em></span>`:icPart(k,'+'+v,true)}<small>${k==='coins'?'金币':k==='uni'?'通用':k.startsWith('liv:')?'限定 '+LIVS[k.slice(4)].n:save.shards[k]+'/'+PARTS[k].need}</small></span>`).join('');
+const gotHTML=got=>(got._pity?'<div class="dbl">★ 心愿保底触发</div>':'')+Object.entries(got).filter(([k])=>k!=='_pity').map(([k,v],i)=>`<span class="drop" style="animation-delay:${.15+i*.1}s">${k==='coins'?icCoin('+'+v):k==='uni'?icUni('+'+v):k.startsWith('liv:')?`<span class="ic r-g livic"><i></i><em>🎨</em></span>`:icPart(k,'+'+v,true)}<small>${k==='coins'?'金币':k==='uni'?'通用碎片':k.startsWith('liv:')?'限定 '+LIVS[k.slice(4)].n:save.shards[k]+'/'+PARTS[k].need}</small></span>`).join('');
 $('rDouble').onclick=()=>{if(!lastGot)return;showRewardedAd(ok=>{if(!ok){toast('未看完，没有奖励');return}const g2={};for(const[k,v] of Object.entries(lastGot)){if(k==='uni'){save.uni+=v;g2.uni=(g2.uni||0)+v}else grantShards(k,v,g2)}persist();lastGot=null;
  $('rDouble').disabled=true;$('rDouble').textContent='✓ 已翻倍';$('rShards').insertAdjacentHTML('beforeend','<div class="dbl">翻倍追加</div>'+gotHTML(g2));track('reward_grant',{placement:'result_double',got:g2});toast('碎片已翻倍！')},'result_double')};
 // ---- 每日福利：抽奖 + 宝箱 ----
@@ -598,15 +646,15 @@ function openChest(){const got={},n=5+(Math.random()*4|0);pityPre(got);for(let i
 function openDaily(){hideAll();show('daily',1);renderDaily()}
 function renderDaily(res){const d=daily();persist();
  $('daily').innerHTML=`<div class="rcard dl"><div class="ptitle">🎁 每日福利</div><div class="dcols">
- <div class="dcol"><div class="dh">幸运抽奖</div><div class="wheel">${POOL.map(p=>`<span>${p.k==='coins'?icCoin(p.v):p.k==='uni'?icUni(p.v):p.k==='shard'?`<span class="ic r-b sh"><i style="background-position:${4/7*100}% 0"></i><b>×${p.v}</b></span>`:'<span class="ic r-g livic"><i></i><em>🎨</em><b>限定</b></span>'}</span>`).join('')}</div>
+ <div class="dcol"><div class="dh">幸运抽奖</div><div class="wheel">${POOL.map(p=>`<span>${p.k==='coins'?icCoin(p.v):p.k==='uni'?icUni(p.v):p.k==='shard'?`<span class="icw"><span class="ic r-b sh"><i style="background-position:${4/7*100}% 0"></i><b>×${p.v}</b></span><em class="lbl">随机碎片</em></span>`:'<span class="icw"><span class="ic r-g livic"><i></i><em>🎨</em><b>限定</b></span><em class="lbl">限定涂装</em></span>'}</span>`).join('')}</div>
   <button class="btn" id="dSpin" ${d.free<=0?'disabled':''}>免费抽 ${d.free}/${DAY_FREE}</button><button class="btn ghost" id="dAdSpin" ${d.free>0||d.adSpin>=DAY_AD_SPIN?'disabled':''}>📺 看视频再抽 ${DAY_AD_SPIN-d.adSpin}/${DAY_AD_SPIN}</button><small>奖池：金币、通用碎片、随机部件碎片、<b>限定涂装</b>（鎏金条纹/霓虹腰线/烈焰号码）</small></div>
  <div class="dcol"><div class="dh">碎片宝箱</div><div class="chest">🧰</div><button class="btn" id="dChest" ${d.chest>=DAY_CHEST?'disabled':''}>📺 看视频开箱 ${DAY_CHEST-d.chest}/${DAY_CHEST}</button><small>每箱 5-8 片<b>随机</b>部件碎片（已拥有自动转通用）</small></div></div>
- <div class="wishline">${wishOk()?`心愿 ${icPart(save.wish)} <b>${PARTS[save.wish].n}</b> · 保底 ${save.pity||0}/${AB.pityN}（连续未出则下次必出）`:'在车库部件列表点 ☆ 标记心愿部件，抽奖/宝箱有保底'}</div>${res?`<div class="dresPop"><div class="dresIn"><div class="dh">🎉 获得</div><div class="dres">${gotHTML(res)}</div><button class="btn sm" onclick="this.closest('.dresPop').remove()">好的</button></div></div>`:''}<button class="btn ghost" id="dBack">← 返回</button></div>`;
+ <div class="wishline">${wishOk()?`心愿 ${icPart(save.wish,undefined,false,true)} <b>${PARTS[save.wish].n}</b> · 保底 ${save.pity||0}/${AB.pityN}（连续未出则下次必出）`:'在车库部件列表点 ☆ 标记心愿部件，抽奖/宝箱有保底'}</div>${res?`<div class="dresPop"><div class="dresIn"><div class="dh">🎉 获得</div><div class="dres">${gotHTML(res)}</div><button class="btn sm" onclick="this.closest('.dresPop').remove()">好的</button></div></div>`:''}<button class="btn ghost" id="dBack">← 返回</button></div>`;
  $('dBack').onclick=()=>menu();if(!AB.spin)$('dAdSpin').remove();if(!AB.chest)$('dChest').closest('.dcol').remove();['dAdSpin','dChest'].forEach(i=>{const e=$(i);if(e&&!e.disabled)track('ad_entry_show',{placement:i==='dChest'?'chest':'daily_ad_spin'})});
  $('dSpin').onclick=()=>{const d=daily();if(d.free<=0)return;d.free--;const g=spinOnce();track('reward_grant',{placement:'daily_free_spin',got:g});sfx('good');renderDaily(g)};
  $('dAdSpin').onclick=()=>showRewardedAd(ok=>{if(!ok)return toast('未看完，没有奖励');const d=daily();if(d.adSpin>=DAY_AD_SPIN)return;d.adSpin++;const g=spinOnce();track('reward_grant',{placement:'daily_ad_spin',got:g});renderDaily(g)},'daily_ad_spin');
  $('dChest').onclick=()=>showRewardedAd(ok=>{if(!ok)return toast('未看完，没有奖励');const d=daily();if(d.chest>=DAY_CHEST)return;d.chest++;const g=openChest();track('reward_grant',{placement:'chest',got:g});renderDaily(g)},'chest')}
-$('menuDaily').onclick=openDaily;
+$('menuDaily').onclick=openDaily;$('menuNick').onclick=editNick;
 $('menuSet').onclick=()=>openSettings('menu');$('menuGarage').onclick=()=>openGarage(gKey);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)togglePause()});
 // ================= 主循环 + 自动降画质 =================
@@ -620,7 +668,7 @@ function loop(now){requestAnimationFrame(loop);const raw=(now-last)/1000;let dt=
  if(floor)render();hud();engineUpd();
  if(!$('garage').classList.contains('hide')){const c=$('gPrev');if(c){const x=c.getContext('2d'),i=Math.floor(now/180)%16;x.clearRect(0,0,300,220);drawFull(x,gKey,save.cars[gKey],i,150,140,1.25,Math.floor(now/60)%3)}}}
 // ================= 菜单 =================
-function menu(){hideAll();setTimeout(auStatus,0);running=false;const box=$('cards');box.innerHTML='';const mx={hp:160,spd:20,mass:2,dmg:1.25,turn:3.6};
+function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickTxt').textContent=save.nick;setTimeout(auStatus,0);running=false;const box=$('cards');box.innerHTML='';const mx={hp:160,spd:20,mass:2,dmg:1.25,turn:3.6};
  for(const k of KEYS){const s=CARS[k],d=document.createElement('div');d.className='card';d.style.background=`linear-gradient(120deg,${s.col},${s.col2})`;const st=carStats(k,save.cars[k]);
   const bars=[['血量',st.hp/mx.hp],['速度',st.spd/mx.spd],['重量',st.mass/mx.mass],['撞击',st.dmg/mx.dmg],['操控',st.turn/mx.turn]].map(b=>`<div class="sb"><i>${b[0]}</i><u><b style="width:${Math.min(100,b[1]*100)}%"></b></u></div>`).join('');
   const fp=ptsFree(save.cars[k]);d.innerHTML=`<canvas width="236" height="236"></canvas><div class="info"><div class="nm">${s.name}</div><div class="en">${s.en}</div><span class="tag">${s.tag} · ${s.desc}</span>${bars}</div><span class="lv">Lv.${save.cars[k].lv}${fp?` · ${fp}点`:''}</span>`;
@@ -629,4 +677,4 @@ function menu(){hideAll();setTimeout(auStatus,0);running=false;const box=$('card
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
