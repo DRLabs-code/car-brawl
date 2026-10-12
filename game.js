@@ -337,20 +337,21 @@ const sgn=v=>v<0?-1:1;
 function drive(c,ix,iz,dsh,dt,revBtn){const mag=Math.min(1,Math.hypot(ix,iz));let d=0;
  if(mag>.15){d=Math.atan2(ix,iz)-c.h;d=Math.atan2(Math.sin(d),Math.cos(d))}
  // 倒车意图：按住倒车键，或摇杆推向与车头大致相反（>125°，倒车中放宽到 >95° 保持）
- const back=revBtn||c.isP&&mag>.4&&Math.abs(d)>(c.rev?1.65:2.18);let st;
+ const kb=c.isP&&c.kb;const back=revBtn||!kb&&c.isP&&mag>.4&&Math.abs(d)>(c.rev?1.65:2.18);let st;
+ if(kb)st=kb.s;else
  if(back&&mag>.15){let dr=d-Math.PI*sgn(d);dr=Math.atan2(Math.sin(dr),Math.cos(dr));st=Math.max(-1,Math.min(1,-dr*1.8))}// 车尾对准摇杆方向（倒车时转向反向）
  else st=mag>.15&&!back?Math.max(-1,Math.min(1,d*1.8)):0;c.steer+=Math.max(-5*dt,Math.min(5*dt,st-c.steer));
  c.dcd-=dt;if(dsh&&c.dcd<=0){c.dash=.4;c.dcd=3*c.dashCd;smoke(c.x-Math.sin(c.h)*1.8,c.z-Math.cos(c.h)*1.8,4);if(c.isP)sfx('dash')}c.dash-=dt;
  const ter=terrainAt(c.x,c.z),fx=Math.sin(c.h),fz=Math.cos(c.h);let fwd=c.vx*fx+c.vz*fz,lx=c.vx-fx*fwd,lz=c.vz-fz*fwd;const lat=Math.hypot(lx,lz),pf=fwd;
- const thr=mag>.15&&!back?mag*Math.max(0,Math.cos(Math.min(Math.abs(d),1.5))*1.1-.05):0,top=c.spd*(c.dash>0?1.8*c.dashPow:1)*(ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1);
- c.brake=false;const rm=revBtn?1:Math.max(.5,mag);
+ const thr=kb?(kb.t&&!back?1:0):mag>.15&&!back?mag*Math.max(0,Math.cos(Math.min(Math.abs(d),1.5))*1.1-.05):0,top=c.spd*(c.dash>0?1.8*c.dashPow:1)*(ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1);
+ c.brake=false;const rm=revBtn||kb?1:Math.max(.5,mag);
  if(c.dash>0)fwd+=c.acc*3*dt;
  else if(back){if(fwd>.8){fwd=Math.max(0,fwd-(c.acc*2.6+fwd*2)*dt);c.brake=true}else if(fwd>-top*.4*rm)fwd-=c.acc*.9*dt;else fwd+=(-top*.4*rm-fwd)*3*dt}
  else if(thr>0&&fwd<top*thr)fwd+=c.acc*thr*dt*(fwd<0?2.5:1);else fwd*=Math.exp(-(thr>0?.4:1.6)*dt);
- if(!back&&mag<=.15&&Math.abs(fwd)<.6)fwd*=Math.exp(-6*dt);
+ if(!back&&(kb?!kb.t:mag<=.15)&&Math.abs(fwd)<.6)fwd*=Math.exp(-6*dt);
  c.rev=fwd<-.3&&back;c.inp=back||thr>.05;
  if(fwd>top)fwd-=(fwd-top)*2.5*dt;if(ter==='mud')fwd*=Math.exp(-1.2*c.terr*dt);
- const yaw=c.steer*c.turn*Math.max(-1,Math.min(1,fwd/6))*(c.dash>0?.7:1);c.h+=yaw*dt;
+ const yaw=c.steer*c.turn*Math.max(-1,Math.min(1,fwd/6))*(c.dash>0?.7:1);c.h+=yaw*dt;if(kb&&kb.s&&Math.abs(fwd)<1.5)c.h+=kb.s*.7*c.turn/3*(1-Math.abs(fwd)/1.5)*dt;// 静止小幅原地转向防卡
  let G=7*c.turn/3;if(ter==='oil')G*=Math.min(1,.18*c.iceGrip);else if(ter==='sand')G*=1-.4*c.terr;if(c.dash>0)G*=.55;const drift=lat>5.5||ter==='oil'&&lat>2.5;if(drift)G*=.5;
  const gk=Math.exp(-G*dt);lx*=gk;lz*=gk;const nfx=Math.sin(c.h),nfz=Math.cos(c.h);
  // 侧滑速度部分转回前进方向（转向时车速保留，形成甩尾）
@@ -379,8 +380,9 @@ function unstick(c){let nx=0,nz=0;for(const o of props){if(!o.solid)continue;con
 function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
-  if(c.isP){let sx=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),sy=jy-((keys.KeyW||keys.ArrowUp)?1:0);
-   const m=Math.min(1,Math.hypot(sx,sy)),rb=revHold||keys.KeyS||keys.ArrowDown;if(m>.15){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}if(testInp){ix=testInp[0];iz=testInp[1]}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;c._rb=rb&&(!tut||tut.step>=2);if(introT>0){ix=iz=0;dsh=false;c._rb=false}}
+  if(c.isP){const kW=keys.KeyW||keys.ArrowUp?1:0,kS=keys.KeyS||keys.ArrowDown?1:0,kT=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let sx=jx,sy=jy;
+   const jm=Math.hypot(jx,jy);c.kb=jm<=.15&&(kW||kS||kT)&&!testInp?{t:kW&&!kS?1:0,s:kT,b:kS}:null;
+   const m=c.kb?(kW||kS?1:0):Math.min(1,jm),rb=revHold||(c.kb?kS:0);if(jm>.15){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}if(testInp){ix=testInp[0];iz=testInp[1]}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;c._rb=rb&&(!tut||tut.step>=2);if(introT>0){ix=iz=0;dsh=false;c._rb=false}}
   else if(c.dummy){c.vx*=Math.exp(-3*dt);c.vz*=Math.exp(-3*dt);c.x+=(3-c.x)*dt*.5;c.z+=(3-c.z)*dt*.5}
   else if(introT<=0){const o=aiThink(c,dt);ix=o[0];iz=o[1];dsh=o[2];c._rb=false;
    if(c.ai.back>0){c.ai.back-=dt;c._rb=true;ix=Math.sin(c.h+c.ai.bs*1.2);iz=Math.cos(c.h+c.ai.bs*1.2);ix=-ix;iz=-iz;dsh=false;if(c.ai.back<=0)c.ai.path=null}}
@@ -516,7 +518,11 @@ function endTut(toGarage){if(!save.tutorialDone){save.tutorialDone=true;save.sha
 let gKey='beast',garageGuide=false,afterGarage=null;
 function canCraft(id){const p=PARTS[id],have=save.shards[id]||0;return have>=p.need||save.uni>=(p.need-have)*UNI[p.r]}
 function openGarage(k){gKey=k||gKey;hideAll();show('garage',1);renderGarage()}
-let gSel=null;
+let gSel=null,gOpen='front',gTab='craft';
+function fitUI(){const rot=document.body.classList.contains('rot'),aw=rot?innerHeight:innerWidth,ah=rot?innerWidth:innerHeight;document.documentElement.style.setProperty('--uz',Math.max(1,Math.min(aw/1000,ah/720,2)).toFixed(3))}
+addEventListener('resize',fitUI);setTimeout(fitUI,0);
+function fitStage(){fitUI();const st=document.querySelector('#garage .gstage');if(!st)return;const W=innerWidth,H=innerHeight,rot=document.body.classList.contains('rot'),aw=rot?H:W,ah=rot?W:H;const k=Math.min(aw/1200,ah/675);st.style.transform=`translate(-50%,-50%) scale(${k})`}
+addEventListener('resize',()=>setTimeout(fitStage,50));
 function renderGarage(){const cs=save.cars[gKey],st=carStats(gKey,cs),b=CARS[gKey],fp=ptsFree(cs);
  const tabs=KEYS.map(k=>`<button class="tab ${k===gKey?'on':''}" data-car="${k}" style="--c:${CARS[k].col}">${CARS[k].name}<small>Lv.${save.cars[k].lv}</small></button>`).join('');
  const stats=Object.keys(STATS).map(s=>{const v=cs.pts[s],pct=Math.round((st[s]/b[s]-1)*100);return`<div class="srow"><span class="sn">${STATS[s]}</span><span class="pips">${Array.from({length:PT_MAX},(_,i)=>`<i class="${i<v?'on':''}"></i>`).join('')}</span><span class="sv">${pct>=0?'+':''}${pct}%</span><button class="mini" data-pt="${s}" data-d="-1" ${v<=0?'disabled':''}>−</button><button class="mini" data-pt="${s}" data-d="1" ${fp<=0||v>=PT_MAX?'disabled':''}>＋</button></div>`}).join('');
@@ -530,18 +536,22 @@ function renderGarage(){const cs=save.cars[gKey],st=carStats(gKey,cs),b=CARS[gKe
   return`<div class="slot"><span class="sn">${SLOTS[sl]}<em>${cur?PARTS[cur].n:'空'}</em></span><button class="pchip ipc x ${!cur?'on':''} ${sel===null?'sel':''}" data-sel="${sl}" data-id=""><span class="ic empty"><i></i></span><small>空槽</small></button>${opts.map(id=>`<button class="pchip ipc ${cur===id?'on':''} ${sel===id?'sel':''} ${save.owned[id]?'':'lock'}" data-sel="${sl}" data-id="${id}">${icPart(id,undefined,false,true)}${save.owned[id]?'':'<em class="lk">🔒</em>'}<small>${PARTS[id].n}</small></button>`).join('')}${sel!==undefined?cmpRow(sl,sel):cur?`<small>${PARTS[cur].desc}</small>`:''}</div>`}).join('');
  const fillShown=[];const craft=Object.keys(PARTS).map(id=>{const p=PARTS[id],have=save.shards[id]||0,own=save.owned[id],gap=Math.max(0,p.need-have),uniNeed=gap*UNI[p.r];
   const dl=daily(),canFill=AB.fill&&!own&&gap>0&&gap<=Math.ceil(p.need*AB.fillPct)&&(dl.fill||0)<3&&have<p.need;if(canFill)fillShown.push(id);
-  const btn=canFill?`<span class="bcol"><button class="btn sm adbtn" data-fill="${id}">📺 补齐 ${gap}</button><small>今日 ${3-(dl.fill||0)}/3</small></span>`:own?'<span class="owned">已拥有</span>':have>=p.need?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-craft="${id}">合成</button>`:save.uni>=uniNeed?`<button class="btn sm ghost" data-craft="${id}">${icUni('−'+uniNeed)} 补齐</button>`:`<span class="lack">差 ${gap}</span>`;
+  const btn=canFill?`<span class="bcol"><button class="btn sm adbtn" data-fill="${id}">📺 补齐 +${gap} 碎片</button><small>今日 ${3-(dl.fill||0)}/3</small></span>`:own?'<span class="owned">已拥有</span>':have>=p.need?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-craft="${id}">合成</button>`:save.uni>=uniNeed?`<button class="btn sm ghost" data-craft="${id}">${icUni('')} 通用×${uniNeed} 补齐</button>`:`<span class="lack">差 ${gap}</span>`;
   return`<div class="crow ic2">${own?'':`<button class="wish ${save.wish===id?'on':''}" data-wish="${id}">${save.wish===id?'★':'☆'}</button>`}${icPart(id,own?'✓':Math.min(have,p.need)+'/'+p.need,!own)}<div class="cmid"><b>${p.n} <span class="rar ${p.r}">${RARN[p.r]}</span></b><small>${SLOTS[p.slot]} · ${p.desc}</small><div class="cbar"><div style="width:${own?100:Math.min(100,have/p.need*100)}%"></div></div></div>${btn}</div>`}).join('');
- const guide=garageGuide?`<div class="gguide">引导：${save.owned.spike?(cs.equip.front==='spike'?'③ 完成！点【出战】试试新车头':'② 在【车头】点「尖刺」，看属性对比后点【装备】'):'① 在下方部件列表点【合成】尖刺'}</div>`:'';
- $('garage').innerHTML=`<div class="gwrap"><div class="ghead"><button class="btn ghost sm" id="gBack">← 返回</button><b>车库</b><span class="uni">${icCoin(save.coins)}${icUni(save.uni)}</span></div>${guide}<div class="tabs">${tabs}</div>
- <div class="gtop"><canvas id="gPrev" width="300" height="220"></canvas><div class="ginfo"><div class="gname">${b.name}</div><div class="gtag">${b.tag}</div><div class="xpRow"><span>Lv.${cs.lv}</span><div class="xpBar"><div style="width:${cs.lv>=MAXLV?100:cs.xp/need(cs.lv)*100}%"></div></div><span>${cs.lv>=MAXLV?'MAX':cs.xp+'/'+need(cs.lv)}</span></div>
- <div class="gnum">血量 ${Math.round(st.hp)} · 速度 ${st.spd.toFixed(1)} · 重量 ${st.mass.toFixed(2)}<br>加速 ${st.acc.toFixed(1)} · 操控 ${st.turn.toFixed(2)} · 撞击 ${st.dmg.toFixed(2)}</div></div></div>
- <div class="gsec"><div class="gst">属性加点 <span>可用 <b>${fp}</b> 点 · 每点 +3% · 单项上限 ${PT_MAX}</span><button class="mini wide" id="gReset" ${ptsUsed(cs)?'':'disabled'}>免费洗点</button></div>${stats}</div>
- <div class="gsec"><div class="gst">外观 · 颜色 <span>金币购买，买过所有车可用</span></div><div class="swatches">${Object.keys(COLORS).map(c=>`<button class="sw2 ${cs.paint.color===c?'on':''}" data-col="${c}" style="--c:${COLORS[c].c}"><i></i><small>${COLORS[c].n}</small><em>${save.colors[c]?(cs.paint.color===c?'使用中':'已拥有'):ico(20,'cur mini',COLORS[c].p)}</em></button>`).join('')}</div>
- <div class="gst" style="margin-top:6px">涂装</div><div class="swatches"><button class="lv2 ${!cs.paint.livery?'on':''}" data-liv="">无</button>${Object.keys(LIVS).map(l=>`<button class="lv2 ${cs.paint.livery===l?'on':''}" data-liv="${l}">${LIVS[l].n}<em>${save.livs[l]?'':LIVS[l].lim?'<i class="limt">限定·抽奖</i>':ico(20,'cur mini',LIVS[l].p)}</em></button>`).join('')}</div></div>
- <div class="gsec"><div class="gst">改装槽位 <span>未装部件 = 真实车型素车</span></div>${slots}</div>
- <div class="gsec"><div class="gst">部件碎片 · 合成 <span>重复碎片自动转通用（白1/蓝2/紫3/金4）</span></div>${craft}</div>
+ const guide=garageGuide?`<div class="gguide">引导：${save.owned.spike?(cs.equip.front==='spike'?'③ 完成！点【出战】试试新车头':'② 在中间【车头】槽位点「尖刺」，看属性对比后点【装备】'):'① 在右侧【碎片合成】点尖刺的【合成】'}</div>`:'';
+ if(garageGuide)gTab=save.owned.spike?gTab:'craft';if(garageGuide&&save.owned.spike&&!gOpen)gOpen='front';
+ const slotsH=Object.keys(SLOTS).map(sl=>{const cur=cs.equip[sl],op=gOpen===sl,opts=Object.keys(PARTS).filter(id=>PARTS[id].slot===sl),sel=gSel&&gSel.sl===sl?gSel.id:undefined;
+  return`<div class="gs ${op?'open':''}"><button class="gsh" data-open="${sl}">${cur?icPart(cur,undefined,false,true):'<span class="ic empty"><i></i></span>'}<span class="gst2"><b>${SLOTS[sl]}</b><small>${cur?PARTS[cur].n:'空槽'}</small></span><em>${op?'▲':'▼'}</em></button>${op?`<div class="gsb"><div class="gopts"><button class="pchip ipc x ${!cur?'on':''} ${sel===null?'sel':''}" data-sel="${sl}" data-id=""><span class="ic empty"><i></i></span><small>空槽</small></button>${opts.map(id=>`<button class="pchip ipc ${cur===id?'on':''} ${sel===id?'sel':''} ${save.owned[id]?'':'lock'}" data-sel="${sl}" data-id="${id}">${icPart(id,undefined,false,true)}${save.owned[id]?'':'<em class="lk">🔒</em>'}<small>${PARTS[id].n}</small></button>`).join('')}</div>${sel!==undefined?cmpRow(sl,sel):cur?`<small class="gdesc">${PARTS[cur].desc}</small>`:'<small class="gdesc">点部件查看属性对比</small>'}</div>`:''}</div>`}).join('');
+ const look=`<div class="gst">颜色 <span>金币购买，所有车通用</span></div><div class="swatches">${Object.keys(COLORS).map(c=>`<button class="sw2 ${cs.paint.color===c?'on':''}" data-col="${c}" style="--c:${COLORS[c].c}"><i></i><small>${COLORS[c].n}</small><em>${save.colors[c]?(cs.paint.color===c?'使用中':'已拥有'):ico(20,'cur mini',COLORS[c].p)}</em></button>`).join('')}</div>
+ <div class="gst" style="margin-top:8px">涂装</div><div class="swatches"><button class="lv2 ${!cs.paint.livery?'on':''}" data-liv="">无</button>${Object.keys(LIVS).map(l=>`<button class="lv2 ${cs.paint.livery===l?'on':''}" data-liv="${l}">${LIVS[l].n}<em>${save.livs[l]?'':LIVS[l].lim?'<i class="limt">限定·抽奖</i>':ico(20,'cur mini',LIVS[l].p)}</em></button>`).join('')}</div>`;
+ $('garage').innerHTML=`<div class="gstage"><div class="ghead"><button class="btn ghost sm" id="gBack">← 返回</button><b>车库</b><div class="tabs">${tabs}</div><span class="uni">${icCoin(save.coins)}${icUni(save.uni)}</span></div>${guide}
+ <div class="gcols"><div class="gcol gl"><canvas id="gPrev" width="300" height="200"></canvas><div class="gname">${b.name} <span class="gtag">${b.tag}</span></div><div class="xpRow"><span>Lv.${cs.lv}</span><div class="xpBar"><div style="width:${cs.lv>=MAXLV?100:cs.xp/need(cs.lv)*100}%"></div></div><span>${cs.lv>=MAXLV?'MAX':cs.xp+'/'+need(cs.lv)}</span></div>
+ <div class="gnum">血量 ${Math.round(st.hp)} · 速度 ${st.spd.toFixed(1)} · 重量 ${st.mass.toFixed(2)} · 加速 ${st.acc.toFixed(1)} · 操控 ${st.turn.toFixed(2)} · 撞击 ${st.dmg.toFixed(2)}</div>
+ <div class="gst">属性加点 <span>可用 <b>${fp}</b> 点 · 每点 +3%</span><button class="mini wide" id="gReset" ${ptsUsed(cs)?'':'disabled'}>免费洗点</button></div><div class="gpane">${stats}</div></div>
+ <div class="gcol gm"><div class="gst">改装槽位 <span>每槽一个 · 未装 = 素车</span></div><div class="gpane">${slotsH}</div></div>
+ <div class="gcol gr"><div class="rtabs"><button class="rt ${gTab==='look'?'on':''}" data-gtab="look">外观 / 涂装</button><button class="rt ${gTab==='craft'?'on':''}" data-gtab="craft">碎片合成</button></div><div class="gpane">${gTab==='look'?look:`<div class="gst"><span>重复碎片自动转通用（白1/蓝2/紫3/金4）</span></div>${craft}`}</div></div></div>
  <div class="gfoot"><button class="btn" id="gGo">出战 ▶</button></div></div>`;
+ fitStage();
  fillShown.forEach(id=>track('ad_entry_show',{placement:'targeted_fill',part:id}));
  $('gBack').onclick=()=>{garageGuide=false;menu()};$('gGo').onclick=()=>{garageGuide=false;openMaps(gKey)};
  $('gReset').onclick=()=>{for(const s in cs.pts)cs.pts[s]=0;persist();toast('已免费洗点');renderGarage()}}
@@ -550,6 +560,8 @@ $('garage').addEventListener('click',e=>{const t=e.target.closest('button');if(!
  else if(t.dataset.col){const c=t.dataset.col;if(!save.colors[c]){if(save.coins<COLORS[c].p){toast('金币不足');return}save.coins-=COLORS[c].p;save.colors[c]=true;toast('已购买：'+COLORS[c].n)}cs.paint.color=c;persist();sfx('good');renderGarage()}
  else if(t.dataset.liv!==undefined){const l=t.dataset.liv||null;if(l&&!save.livs[l]&&LIVS[l].lim){toast('限定涂装：每日抽奖获得');return}if(l&&!save.livs[l]){if(save.coins<LIVS[l].p){toast('金币不足');return}save.coins-=LIVS[l].p;save.livs[l]=true;toast('已购买：'+LIVS[l].n)}cs.paint.livery=l;persist();sfx('good');renderGarage()}
  else if(t.dataset.pt){const s=t.dataset.pt,d=+t.dataset.d;if(d>0&&ptsFree(cs)>0&&cs.pts[s]<PT_MAX)cs.pts[s]++;if(d<0&&cs.pts[s]>0)cs.pts[s]--;persist();renderGarage()}
+ else if(t.dataset.open){gOpen=gOpen===t.dataset.open?null:t.dataset.open;gSel=null;renderGarage()}
+ else if(t.dataset.gtab){gTab=t.dataset.gtab;renderGarage()}
  else if(t.dataset.sel!==undefined){gSel={sl:t.dataset.sel,id:t.dataset.id||null};renderGarage()}
  else if(t.dataset.eq!==undefined){const sl=t.dataset.eq,id=t.dataset.id||null,old=cs.equip[sl];if(id&&!save.owned[id])return;cs.equip[sl]=id;persist();sfx('good');toast(id?(old?`已装备 ${PARTS[id].n}，${PARTS[old].n} 回到库存`:`已装备 ${PARTS[id].n}`):`已卸下 ${PARTS[old].n}（空槽）`);gSel=null;renderGarage()}
  else if(t.dataset.wish){const id=t.dataset.wish;save.wish=save.wish===id?null:id;save.pity=0;persist();toast(save.wish?'心愿部件：'+PARTS[id].n:'已取消心愿');renderGarage()}
@@ -677,4 +689,4 @@ function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickT
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};

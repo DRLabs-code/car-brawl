@@ -176,7 +176,8 @@ body.land #rev{right:calc(max(24px,env(safe-area-inset-right)) + 106px);width:66
 /* 图标名称 */
 .icw{display:inline-flex;flex-direction:column;align-items:center;gap:3px;vertical-align:middle;max-width:72px}
 .icw .lbl{font-style:normal;font-size:10px;font-weight:800;color:#e9e6ff;line-height:1.1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px;margin-top:4px}
-.drop .icw .lbl{color:#fff}.crow.ic2 .icw .lbl{display:none}
+.drop .icw .lbl{color:#fff}.crow.ic2 .icw .lbl{display:block;font-size:9px;max-width:60px;color:#cfc8ff}
+.adbtn .ic,.btn.sm .ic{width:22px;height:22px;vertical-align:middle;display:inline-block}.adbtn .ic b,.btn.sm .ic b{display:none}
 /* 匹配 */
 #match{gap:8px}.mt{font-size:24px;font-weight:900;color:#ffd23f;text-shadow:0 3px 0 #1b1420}.dots::after{content:'';animation:dots 1.2s infinite}@keyframes dots{0%{content:''}33%{content:'.'}66%{content:'..'}100%{content:'...'}}
 .msub{font-size:12px;color:#cfd3ff}.mtip{font-size:11px;color:#9be7ff;margin-top:6px}
@@ -189,3 +190,30 @@ body.land #rev{right:calc(max(24px,env(safe-area-inset-right)) + 106px);width:66
 #rBoard{width:100%;max-height:120px;overflow:auto;margin:4px 0;display:flex;flex-direction:column;gap:2px}
 .brow{display:flex;align-items:center;gap:6px;padding:2px 8px;border-radius:8px;background:#00000030;font-size:12px}.brow.me{background:#ffd23f33;outline:1.5px solid #ffd23f}.brow.me b{color:#ffd23f}
 .brow .bp{width:26px;font-weight:900}.brow .bf{width:10px;height:10px;border-radius:3px;border:2px solid var(--f)}.brow b{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.brow small{color:#9be7ff;font-size:10px}.brow .bk{width:38px;text-align:right}
+
+/* ===== 车库：一屏三栏（1200x675 设计稿，整体按视口缩放）===== */
+#garage{overflow:hidden;padding:0;display:block}
+#garage .gstage{position:absolute;left:50%;top:50%;width:1200px;height:675px;transform-origin:50% 50%;display:flex;flex-direction:column;gap:8px;padding:14px 18px;box-sizing:border-box;font-size:14px}
+#garage .ghead{display:flex;align-items:center;gap:14px;flex:none}#garage .ghead>b{font-size:22px}#garage .ghead .tabs{flex:1;display:flex;gap:8px;margin:0}#garage .ghead .tab{flex:1;padding:6px}#garage .ghead .uni{display:flex;gap:10px}
+#garage .gguide{flex:none;margin:0}
+#garage .gcols{flex:1;min-height:0;display:grid;grid-template-columns:360px 1fr 400px;gap:12px}
+#garage .gcol{min-height:0;display:flex;flex-direction:column;gap:6px;background:#00000038;border:1px solid #ffffff1c;border-radius:14px;padding:10px}
+#garage .gpane{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+#garage .gpane::-webkit-scrollbar{width:6px}#garage .gpane::-webkit-scrollbar-thumb{background:#ffffff40;border-radius:3px}
+#garage #gPrev{width:300px;height:200px;align-self:center;flex:none}#garage .gname{font-size:20px;font-weight:900}#garage .gtag{font-size:12px;opacity:.75;font-weight:600}
+#garage .gnum{font-size:12px;opacity:.85;line-height:1.5}#garage .gst{font-size:15px;font-weight:900;display:flex;align-items:center;gap:8px;flex-wrap:wrap}#garage .gst span{font-size:12px;font-weight:600;opacity:.75}
+#garage .srow{margin:5px 0}
+#garage .gs{border:1px solid #ffffff22;border-radius:12px;margin-bottom:8px;background:#ffffff0a}#garage .gs.open{border-color:#ffc30099;background:#ffc3000f}
+#garage .gsh{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;color:inherit;padding:8px 10px;cursor:pointer;text-align:left}#garage .gsh .ic{width:46px;height:46px}#garage .gst2{flex:1;display:flex;flex-direction:column}#garage .gst2 b{font-size:16px}#garage .gst2 small{font-size:12px;opacity:.8}#garage .gsh em{font-style:normal;opacity:.7}
+#garage .gsb{padding:0 10px 10px}#garage .gopts{display:flex;gap:6px;flex-wrap:nowrap}#garage .gopts .pchip{flex:1;min-width:0}#garage .gdesc{display:block;margin-top:6px;opacity:.8}
+#garage .rtabs{display:flex;gap:6px;flex:none}#garage .rt{flex:1;padding:8px;border-radius:10px;border:1px solid #ffffff30;background:#ffffff10;color:#fff;font-weight:900;font-size:14px;cursor:pointer}#garage .rt.on{background:#ffc300;color:#2a1a00;border-color:#ffc300}
+#garage .gfoot{flex:none;display:flex;justify-content:center;margin:0}#garage .gfoot .btn{width:360px;padding:10px}
+#garage .cmpbox{margin-top:8px}
+#garage .gcols{grid-template-rows:minmax(0,1fr);grid-template-columns:340px 1fr 440px}#garage .gcol{overflow:hidden}
+#garage .gfoot{position:static;padding:0}
+#garage .crow.ic2 .btn.sm{white-space:nowrap;font-size:12px;padding:6px 8px}#garage .crow.ic2 .bcol{flex:none}
+#garage .gl .gpane{flex:1}
+
+/* 桌面宽屏：非车库面板按视口统一放大 */
+.panel:not(#garage)>*{zoom:var(--uz,1)}#hudTop,#auHint,#muteM{zoom:var(--uz,1)}
+.panel:not(#garage){overflow-y:auto;justify-content:safe center}
