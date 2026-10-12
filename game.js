@@ -140,7 +140,9 @@ addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='Space'){dashReq=true;
 const joy=document.getElementById('joy'),knob=document.getElementById('knob');
 function jmove(e){const r=joy.getBoundingClientRect(),[ox,oy]=toLocal(r.left+r.width/2,r.top+r.height/2),[px,py]=toLocal(e.clientX,e.clientY),c=joy.offsetWidth/2;let dx=px-ox,dy=py-oy;const L=Math.hypot(dx,dy),m=c*.75;if(L>m){dx*=m/L;dy*=m/L}knob.style.transform=`translate(${dx}px,${dy}px)`;jx=dx/m;jy=dy/m}
 joy.addEventListener('pointerdown',e=>{jid=e.pointerId;joy.setPointerCapture(jid);jmove(e)});joy.addEventListener('pointermove',e=>{if(e.pointerId===jid)jmove(e)});
-const jend=e=>{if(e.pointerId===jid){jid=null;jx=jy=0;knob.style.transform=''}};joy.addEventListener('pointerup',jend);joy.addEventListener('pointercancel',jend);
+const jend=e=>{if(e.pointerId===jid){jid=null;jx=jy=0;knob.style.transform=''}};joy.addEventListener('pointerup',jend);joy.addEventListener('pointercancel',jend);joy.addEventListener('lostpointercapture',jend);
+addEventListener('blur',()=>{jid=null;jx=jy=0;knob.style.transform='';revHold=false;for(const k in keys)keys[k]=0});
+let revHold=false;const rvb=document.getElementById('rev');rvb.addEventListener('pointerdown',e=>{e.preventDefault();revHold=true;rvb.setPointerCapture(e.pointerId);rvb.classList.add('on')});['pointerup','pointercancel','lostpointercapture'].forEach(t=>rvb.addEventListener(t,()=>{revHold=false;rvb.classList.remove('on')}));
 document.getElementById('dash').addEventListener('pointerdown',e=>{e.preventDefault();dashReq=true});
 function screenToWorld(sx,sy){const wx=sy+sx/2,wz=sy-sx/2,L=Math.hypot(wx,wz)||1;return[wx/L,wz/L]}
 // ================= 特效 =================
@@ -284,12 +286,12 @@ function collide(a,b){const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz),min=a.r
   ft(mx,mz,3.2,'对撞！','#ffffff',26,true);if(np)sfx('hit',np);if(mine){shake=Math.max(shake,7);hitstop=Math.max(hitstop,.06);vib('mid')}debris(mx,mz,4,'#b8c2cc')}
  else{const atkMul=zAtk==='front'?1:.5,selfMul=zAtk==='front'?.2:.5,dv=base*atk.dmg*Math.sqrt(atk.mass/vic.mass)*atkMul*ZMUL[zVic]*(zVic==='side'?atk.sideBonus*vic.critRes:zVic==='rear'?vic.rearRes:1);hurt(vic,dv,atk);if(vic.thorns>0&&atk.alive){hurt(atk,dv*vic.thorns,vic);if(nearP(mx,mz))ft(atk.x,atk.z,2.6,'反伤 -'+Math.round(dv*vic.thorns),'#c9c3ff',16)}hurt(atk,base*selfMul*.5,vic);const n=Math.round(dv);
   if(zVic==='side'){ft(vic.x,vic.z,3.6,'暴击！ -'+n,'#ffd23f',34,true);spark(mx,mz,18,'#ffffff');debris(vic.x,vic.z,6,vic.s.col);if(np)sfx('crit');if(mine){shake=Math.max(shake,11);hitstop=Math.max(hitstop,.09);vib('heavy')}
-   if(tut&&tut.step===2&&atk.isP){tut.step=3;tut.t=0;sfx('good');updTut()}}
+   if(tut&&tut.step===3&&atk.isP){tut.step=4;tut.t=0;sfx('good');updTut()}}
   else if(zVic==='rear'){push*=1.5;ft(vic.x,vic.z,3.3,'追尾 -'+n,'#ff9a3c',26);smoke(vic.x,vic.z,3);if(np)sfx('hit',np*.8);if(mine){shake=Math.max(shake,6);vib('mid')}}
   else{ft(vic.x,vic.z,3.1,'格挡 -'+n,'#e0e4f5',19);if(np)sfx('block');if(mine){shake=Math.max(shake,3);vib('light')}}
   if(vic.isP)ft(vic.x,vic.z,1.4,{front:'车头受击',side:'⚠ 侧面受击',rear:'车尾受击'}[zVic],'#ff7b7b',15);
   if(atk.isP&&zAtk!=='front')ft(atk.x,atk.z,1.4,'非车头撞击·自伤','#c9c3ff',13);
-  if(tut&&tut.step===2&&atk.isP&&zVic!=='side')ft(vic.x,vic.z,4.4,'要撞它的侧面哦！','#7df9ff',18,true)}
+  if(tut&&tut.step===3&&atk.isP&&zVic!=='side')ft(vic.x,vic.z,4.4,'要撞它的侧面哦！','#7df9ff',18,true)}
  bounce(a,b,nx,nz,rv,push)}
 // ================= AI（难度 = 设置档位 + 等级）=================
 function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
@@ -308,13 +310,21 @@ function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
 // ================= 车辆物理（惯性 / 抓地 / 侧滑 / 悬挂）=================
 function terrainAt(x,z){for(const g of gzones)if(Math.hypot(g.x-x,g.z-z)<g.r)return MAP.zone.k;return null}
 const sgn=v=>v<0?-1:1;
-function drive(c,ix,iz,dsh,dt){const mag=Math.min(1,Math.hypot(ix,iz));let d=0;
+function drive(c,ix,iz,dsh,dt,revBtn){const mag=Math.min(1,Math.hypot(ix,iz));let d=0;
  if(mag>.15){d=Math.atan2(ix,iz)-c.h;d=Math.atan2(Math.sin(d),Math.cos(d))}
- const st=mag>.15?Math.max(-1,Math.min(1,d*1.8)):0;c.steer+=Math.max(-5*dt,Math.min(5*dt,st-c.steer));
+ // 倒车意图：按住倒车键，或摇杆推向与车头大致相反（>125°，倒车中放宽到 >95° 保持）
+ const back=revBtn||c.isP&&mag>.4&&Math.abs(d)>(c.rev?1.65:2.18);let st;
+ if(back&&mag>.15){let dr=d-Math.PI*sgn(d);dr=Math.atan2(Math.sin(dr),Math.cos(dr));st=Math.max(-1,Math.min(1,-dr*1.8))}// 车尾对准摇杆方向（倒车时转向反向）
+ else st=mag>.15&&!back?Math.max(-1,Math.min(1,d*1.8)):0;c.steer+=Math.max(-5*dt,Math.min(5*dt,st-c.steer));
  c.dcd-=dt;if(dsh&&c.dcd<=0){c.dash=.4;c.dcd=3*c.dashCd;smoke(c.x-Math.sin(c.h)*1.8,c.z-Math.cos(c.h)*1.8,4);if(c.isP)sfx('dash')}c.dash-=dt;
  const ter=terrainAt(c.x,c.z),fx=Math.sin(c.h),fz=Math.cos(c.h);let fwd=c.vx*fx+c.vz*fz,lx=c.vx-fx*fwd,lz=c.vz-fz*fwd;const lat=Math.hypot(lx,lz),pf=fwd;
- const thr=mag>.15?mag*(1-Math.min(.6,Math.abs(d)/2.6)):0,top=c.spd*(c.dash>0?1.8*c.dashPow:1)*(ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1);
- if(c.dash>0)fwd+=c.acc*3*dt;else if(thr>0&&fwd<top*thr)fwd+=c.acc*thr*dt*(fwd<0?2:1);else fwd*=Math.exp(-(thr>0?.4:1.3)*dt);
+ const thr=mag>.15&&!back?mag*Math.max(0,Math.cos(Math.min(Math.abs(d),1.5))*1.1-.05):0,top=c.spd*(c.dash>0?1.8*c.dashPow:1)*(ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1);
+ c.brake=false;const rm=revBtn?1:Math.max(.5,mag);
+ if(c.dash>0)fwd+=c.acc*3*dt;
+ else if(back){if(fwd>.8){fwd=Math.max(0,fwd-(c.acc*2.6+fwd*2)*dt);c.brake=true}else if(fwd>-top*.4*rm)fwd-=c.acc*.9*dt;else fwd+=(-top*.4*rm-fwd)*3*dt}
+ else if(thr>0&&fwd<top*thr)fwd+=c.acc*thr*dt*(fwd<0?2.5:1);else fwd*=Math.exp(-(thr>0?.4:1.6)*dt);
+ if(!back&&mag<=.15&&Math.abs(fwd)<.6)fwd*=Math.exp(-6*dt);
+ c.rev=fwd<-.3&&back;c.inp=back||thr>.05;
  if(fwd>top)fwd-=(fwd-top)*2.5*dt;if(ter==='mud')fwd*=Math.exp(-1.2*c.terr*dt);
  const yaw=c.steer*c.turn*Math.max(-1,Math.min(1,fwd/6))*(c.dash>0?.7:1);c.h+=yaw*dt;
  let G=7*c.turn/3;if(ter==='oil')G*=Math.min(1,.18*c.iceGrip);else if(ter==='sand')G*=1-.4*c.terr;if(c.dash>0)G*=.55;const drift=lat>5.5||ter==='oil'&&lat>2.5;if(drift)G*=.5;
@@ -336,23 +346,33 @@ function drive(c,ix,iz,dsh,dt){const mag=Math.min(1,Math.hypot(ix,iz));let d=0;
   else parts.push({k:'dust',x:wx,z:wz,y:.2,vx:-nfx*2+rnd(-1,1),vz:-nfz*2+rnd(-1,1),vy:rnd(.3,1),t:0,life:ter==='sand'?1.2:.7,s:ter==='sand'?rnd(9,14):rnd(5,8),col:MAP.dust})}}
  if(drift||c.dash>0||(ter==='oil'&&spd>4)){skx.globalAlpha=Math.min(.38,.08+lat*.03);skx.fillStyle=ter==='mud'?'#4a3420':'#2b2230';for(const s of[-1,1]){const p=iso(rx+cx*s*1.0,rz+cz*s*1.0);skx.beginPath();skx.ellipse((p[0])*FSC+floor.ox,(p[1])*FSC+floor.oy,4*FSC,2*FSC,0,0,7);skx.fill()}skx.globalAlpha=1;
   if(drift&&Math.random()<.5*PM)parts.push({k:'smoke',x:rx+rnd(-.5,.5),z:rz+rnd(-.5,.5),y:.3,vx:rnd(-1,1),vz:rnd(-1,1),vy:rnd(.8,1.6),t:0,life:.9,s:rnd(7,11),dark:false});if(c.isP&&drift&&Math.random()<dt*8)sfx('skid')}}
+// ================= 脱困 =================
+let stuckLog={p:0,ai:0},testInp=null,noEnd=false;
+function unstick(c){let nx=0,nz=0;for(const o of props){if(!o.solid)continue;const dx=c.x-o.x,dz=c.z-o.z,L=Math.hypot(dx,dz);if(L<c.r+o.r+2.5&&L>0){nx+=dx/L/L;nz+=dz/L/L}}
+ const sd=sdist(POLY,c.x,c.z);if(sd.s>-3){nx-=sd.nx*.6;nz-=sd.nz*.6}let L=Math.hypot(nx,nz);if(L<1e-3){nx=-Math.sin(c.h);nz=-Math.cos(c.h);L=1}nx/=L;nz/=L;
+ c.vx=nx*7;c.vz=nz*7;c.x+=nx*.6;c.z+=nz*.6;smoke(c.x,c.z,3)}
 // ================= 模拟 =================
 function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
-  if(c.isP){let sx=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),sy=jy+((keys.KeyS||keys.ArrowDown)?1:0)-((keys.KeyW||keys.ArrowUp)?1:0);
-   const m=Math.min(1,Math.hypot(sx,sy));if(m>.15){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;if(introT>0){ix=iz=0;dsh=false}}
+  if(c.isP){let sx=jx+((keys.KeyD||keys.ArrowRight)?1:0)-((keys.KeyA||keys.ArrowLeft)?1:0),sy=jy-((keys.KeyW||keys.ArrowUp)?1:0);
+   const m=Math.min(1,Math.hypot(sx,sy)),rb=revHold||keys.KeyS||keys.ArrowDown;if(m>.15){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}if(testInp){ix=testInp[0];iz=testInp[1]}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;c._rb=rb&&(!tut||tut.step>=2);if(introT>0){ix=iz=0;dsh=false;c._rb=false}}
   else if(c.dummy){c.vx*=Math.exp(-3*dt);c.vz*=Math.exp(-3*dt);c.x+=(3-c.x)*dt*.5;c.z+=(3-c.z)*dt*.5}
-  else if(introT<=0){const o=aiThink(c,dt);ix=o[0];iz=o[1];dsh=o[2]}
-  if(!c.dummy)drive(c,ix,iz,dsh,dt);
+  else if(introT<=0){const o=aiThink(c,dt);ix=o[0];iz=o[1];dsh=o[2];c._rb=false;
+   if(c.ai.back>0){c.ai.back-=dt;c._rb=true;ix=Math.sin(c.h+c.ai.bs*1.2);iz=Math.cos(c.h+c.ai.bs*1.2);ix=-ix;iz=-iz;dsh=false;if(c.ai.back<=0)c.ai.path=null}}
+  if(!c.dummy)drive(c,ix,iz,dsh,dt,c._rb);
+  // 卡住检测：有油门但几乎不动
+  if(!c.dummy&&introT<=0){const sp=Math.hypot(c.vx,c.vz);if(c.inp&&sp<1.2)c.stuckT=(c.stuckT||0)+dt;else c.stuckT=Math.max(0,(c.stuckT||0)-dt*2);
+   if(c.isP&&c.stuckT>1.5){unstick(c);c.stuckT=0;ft(c.x,c.z,2.6,'脱困','#7df9ff',16);stuckLog.p++}
+   else if(!c.isP&&c.stuckT>1&&!(c.ai.back>0)){c.ai.back=.9;c.ai.bs=Math.random()<.5?-1:1;c.stuckT=0;stuckLog.ai++}}
   if(c.hp/c.maxhp<.35){c.smokeT-=dt;if(c.smokeT<0){c.smokeT=.12;smoke(c.x,c.z,1,true)}}
   if(c.dash>0&&Math.random()<.5)parts.push({k:'fire',x:c.x-Math.sin(c.h)*2.2,z:c.z-Math.cos(c.h)*2.2,y:.8,vx:-Math.sin(c.h)*4,vz:-Math.cos(c.h)*4,vy:1,t:0,life:.25,s:8});
   if(zoneR<AR-.3&&sdist(ZPOLY,c.x,c.z).s>.3){c.hp-=8*dt;c.flash=Math.max(c.flash,.05);if(Math.random()<dt*10)spark(c.x,c.z,2,'#7df9ff');if(c.isP&&Math.random()<dt*6)sfx('zap');if(c.hp<=0)hurt(c,1,null)}}
- for(const c of cars){c.x+=c.vx*dt;c.z+=c.vz*dt;const sd=sdist(POLY,c.x,c.z);if(sd.s>.4){const nx=sd.nx,nz=sd.nz;c.x-=nx*(sd.s-.4);c.z-=nz*(sd.s-.4);const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=1.6*vn*nx;c.vz-=1.6*vn*nz;if(vn>6){spark(c.x,c.z,5);if(c.isP){vib('light');sfx('block')}}}}
-  for(const o of props){if(!o.solid)continue;const dx=c.x-o.x,dz=c.z-o.z,L=Math.hypot(dx,dz),m=c.r+o.r;if(L<m&&L>0){c.x+=dx/L*(m-L);c.z+=dz/L*(m-L);const vn=(c.vx*dx+c.vz*dz)/L;if(vn<0){c.vx-=1.5*vn*dx/L;c.vz-=1.5*vn*dz/L;if(vn<-6){spark(c.x-dx/L*c.r,c.z-dz/L*c.r,4);if(c.isP){vib('light');sfx('block')}}}}}}
+ for(const c of cars){c.x+=c.vx*dt;c.z+=c.vz*dt;for(let it=0;it<3;it++){const sd=sdist(POLY,c.x,c.z);if(sd.s>.4){const nx=sd.nx,nz=sd.nz;c.x-=nx*(sd.s-.4);c.z-=nz*(sd.s-.4);const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=(vn>6?1.4:1.05)*vn*nx;c.vz-=(vn>6?1.4:1.05)*vn*nz;if(vn>6){spark(c.x,c.z,5);if(c.isP){vib('light');sfx('block')}}}}
+  for(const o of props){if(!o.solid)continue;const dx=c.x-o.x,dz=c.z-o.z,L=Math.hypot(dx,dz),m=c.r+o.r;if(L<m&&L>0){c.x+=dx/L*(m-L+.02);c.z+=dz/L*(m-L+.02);const vn=(c.vx*dx+c.vz*dz)/L;if(vn<0){const k=vn<-6?1.4:1.05;c.vx-=k*vn*dx/L;c.vz-=k*vn*dz/L;if(vn<-6&&it===0){spark(c.x-dx/L*c.r,c.z-dz/L*c.r,4);if(c.isP){vib('light');sfx('block')}}}}}}}
  for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++)if(cars[i].alive&&cars[j].alive)collide(cars[i],cars[j]);
  if(tut)tutStep(dt);
- else if(running&&((!player.alive&&time-deadTime>1.6)||cars.filter(c=>c.alive).length<=1))finish()}
+ else if(running&&!noEnd&&((!player.alive&&time-deadTime>1.6)||cars.filter(c=>c.alive).length<=1))finish()}
 function updParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t>p.life){parts.splice(i,1);continue}
  if(p.vx!==undefined){p.x+=p.vx*dt;p.z+=p.vz*dt;p.y+=p.vy*dt;if(p.k==='spark'||p.k==='deb'||p.k==='mud'){p.vy-=25*dt;if(p.y<0){p.y=0;p.vy*=-.3;p.vx*=.5;p.vz*=.5}}if(p.k==='deb')p.rot+=p.vr*dt}}
  for(let i=fts.length-1;i>=0;i--){fts[i].t+=dt;if(fts[i].t>1.1)fts.splice(i,1)}
@@ -392,8 +412,8 @@ function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx
  for(const c of cars){const [sx,sy]=iso(c.x,c.z);shadow(sx+4,sy+4,46,25,c.alive?.5:.3)}
  for(const it of list){if(it.p)drawProp(it.p);else drawCar(it.c)}
  if(fence)drawFencePoly(false);
- drawParts();for(const c of cars)if(c.alive&&!c.isP&&!c.dummy)hpBar(c);drawFts();
- if(tut&&tut.step===2){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
+ drawParts();for(const q of TLQ)tailLights(...q);TLQ.length=0;for(const c of cars)if(c.alive&&!c.isP&&!c.dummy)hpBar(c);drawFts();
+ if(tut&&tut.step===3){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
  if(player&&player.alive){const[sx,sy]=iso(player.x,player.z);ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.globalAlpha=.8+.2*Math.sin(time*8);ctx.beginPath();ctx.ellipse(sx,sy,42,21,0,0,7);ctx.stroke();ctx.globalAlpha=1;
   ctx.fillStyle='#ffd23f';ctx.strokeStyle='#1b1420';ctx.lineWidth=3;const ty2=sy-100+Math.sin(time*5)*3;ctx.beginPath();ctx.moveTo(sx,ty2+12);ctx.lineTo(sx-9,ty2);ctx.lineTo(sx+9,ty2);ctx.closePath();ctx.stroke();ctx.fill()}
  ctx.setTransform(DPR,0,0,DPR,0,0);if(hitstop>0.07){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(0,0,W,H)}
@@ -408,7 +428,15 @@ function drawFence(posts){
 function drawCar(c){const [sx,sy]=iso(c.x,c.z),i=frameOf(c.h),st=c.steer>.3?2:c.steer<-.3?0:1,rl=((Math.floor(c.roll)%3)+3)%3;
  if(!c.alive){const y=sy+Math.min(6,c.deadT*20);drawWheels(ctx,c.k,i,1,0,sx,y,WS);drawCarSprite(ctx,c.skin,i,sx,y,FS);drawHalf(ctx,DARK[c.k],i,sx,y);return}
  const bx=sx+c.sus.px,by=sy+c.sus.py+c.bump;drawWheels(ctx,c.k,i,st,rl,sx,sy+c.bump*.3,WS);drawCarSprite(ctx,c.skin,i,bx,by,FS);drawParts(ctx,c.k,c.eq,i,bx,by,1);
+ if(c.rev||c.brake)TLQ.push([c,bx-sx,by-sy]);
  if(c.flash>0){ctx.globalAlpha=Math.min(1,c.flash*8);drawHalf(ctx,WHITE[c.k],i,bx,by);ctx.globalAlpha=1;c.flash-=1/60}}
+const TLQ=[];
+const TAIL={tyrant:[2.3,.9,1.5],fang:[2.2,.85,1.0],beast:[2.0,.9,1.45]};
+function tailLights(c,ox,oy){const[tz,tx,ty]=TAIL[c.k],fx=Math.sin(c.h),fz=Math.cos(c.h),lx=Math.cos(c.h),lz=-Math.sin(c.h),pts=[];
+ for(const s of[-1,1]){const wx=c.x-fx*tz+lx*s*tx,wz=c.z-fz*tz+lz*s*tx,p=iso(wx,wz);pts.push([p[0]+ox,p[1]+oy-ty*HK,(wx-c.x)*(fx)+(wz-c.z)*fz])}
+ const vis=fx+fz<.35;if(!vis)return;// 车尾朝镜头时才看得到
+ ctx.save();for(const[x,y] of pts){const R=c.rev?14:11,g=ctx.createRadialGradient(x,y,0,x,y,R);g.addColorStop(0,'rgba(255,40,40,.75)');g.addColorStop(1,'rgba(255,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,R,0,7);ctx.fill();
+  ctx.fillStyle='#1b1420';ctx.fillRect(x-5,y-3.5,10,7);ctx.fillStyle='#ff2a2a';ctx.fillRect(x-4,y-2.5,8,5);ctx.fillStyle=c.rev?'#fff':'#ffb0b0';ctx.fillRect(x-1.5,y-1.5,3,3)}ctx.restore()}
 function hpBar(c){const [sx,sy]=iso(c.x,c.z),y=sy-88,w=46,f=c.hp/c.maxhp;ctx.fillStyle='#1b1420';rr(sx-w/2-2,y-2,w+4,10,5);ctx.fill();ctx.fillStyle='#3a2f45';rr(sx-w/2,y,w,6,3);ctx.fill();ctx.fillStyle=f<.35?'#ff4d4d':f<.6?'#ffb703':'#7bd94f';rr(sx-w/2,y,w*f,6,3);ctx.fill();ctx.fillStyle='#ffffff55';ctx.fillRect(sx-w/2+2,y+1,Math.max(0,w*f-4),1.5);
  ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#1b1420';ctx.strokeText('Lv'+c.lv,sx-w/2-10,y+7);ctx.fillStyle='#ffd23f';ctx.fillText('Lv'+c.lv,sx-w/2-10,y+7)}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h)}
@@ -436,11 +464,11 @@ function hideAll(){PANELS.forEach(p=>show(p,0))}
 let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.add('hide'),2200)}
 document.addEventListener('click',e=>{if(e.target.closest('button,.card,.mapc,.tab'))sfx('ui')},true);
 // ================= 新手引导 =================
-const TUT=[['① 移动','拖动左下<b>摇杆</b>（电脑：WASD）开动小车，往哪推就往屏幕哪个方向开','joy'],['② 冲刺','点右下<b>冲刺</b>（电脑：空格），冲刺 0.4 秒，冷却 3 秒','dash'],['③ 暴击','用<b>车头</b>撞假人的<b>侧面</b>，打出 1.5 倍暴击！撞车头只有 0.6 倍',''],['④ 改装','漂亮！送你 <b>10 片尖刺碎片</b>，去车库合成并装上吧',''],];
-function updTut(){['joy','dash'].forEach(i=>$(i).classList.remove('glow'));if(!tut){show('tutBox',0);return}const s=TUT[tut.step];show('tutBox',1);
- $('tutBox').innerHTML=`<div class="tt">新手引导 ${s[0]}</div><div>${s[1]}</div>${tut.step===3?'<button class="btn" id="tutGo">去车库 →</button>':''}<button class="skip" id="tutSkip">跳过引导</button>`;
- if(s[2])$(s[2]).classList.add('glow');if(tut.step===3)$('tutGo').onclick=()=>endTut(true);$('tutSkip').onclick=()=>endTut(false)}
-function tutStep(dt){tut.t+=dt;if(tut.step===0&&activeT>1.2){tut.step=1;sfx('good');updTut()}else if(tut.step===1&&player.dcd>0&&player.dcd<2.6){tut.step=2;sfx('good');updTut()}}
+const TUT=[['① 移动','拖动左下<b>摇杆</b>（电脑：WASD）开动小车，往哪推就往屏幕哪个方向开','joy'],['② 冲刺','点右下<b>冲刺</b>（电脑：空格），冲刺 0.4 秒，冷却 3 秒','dash'],['③ 倒车','按住<b>倒车</b>键（电脑：S/↓），或把摇杆推向车尾方向：先刹车再倒车，倒车时尾灯亮、转向反向','rev'],['④ 暴击','用<b>车头</b>撞假人的<b>侧面</b>，打出 1.5 倍暴击！撞车头只有 0.6 倍',''],['⑤ 改装','漂亮！送你 <b>10 片尖刺碎片</b>，去车库合成并装上吧',''],];
+function updTut(){['joy','dash','rev'].forEach(i=>$(i).classList.remove('glow'));if(!tut){show('tutBox',0);return}const s=TUT[tut.step];show('tutBox',1);
+ $('tutBox').innerHTML=`<div class="tt">新手引导 ${s[0]}</div><div>${s[1]}</div>${tut.step===4?'<button class="btn" id="tutGo">去车库 →</button>':''}<button class="skip" id="tutSkip">跳过引导</button>`;
+ if(s[2])$(s[2]).classList.add('glow');if(tut.step===4)$('tutGo').onclick=()=>endTut(true);$('tutSkip').onclick=()=>endTut(false)}
+function tutStep(dt){tut.t+=dt;if(tut.step===0&&activeT>1.2){tut.step=1;sfx('good');updTut()}else if(tut.step===1&&player.dcd>0&&player.dcd<2.6){tut.step=2;sfx('good');updTut()}else if(tut.step===2){if(player.fwd<-2)tut.rv=(tut.rv||0)+dt;if(tut.rv>.6){tut.step=3;sfx('good');updTut()}}}
 function endTut(toGarage){if(!save.tutorialDone){save.tutorialDone=true;save.shards.spike=Math.max(save.shards.spike||0,PARTS.spike.need);persist()}tut=null;running=false;cars=[];player=null;['joy','dash'].forEach(i=>$(i).classList.remove('glow'));
  if(toGarage){garageGuide=true;openGarage('beast')}else menu()}
 // ================= 车库（改装 / 加点 / 合成）=================
@@ -525,4 +553,4 @@ function menu(){hideAll();running=false;const box=$('cards');box.innerHTML='';co
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
