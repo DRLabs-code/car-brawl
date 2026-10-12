@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="icon" href="data:,"><title>碰碰改装车 · 等距原型</title>
-<link rel="stylesheet" href="style.css"></head><body><div id="app">
+<link rel="stylesheet" href="style.css?v=4"></head><body><div id="app">
 <canvas id="cv"></canvas>
 <div id="hud" class="hide">
  <div id="hudTop"><div id="avatar"><canvas width="96" height="96"></canvas><span id="lvTag">Lv.1</span></div>
@@ -16,13 +16,14 @@
 <div id="intro" class="hide"></div>
 <div id="tutBox" class="hide"></div>
 <div id="menu" class="panel hide"><div class="logo"><span>碰碰</span>改装车<small>ARENA SMASH · 原型</small></div><div id="cards"></div>
- <div class="mbtns"><span class="coinchip" id="menuCoins"></span><button class="btn ghost" id="menuGarage">🔧 车库</button><button class="btn ghost" id="menuSet">⚙ 设置</button></div>
+ <div class="mbtns"><span class="coinchip" id="menuCoins"></span><button class="btn ghost" id="menuDaily">🎁 福利</button><button class="btn ghost" id="menuGarage">🔧 车库</button><button class="btn ghost" id="menuSet">⚙ 设置</button></div>
  <div id="help">📱 左下摇杆 · 右下冲刺　⌨️ WASD/方向键 · 空格冲刺 · Esc 暂停<br>💡 用<b>车头</b>撞对手<b>侧面</b>打出暴击！护好自己的侧面。</div></div>
 <div id="maps" class="panel hide"><div class="ptitle">选择地图</div><div id="mapsSub" class="psub"></div><div id="mapList"></div><button class="btn ghost" id="mapsBack">← 返回</button></div>
 <div id="garage" class="panel scroll hide"></div>
+<div id="daily" class="panel hide"></div>
 <div id="result" class="panel hide"><div class="rcard"><div id="rRank"></div><div id="rTitle"></div><div id="rStats"></div>
  <div class="xpRow"><span id="rLv"></span><div class="xpBar"><div id="rXp"></div></div><span id="rXpTxt"></span></div>
- <div id="rShards"></div><div id="rHint" class="hide"></div><div class="btns"><button id="again" class="btn">再来一局</button><button id="toGarage" class="btn ghost">车库</button><button id="back" class="btn ghost">菜单</button></div></div></div>
+ <div id="rShards"></div><button id="rDouble" class="btn adbtn hide">📺 看视频 碎片翻倍</button><div id="rHint" class="hide"></div><div class="btns"><button id="again" class="btn">再来一局</button><button id="toGarage" class="btn ghost">车库</button><button id="back" class="btn ghost">菜单</button></div></div></div>
 <div id="pause" class="panel hide"><div class="rcard"><div class="ptitle">暂停</div><div class="col"><button class="btn" id="pResume">继续</button><button class="btn ghost" id="pSet">⚙ 设置</button><button class="btn ghost" id="pQuit">退出到菜单</button></div></div></div>
 <div id="settings" class="panel hide"><div class="rcard set"><div class="ptitle">设置</div>
  <label class="srow2"><span>主音量</span><input type="range" id="sVol" min="0" max="100"><b id="sVolV"></b></label>
@@ -34,4 +35,4 @@
  <div class="col"><button class="btn ghost sm" id="sTut">重玩新手引导</button><button class="btn" id="sClose">完成</button></div></div></div>
 <div id="toast" class="hide"></div>
 <div id="loading" class="panel">加载中…</div>
-</div><script src="game.js"></script></body></html>
+</div><script src="game.js?v=4"></script></body></html>
