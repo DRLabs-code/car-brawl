@@ -11,12 +11,12 @@
 ## 2. 配色规范
 | 用途 | 颜色 | Hex |
 |---|---|---|
-| 坦克车主色 | 军绿 | #5D8F3F |
-| 坦克车辅色 | 铁灰 | #5A5F66 |
+| 皮卡主色 | 军绿 | #5D8F3F |
+| 皮卡辅色 | 铁灰 | #5A5F66 |
 | 刺客主色 | 霓虹品红 | #F0207F |
 | 刺客辅色 | 炭黑 | #1E1E24 |
-| 怪兽主色 | 警示橙 | #FF7A1A |
-| 怪兽辅色 | 泥土棕 | #7A4E2D |
+| 越野主色 | 警示橙 | #FF7A1A |
+| 越野辅色 | 泥土棕 | #7A4E2D |
 | 金属件通用 | 亮钢 | #B8C2CC |
 | 轮胎通用 | 胎黑 | #2A2A2E |
 | 强调/发光 | 电光黄 | #FFD23F |
@@ -58,7 +58,7 @@
 - **制作方式**：原型中用低多边形模型（`bake/bake.html`）离线渲染 16 朝向 + 剪影膨胀描边；正式版可由美术重绘或继续用此流程，但需要统一光照方向。
 
 ## 6. 轮廓原则
-- **剪影测试**：涂黑后三辆车一眼能分清（坦克的铲刀 + 六轮、刺客的楔形 + 尾翼、怪兽的巨轮 + 防滚架）。
+- **剪影测试**：涂黑后三辆车一眼能分清（皮卡的高车身 + 后货斗、超跑的低矮楔形、越野的方盒车身 + 圆灯 + 外挂备胎）。
 - 车头方向在任意朝向下都要明确（铲刀 / 尖刺 / 前保险杠颜色区分）。
 - 避免细长突出物，部件要粗壮，在 50px 宽的显示尺寸下仍清楚。
 
@@ -69,26 +69,32 @@
 
 ## 8. 三辆首发车
 
-### ① 铁壁暴君（Iron Tyrant）· 重型坦克车
-- **性格**：沉默稳重、"不动如山"，慢悠悠逼近，一撞就是重击。
-- **外观要点**：方块状宽厚车身、厚装甲板铆钉、炮塔式顶棚（无炮管，可当撞角座）、六角形大轮、车头推土铲感；军绿 + 铁灰 + 黄色警示条。
+**原则**：比例贴近真实车型，只稍微放大轮子和车身以保证小屏可读；未装部件的白板状态就是真实车的素车版本，改装件在其上叠加。
+- 铁壁暴君：参考全尺寸皮卡——高车身、长发动机舱、双座驾驶室、后部开放货斗、大镀铬格栅。
+- 霓虹毒牙：参考中置引擎超跑——低矮修长楔形、深色座舱靠后、侧进气口、细长灯带。
+- 泥岩狂兽：参考硬派越野（牧马人 / 陆巡一类的方正造型）——方盒车身、圆形大灯、七孔竖格栅、黑色轮眉、外挂备胎、车顶行李架；**不是大脚怪兽车**。
+- 精灵分两层烘焙：车身层 16 朝向（`car_<名>_body.png`，4×4，384px），轮子层 16 朝向 × 3 档转向 × 3 帧滚动（`car_<名>_wheels.png`，12×12，160px），两层互为深度遮罩，叠加即为完整车。
+
+### ① 铁壁暴君（Iron Tyrant）· 皮卡式小卡车
+- **性格**：沉稳、"不动如山"，慢慢逼近，一撞就是重击。
+- **外观要点**：高车身、长发动机舱、双座驾驶室、后部开放货斗、大镀铬格栅与方灯、黑色保险杠；军绿 + 铁灰。
 - **属性倾向**：血量 ★★★★★ 重量 ★★★★★ 撞击 ★★★★ 速度 ★★ 加速 ★ 操控 ★★
 
-**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，粗深色描边，三阶卡通光影，车窗高光反光，软阴影，重型坦克式小车，方块宽厚车身，厚重铆钉装甲板，炮塔造型顶棚，超大粗壮车轮，前部推土铲，军绿色和铁灰色配黄色警示条，夸张比例，矮重心，等距三分之四视角，纯色背景，游戏资产设定图
-**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, heavy tank-like battle car, boxy wide chunky body, thick riveted armor plates, turret-shaped roof, oversized chunky wheels, bulldozer front plow, military green and gunmetal grey with yellow hazard stripes, exaggerated proportions, low center of gravity, three-quarter isometric view (2:1), plain background, game asset concept sheet
+**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，比例接近真实车（轮子略放大），粗深色描边，三阶卡通光影，车窗高光反光，软阴影，等距三分之四视角，纯色背景，未改装素车，全尺寸皮卡，高车身，开放货斗，大镀铬格栅，军绿色车身配铁灰与黑色保险杠
+**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, realistic car proportions slightly exaggerated wheels, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, three-quarter isometric view (2:1), plain background, stock unmodified version, full-size pickup truck, tall body, open cargo bed, big chrome grille, army green paint with gunmetal and black bumpers
 
-### ② 霓虹毒牙（Neon Fang）· 低趴跑车刺客
+### ② 霓虹毒牙（Neon Fang）· 低矮修长超跑
 - **性格**：狡猾、傲慢，绕后偷袭残血目标，一击即走。
-- **外观要点**：超低楔形车身、尖锐的车头（天生适合装尖刺）、宽后轮小前轮、大尾翼、发光灯带；品红 + 炭黑 + 电光黄。
-- **属性倾向**：速度 ★★★★★ 加速 ★★★★ 撞击 ★★★（正面冲刺高） 操控 ★★★ 血量 ★★ 重量 ★
+- **外观要点**：中置引擎超跑比例——低矮修长楔形车身、深色座舱靠后、侧进气口、细长青色灯带、红色尾灯条；品红 + 炭黑。
+- **属性倾向**：速度 ★★★★★ 加速 ★★★★ 撞击 ★★★ 操控 ★★★ 血量 ★★ 重量 ★
 
-**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，粗深色描边，三阶卡通光影，车窗高光反光，软阴影，低趴楔形跑车刺客，极低车身，尖锐锋利车头，后轮宽大前轮较小，巨大尾翼，霓虹发光灯带，品红色与炭黑色配电光黄点缀，夸张比例，等距三分之四视角，纯色背景，游戏资产设定图
-**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, low-slung wedge sports car assassin, extremely low body, sharp pointed nose, wide rear wheels and smaller front wheels, huge rear spoiler, glowing neon light strips, magenta and charcoal black with electric yellow accents, exaggerated proportions, three-quarter isometric view (2:1), plain background, game asset concept sheet
+**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，比例接近真实车（轮子略放大），粗深色描边，三阶卡通光影，车窗高光反光，软阴影，等距三分之四视角，纯色背景，未改装素车，中置引擎超跑，低矮修长楔形车身，座舱靠后，侧进气口，青色细灯带，品红色车身配炭黑
+**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, realistic car proportions slightly exaggerated wheels, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, three-quarter isometric view (2:1), plain background, stock unmodified version, mid-engine supercar, low long wedge body, cab-rear canopy, side air intakes, thin cyan light strips, magenta paint with charcoal black
 
-### ③ 泥岩狂兽（Mud Beast）· 改装越野怪兽
-- **性格**：狂野、好斗、乱冲乱撞，享受混战，靠弹跳从高处砸人。
-- **外观要点**：巨型越野轮（占车高一半以上）、高底盘外露避震、短小车身、防滚架、车顶射灯排、溅满泥点；警示橙 + 泥土棕 + 亮钢。
-- **属性倾向**：操控 ★★★★（不怕地形） 血量 ★★★ 重量 ★★★ 撞击 ★★★ 加速 ★★★ 速度 ★★★（均衡型）
+### ③ 泥岩狂兽（Mud Beast）· 硬派方正越野车
+- **性格**：狂野、好斗，享受混战，越野胎不怕任何地形。
+- **外观要点**：硬派越野比例（方盒车身、短前后悬）——圆形大灯、七孔竖格栅、黑色轮眉、外挂备胎、车顶行李架；**不是大脚怪兽车**；警示橙 + 黑。
+- **属性倾向**：操控 ★★★★ 血量 ★★★ 重量 ★★★ 撞击 ★★★ 加速 ★★★ 速度 ★★★（均衡型）
 
-**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，粗深色描边，三阶卡通光影，车窗高光反光，软阴影，改装越野怪兽卡车，巨大越野轮胎，高底盘外露避震弹簧，短小车身，防滚架，车顶射灯排，车身溅满泥点，警示橙色与泥土棕色配亮钢金属件，夸张比例，等距三分之四视角，纯色背景，游戏资产设定图
-**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, modified off-road monster truck, giant knobby tires, high ground clearance with exposed suspension springs, short stubby body, roll cage, roof light bar, mud splatters, safety orange and mud brown with bright steel parts, exaggerated proportions, three-quarter isometric view (2:1), plain background, game asset concept sheet
+**AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，比例接近真实车（轮子略放大），粗深色描边，三阶卡通光影，车窗高光反光，软阴影，等距三分之四视角，纯色背景，未改装素车，硬派方正越野车，方盒车身，圆形大灯，七孔竖格栅，黑色轮眉，外挂备胎，车顶行李架，警示橙车身配黑色
+**AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, realistic car proportions slightly exaggerated wheels, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, three-quarter isometric view (2:1), plain background, stock unmodified version, boxy classic off-road SUV, square body, round headlights, seven-slot vertical grille, black fender flares, rear-mounted spare tire, roof rack, safety orange paint with black trim, not a monster truck
