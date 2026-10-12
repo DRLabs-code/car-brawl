@@ -51,7 +51,7 @@ const SAVE_KEY='carbrawl_save',SAVE_V=2;
 const clampInt=(v,a,b,d)=>{v=Math.floor(Number(v));return isFinite(v)?Math.max(a,Math.min(b,v)):d};
 const defCar=()=>({lv:1,xp:0,pts:{hp:0,mass:0,spd:0,acc:0,turn:0,dmg:0},equip:{front:null,armor:null,engine:null,tire:null},paint:{color:'gray',livery:null}});
 const defSave=()=>({v:SAVE_V,cars:{tyrant:defCar(),fang:defCar(),beast:defCar()},shards:{},owned:{},uni:0,coins:0,colors:{gray:true},livs:{},tutorialDone:false,
- settings:{vol:.7,music:true,sfx:true,vibrate:true,quality:'auto',diff:'normal'}});
+ settings:{vol:.7,mute:false,music:true,sfx:true,vibrate:true,quality:'auto',diff:'normal'}});
 function sanitize(o){const d=defSave();if(!o||typeof o!=='object'||!o.cars)throw new Error('bad');
  if(!o.v||o.v<2){for(const k of KEYS){const c=o.cars[k];if(c){d.cars[k].lv=clampInt(c.lv,1,MAXLV,1);d.cars[k].xp=clampInt(c.xp,0,1e6,0)}}
   for(const [nm,v] of Object.entries(o.shards||{})){const id=NAME2ID[String(nm).replace(/\(.*\)/,'')];if(id)d.shards[id]=clampInt(v,0,9999,0)}return d}
@@ -61,7 +61,7 @@ function sanitize(o){const d=defSave();if(!o||typeof o!=='object'||!o.cars)throw
  for(const id in PARTS){d.shards[id]=clampInt(o.shards&&o.shards[id],0,9999,0);if(o.owned&&o.owned[id])d.owned[id]=true}
  d.uni=clampInt(o.uni,0,99999,0);d.coins=clampInt(o.coins,0,9999999,0);for(const c in o.colors||{})if(COLORS[c])d.colors[c]=true;for(const l in o.livs||{})if(LIVS[l])d.livs[l]=true;if(o.daily&&typeof o.daily==='object')d.daily={d:String(o.daily.d||''),free:clampInt(o.daily.free,0,3,3),adSpin:clampInt(o.daily.adSpin,0,9,0),chest:clampInt(o.daily.chest,0,9,0),fill:clampInt(o.daily.fill,0,9,0)};if(o.wish&&PARTS[o.wish])d.wish=o.wish;d.pity=clampInt(o.pity,0,99,0);
  for(const k of KEYS){const pp=(o.cars[k]||{}).paint||{};d.cars[k].paint={color:COLORS[pp.color]&&d.colors[pp.color]?pp.color:'gray',livery:LIVS[pp.livery]&&d.livs[pp.livery]?pp.livery:null}}d.tutorialDone=!!o.tutorialDone;const s=o.settings||{};
- if(typeof s.vol==='number'&&isFinite(s.vol))d.settings.vol=Math.max(0,Math.min(1,s.vol));['music','sfx','vibrate'].forEach(k=>{if(typeof s[k]==='boolean')d.settings[k]=s[k]});
+ if(typeof s.vol==='number'&&isFinite(s.vol))d.settings.vol=Math.max(0,Math.min(1,s.vol));['mute','music','sfx','vibrate'].forEach(k=>{if(typeof s[k]==='boolean')d.settings[k]=s[k]});
  if(['auto','high','low'].includes(s.quality))d.settings.quality=s.quality;if(['easy','normal','hard'].includes(s.diff))d.settings.diff=s.diff;return d}
 let saveWarn='';
 function loadSave(){let raw=null;try{raw=localStorage.getItem(SAVE_KEY)||localStorage.getItem('carbrawl_save_v1')}catch(e){return defSave()}
@@ -99,27 +99,34 @@ function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=
 function tint(img,col,alpha){const c=mkC(img.width,img.height),x=c.getContext('2d');x.drawImage(img,0,0);x.globalCompositeOperation='source-atop';x.globalAlpha=alpha;x.fillStyle=col;x.fillRect(0,0,c.width,c.height);return c}
 // ================= 音频（WebAudio 程序化）=================
 const AU={ctx:null};
-function auInit(){if(AU.ctx){if(AU.ctx.state==='suspended')AU.ctx.resume();return}let a;try{a=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}AU.ctx=a;
- AU.master=a.createGain();AU.master.connect(a.destination);AU.sfx=a.createGain();AU.sfx.connect(AU.master);AU.music=a.createGain();AU.music.connect(AU.master);
+// iOS：必须在用户手势的同步回调里创建/resume AudioContext，并播放一个极短静音 buffer 解锁。尊重静音键（不绕过）。
+function auResume(){const a=AU.ctx;if(a&&a.state!=='running'&&a.state!=='closed'){const p=a.resume();if(p&&p.then)p.then(auStatus,auStatus)}auStatus()}
+function auUnlock(){auInit();const a=AU.ctx;if(!a)return;try{const b=a.createBuffer(1,1,22050),s=a.createBufferSource();s.buffer=b;s.connect(a.destination);s.start(0)}catch(e){}auResume()}
+function auStatus(){const el=document.getElementById('auHint');if(!el)return;const ok=AU.ctx&&AU.ctx.state==='running',on=!save.settings.mute&&save.settings.vol>0&&(save.settings.music||save.settings.sfx);el.classList.toggle('hide',ok||!on);el.textContent=AU.ctx?'🔇 点击屏幕开启声音':'🔈 点击开启声音'}
+function auInit(){if(AU.ctx){if(AU.ctx.state!=='running')auResume();return}let a;try{a=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}AU.ctx=a;
+ a.onstatechange=()=>{auStatus();if(a.state==='interrupted'||a.state==='suspended')setTimeout(()=>{if(!document.hidden)auResume()},300)};
+ AU.master=a.createGain();AU.an=a.createAnalyser();AU.an.fftSize=1024;AU.master.connect(AU.an);AU.an.connect(a.destination);AU.sfx=a.createGain();AU.sfx.connect(AU.master);AU.music=a.createGain();AU.music.connect(AU.master);
  AU.noise=a.createBuffer(1,a.sampleRate,a.sampleRate);const d=AU.noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
  const o=a.createOscillator();o.type='sawtooth';const o2=a.createOscillator();o2.type='square';const f=a.createBiquadFilter();f.type='lowpass';f.frequency.value=400;const g=a.createGain();g.gain.value=0;
  o.connect(f);o2.connect(f);f.connect(g);g.connect(AU.sfx);o.start();o2.start();AU.eng={o,o2,f,g};auApply();bgmStart()}
-function auApply(){if(!AU.ctx)return;const s=save.settings,t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(s.vol,t,.05);AU.sfx.gain.setTargetAtTime(s.sfx?1:0,t,.05);AU.music.gain.setTargetAtTime(s.music?.32:0,t,.05)}
+function auApply(){if(!AU.ctx)return;const s=save.settings,t=AU.ctx.currentTime;AU.master.gain.setTargetAtTime(s.mute?0:s.vol,t,.05);AU.sfx.gain.setTargetAtTime(s.sfx?1:0,t,.05);AU.music.gain.setTargetAtTime(s.music?.32:0,t,.05)}
 function tone(f,d,type,v,slide,t0,dest){const a=AU.ctx,t=t0||a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(dest||AU.sfx);o.start(t);o.stop(t+d+.02)}
 function noise(d,v,freq,t0,dest,hp){const a=AU.ctx,t=t0||a.currentTime,s=a.createBufferSource();s.buffer=AU.noise;const f=a.createBiquadFilter();f.type=hp?'highpass':'lowpass';f.frequency.setValueAtTime(freq,t);if(!hp)f.frequency.exponentialRampToValueAtTime(Math.max(60,freq*.2),t+d);const g=a.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||AU.sfx);s.start(t);s.stop(t+d)}
 const SFX={hit:p=>{noise(.15,.12+.3*p,1800);tone(110,.15,'sine',.1+.35*p,.5)},crit:()=>{noise(.22,.45,3500);tone(880,.18,'square',.12,1.5);tone(90,.25,'sine',.5,.4)},
  block:()=>{tone(320,.08,'triangle',.15,.7);noise(.06,.12,2500)},boom:()=>{noise(.9,.7,1200);tone(70,.7,'sine',.6,.3);tone(45,.9,'triangle',.4,.5)},
  dash:()=>{noise(.3,.2,900);tone(200,.25,'sawtooth',.08,2.2)},ui:()=>tone(660,.07,'square',.08,1.3),good:()=>{tone(523,.1,'square',.1);tone(784,.18,'square',.1,0,AU.ctx.currentTime+.09)},
  zap:()=>tone(1500+Math.random()*800,.05,'sawtooth',.03,.5),skid:()=>noise(.12,.05,4000,0,0,true)};
-function sfx(n,...a){if(!AU.ctx||!save.settings.sfx)return;try{SFX[n](...a)}catch(e){}}
+function sfx(n,...a){if(!AU.ctx||!save.settings.sfx||save.settings.mute)return;try{SFX[n](...a)}catch(e){}}
 let bgmStep=0,bgmNext=0;const BASS=[45,45,41,43],ARP=[0,7,12,7,3,7,15,7],midi=n=>440*Math.pow(2,(n-69)/12);
-function bgmStart(){if(AU.bgmT)return;bgmNext=AU.ctx.currentTime+.1;AU.bgmT=setInterval(()=>{const a=AU.ctx;if(!a||a.state!=='running')return;const sp=60/124/4;
+function bgmStart(){if(AU.bgmT)return;bgmNext=AU.ctx.currentTime+.1;AU.bgmT=setInterval(()=>{const a=AU.ctx;if(!a||a.state!=='running')return;if(bgmNext<a.currentTime-.3)bgmNext=a.currentTime+.05;const sp=60/124/4;
  while(bgmNext<a.currentTime+.25){const st=bgmStep%64,root=BASS[st>>4];
   if(st%4===0)tone(midi(root),.22,'triangle',.5,0,bgmNext,AU.music);if(st%2===0)tone(midi(root+24+ARP[(st>>1)%8]),.11,'square',.06,0,bgmNext,AU.music);
   if(st%8===4)noise(.07,.18,6000,bgmNext,AU.music,true);if(st%16===0)tone(60,.18,'sine',.5,.4,bgmNext,AU.music);bgmNext+=sp;bgmStep++}},60)}
 function engineUpd(){if(!AU.eng)return;const t=AU.ctx.currentTime,on=running&&!paused&&player&&player.alive;const sp=on?Math.abs(player.fwd||0):0,r=on&&player.dash>0?1.35:1;
  AU.eng.o.frequency.setTargetAtTime((48+sp*6.5)*r,t,.06);AU.eng.o2.frequency.setTargetAtTime((24+sp*3.2)*r,t,.06);AU.eng.f.frequency.setTargetAtTime(280+sp*45,t,.06);AU.eng.g.gain.setTargetAtTime(on&&save.settings.sfx?.035+sp*.0035:0,t,.08)}
-addEventListener('pointerdown',auInit);addEventListener('keydown',auInit);
+['touchstart','touchend','pointerdown','mousedown','click','keydown'].forEach(t=>addEventListener(t,auUnlock,{capture:true,passive:true}));
+document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;if(document.hidden){AU.ctx.suspend&&AU.ctx.suspend()}else auResume()});addEventListener('pageshow',()=>AU.ctx&&auResume());addEventListener('focus',()=>AU.ctx&&auResume());
+function audioLevel(){if(!AU.an)return 0;const d=new Float32Array(AU.an.fftSize);AU.an.getFloatTimeDomainData(d);let s=0;for(const v of d)s+=v*v;return Math.sqrt(s/d.length)}
 // 震动：只对玩家参与的撞击，按强度分档
 function vib(level){if(!save.settings.vibrate)return;const p={light:12,mid:30,heavy:[60,30,90],boom:[120,40,160]}[level];try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 // ================= 游戏状态 =================
@@ -545,8 +552,12 @@ function openSettings(from){settingsFrom=from;show('settings',1);const s=save.se
  $('sVol').value=Math.round(s.vol*100);$('sVolV').textContent=Math.round(s.vol*100)+'%';['music','sfx','vibrate'].forEach(k=>$('s_'+k).checked=s[k]);
  document.querySelectorAll('[data-q]').forEach(b=>b.classList.toggle('on',b.dataset.q===s.quality));document.querySelectorAll('[data-diff]').forEach(b=>b.classList.toggle('on',b.dataset.diff===s.diff));
  $('sQNow').textContent='当前：'+(QL==='low'?'低':'高')}
+function updMute(){const s=save.settings,off=s.mute||s.vol<=0||!s.music&&!s.sfx;['muteM','muteH'].forEach(i=>{const e=$(i);if(e){e.textContent=off?'🔇':'🔊';e.classList.toggle('off',off);e.title=off?'已静音（点我开启）':'声音开（点我静音）'}})}
+['muteM','muteH'].forEach(i=>$(i).addEventListener('click',e=>{e.stopPropagation();const s=save.settings;const off=s.mute||!s.music&&!s.sfx;if(off){s.mute=false;if(!s.music&&!s.sfx){s.music=true;s.sfx=true}if(s.vol<=0)s.vol=.7}else s.mute=true;persist();auUnlock();auApply();updMute();auStatus();if(!s.mute)setTimeout(()=>sfx('ui'),50);toast(s.mute?'已静音':'声音已开启')}));
+setTimeout(updMute,0);
+$('sTest').onclick=()=>{if(save.settings.mute){save.settings.mute=false;persist();updMute()}auUnlock();auApply();setTimeout(()=>{sfx('ui');sfx('hit',1);setTimeout(()=>sfx('crit'),250)},60);setTimeout(()=>{$('sAuSt').textContent=AU.ctx?('音频：'+AU.ctx.state+(save.settings.sfx?'':' · 音效已关')+' · iPhone 静音键开启时无声'):'音频不可用'},150)};
 $('sVol').oninput=e=>{save.settings.vol=e.target.value/100;$('sVolV').textContent=e.target.value+'%';auInit();auApply();persist()};
-['music','sfx','vibrate'].forEach(k=>$('s_'+k).onchange=e=>{save.settings[k]=e.target.checked;auInit();auApply();persist();if(k==='vibrate'&&e.target.checked)vib('mid')});
+['music','sfx','vibrate'].forEach(k=>$('s_'+k).onchange=e=>{save.settings[k]=e.target.checked;if(k!=='vibrate'&&e.target.checked)save.settings.mute=false;updMute();auInit();auApply();persist();if(k==='vibrate'&&e.target.checked)vib('mid')});
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{setQuality(b.dataset.q);openSettings(settingsFrom)});
 document.querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{save.settings.diff=b.dataset.diff;persist();openSettings(settingsFrom)});
 $('sClose').onclick=()=>{show('settings',0)};$('sTut').onclick=()=>{show('settings',0);hideAll();buildArena('site',38);start('beast',{tutorial:true})};
@@ -609,7 +620,7 @@ function loop(now){requestAnimationFrame(loop);const raw=(now-last)/1000;let dt=
  if(floor)render();hud();engineUpd();
  if(!$('garage').classList.contains('hide')){const c=$('gPrev');if(c){const x=c.getContext('2d'),i=Math.floor(now/180)%16;x.clearRect(0,0,300,220);drawFull(x,gKey,save.cars[gKey],i,150,140,1.25,Math.floor(now/60)%3)}}}
 // ================= 菜单 =================
-function menu(){hideAll();running=false;const box=$('cards');box.innerHTML='';const mx={hp:160,spd:20,mass:2,dmg:1.25,turn:3.6};
+function menu(){hideAll();setTimeout(auStatus,0);running=false;const box=$('cards');box.innerHTML='';const mx={hp:160,spd:20,mass:2,dmg:1.25,turn:3.6};
  for(const k of KEYS){const s=CARS[k],d=document.createElement('div');d.className='card';d.style.background=`linear-gradient(120deg,${s.col},${s.col2})`;const st=carStats(k,save.cars[k]);
   const bars=[['血量',st.hp/mx.hp],['速度',st.spd/mx.spd],['重量',st.mass/mx.mass],['撞击',st.dmg/mx.dmg],['操控',st.turn/mx.turn]].map(b=>`<div class="sb"><i>${b[0]}</i><u><b style="width:${Math.min(100,b[1]*100)}%"></b></u></div>`).join('');
   const fp=ptsFree(save.cars[k]);d.innerHTML=`<canvas width="236" height="236"></canvas><div class="info"><div class="nm">${s.name}</div><div class="en">${s.en}</div><span class="tag">${s.tag} · ${s.desc}</span>${bars}</div><span class="lv">Lv.${save.cars[k].lv}${fp?` · ${fp}点`:''}</span>`;
@@ -618,4 +629,4 @@ function menu(){hideAll();running=false;const box=$('cards');box.innerHTML='';co
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};

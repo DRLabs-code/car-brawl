@@ -1,13 +1,13 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="icon" href="data:,"><title>碰碰改装车 · 等距原型</title>
-<link rel="stylesheet" href="style.css?v=4"></head><body><div id="app">
+<link rel="stylesheet" href="style.css?v=5"></head><body><div id="app">
 <canvas id="cv"></canvas>
 <div id="hud" class="hide">
  <div id="hudTop"><div id="avatar"><canvas width="96" height="96"></canvas><span id="lvTag">Lv.1</span></div>
   <div id="hpWrap"><div id="hpName">霓虹毒牙</div><div id="hpBar"><div id="hpLag"></div><div id="hpFill"></div><span id="hpTxt">100</span></div></div>
   <div id="stats"><div class="chip">🚗 <b id="aliveN">8</b></div><div class="chip">💥 <b id="killN">0</b></div><div class="chip">⏱ <b id="timeN">0</b></div></div>
-  <button id="pauseBtn" aria-label="暂停">❚❚</button></div>
+  <button id="muteH" class="mute">🔊</button><button id="pauseBtn" aria-label="暂停">❚❚</button></div>
  <div id="zoneWarn" class="hide">⚡ 电网收缩中</div>
  <div id="joy"><div id="joyRing"></div><div id="knob"></div></div>
  <div id="rev"><span>倒车</span></div>
@@ -16,6 +16,7 @@
 <div id="intro" class="hide"></div>
 <div id="tutBox" class="hide"></div>
 <div id="menu" class="panel hide"><div class="logo"><span>碰碰</span>改装车<small>ARENA SMASH · 原型</small></div><div id="cards"></div>
+ <button id="muteM" class="mute">🔊</button><div id="auHint" class="hide">🔈 点击开启声音</div>
  <div class="mbtns"><span class="coinchip" id="menuCoins"></span><button class="btn ghost" id="menuDaily">🎁 福利</button><button class="btn ghost" id="menuGarage">🔧 车库</button><button class="btn ghost" id="menuSet">⚙ 设置</button></div>
  <div id="help">📱 左下摇杆 · 右下冲刺　⌨️ WASD/方向键 · 空格冲刺 · Esc 暂停<br>💡 用<b>车头</b>撞对手<b>侧面</b>打出暴击！护好自己的侧面。</div></div>
 <div id="maps" class="panel hide"><div class="ptitle">选择地图</div><div id="mapsSub" class="psub"></div><div id="mapList"></div><button class="btn ghost" id="mapsBack">← 返回</button></div>
@@ -29,10 +30,11 @@
  <label class="srow2"><span>主音量</span><input type="range" id="sVol" min="0" max="100"><b id="sVolV"></b></label>
  <label class="srow2"><span>音乐</span><input type="checkbox" id="s_music" class="sw"></label>
  <label class="srow2"><span>音效</span><input type="checkbox" id="s_sfx" class="sw"></label>
+ <div class="srow2"><span>声音</span><button class="btn sm" id="sTest">🔊 测试声音</button><small id="sAuSt"></small></div>
  <label class="srow2"><span>震动</span><input type="checkbox" id="s_vibrate" class="sw"></label>
  <div class="srow2"><span>画质</span><div class="seg"><button data-q="auto">自动</button><button data-q="high">高</button><button data-q="low">低</button></div><small id="sQNow"></small></div>
  <div class="srow2"><span>AI 难度</span><div class="seg"><button data-diff="easy">简单</button><button data-diff="normal">普通</button><button data-diff="hard">困难</button></div></div>
  <div class="col"><button class="btn ghost sm" id="sTut">重玩新手引导</button><button class="btn" id="sClose">完成</button></div></div></div>
 <div id="toast" class="hide"></div>
 <div id="loading" class="panel">加载中…</div>
-</div><script src="game.js?v=4"></script></body></html>
+</div><script src="game.js?v=5"></script></body></html>
