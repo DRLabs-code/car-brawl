@@ -90,9 +90,15 @@ function rnd(a,b){return a+Math.random()*(b-a)}
 const iso=(x,z)=>[(x-z)*K,(x+z)*K/2];
 const mkC=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
 const BASE={},PAINT={},WHL={},LAYI={},WHITE={},DARK={},SKIN=new Map();
+const LINES={},LSPLIT={},ASSET_V=12;
+function splitLines(k){if(LSPLIT[k])return LSPLIT[k];const im=LINES[k],w=im.width,h=im.height,mk=()=>{const c=mkC(w,h);return[c,c.getContext('2d')]};const[s0,x0]=mk();x0.drawImage(im,0,0);const D=x0.getImageData(0,0,w,h),Hh=new ImageData(w,h),Dd=new ImageData(w,h);
+ for(let i=0;i<D.data.length;i+=4){if(!D.data[i+3])continue;const T=D.data[i]>128?Hh:Dd;for(let j=0;j<4;j++)T.data[i+j]=D.data[i+j]}
+ const[d,dx]=mk(),[hc,hx]=mk(),[dl,lx]=mk();dx.putImageData(Dd,0,0);hx.putImageData(Hh,0,0);lx.putImageData(Dd,0,0);lx.globalCompositeOperation='source-in';lx.fillStyle='#7a7290';lx.fillRect(0,0,w,h);
+ return LSPLIT[k]={d,h:hc,dl}}
 function compose(k,color,liv){const key=k+'|'+color+'|'+(liv||'');if(SKIN.has(key))return SKIN.get(key);const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d');x.drawImage(BASE[k],0,0);
  const t=mkC(W4,W4),tx=t.getContext('2d');tx.drawImage(PAINT[k],0,0);tx.globalCompositeOperation='multiply';tx.fillStyle=COLORS[color].c;tx.fillRect(0,0,W4,W4);tx.globalCompositeOperation='destination-in';tx.drawImage(PAINT[k],0,0);x.drawImage(t,0,0);
  if(liv&&LIVS[liv]&&LAYI[k+'_liv_'+(LIVS[liv].src||liv)]){const lc=LIVS[liv].c||(lum(COLORS[color].c)>.55?'#1b1420':'#ffffff'),L=LAYI[k+'_liv_'+(LIVS[liv].src||liv)],l=mkC(W4,W4),lx=l.getContext('2d');lx.drawImage(L,0,0,W4,W4);lx.globalCompositeOperation='source-in';lx.fillStyle=lc;lx.fillRect(0,0,W4,W4);x.drawImage(l,0,0)}
+ if(LINES[k]){const sp=splitLines(k),dk=lum(COLORS[color].c)<.3;x.drawImage(dk?sp.dl:sp.d,0,0);x.drawImage(sp.h,0,0);if(dk)x.drawImage(sp.h,0,0)}
  if(SKIN.size>24)SKIN.delete(SKIN.keys().next().value);SKIN.set(key,o);return o}
 function lum(h){const n=parseInt(h.slice(1),16);return(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255}
 function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src})}
@@ -716,6 +722,6 @@ function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickT
   d.onclick=()=>{gKey=k;openMaps(k)};box.appendChild(d);drawThumb(d.querySelector('canvas'),k,3,.8)}
  $('menuCoins').innerHTML=icCoin(save.coins)+icUni(save.uni);show('menu',1);if(saveWarn){toast(saveWarn);saveWarn=''}}
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
-(async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
+(async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k],LINES[k]]=await Promise.all(['base','paint','wheels','lines'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png?v='+ASSET_V)));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png?v='+ASSET_V).then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
 window.__game={get DPR(){return DPR},get Z(){return Z},get camX(){return camX},FEEL,get camZ(){return camZ},keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
