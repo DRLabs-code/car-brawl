@@ -114,7 +114,7 @@ function tone(f,d,type,v,slide,t0,dest){const a=AU.ctx,t=t0||a.currentTime,o=a.c
 function noise(d,v,freq,t0,dest,hp){const a=AU.ctx,t=t0||a.currentTime,s=a.createBufferSource();s.buffer=AU.noise;const f=a.createBiquadFilter();f.type=hp?'highpass':'lowpass';f.frequency.setValueAtTime(freq,t);if(!hp)f.frequency.exponentialRampToValueAtTime(Math.max(60,freq*.2),t+d);const g=a.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(f);f.connect(g);g.connect(dest||AU.sfx);s.start(t);s.stop(t+d)}
 const SFX={hit:p=>{noise(.15,.12+.3*p,1800);tone(110,.15,'sine',.1+.35*p,.5)},crit:()=>{noise(.22,.45,3500);tone(880,.18,'square',.12,1.5);tone(90,.25,'sine',.5,.4)},
  block:()=>{tone(320,.08,'triangle',.15,.7);noise(.06,.12,2500)},boom:()=>{noise(.9,.7,1200);tone(70,.7,'sine',.6,.3);tone(45,.9,'triangle',.4,.5)},
- dash:()=>{noise(.3,.2,900);tone(200,.25,'sawtooth',.08,2.2)},ui:()=>tone(660,.07,'square',.08,1.3),good:()=>{tone(523,.1,'square',.1);tone(784,.18,'square',.1,0,AU.ctx.currentTime+.09)},
+ dash:()=>{noise(.3,.2,900);tone(200,.25,'sawtooth',.08,2.2);setTimeout(()=>{if(AU.ctx){noise(.55,.14,2400);tone(110,.5,'sawtooth',.05,3)}},70)},ui:()=>tone(660,.07,'square',.08,1.3),good:()=>{tone(523,.1,'square',.1);tone(784,.18,'square',.1,0,AU.ctx.currentTime+.09)},
  zap:()=>tone(1500+Math.random()*800,.05,'sawtooth',.03,.5),skid:()=>noise(.12,.05,4000,0,0,true)};
 function sfx(n,...a){if(!AU.ctx||!save.settings.sfx||save.settings.mute)return;try{SFX[n](...a)}catch(e){}}
 let bgmStep=0,bgmNext=0;const BASS=[45,45,41,43],ARP=[0,7,12,7,3,7,15,7],midi=n=>440*Math.pow(2,(n-69)/12);
@@ -155,6 +155,12 @@ const joy=document.getElementById('joy'),knob=document.getElementById('knob');
 function jmove(e){const r=joy.getBoundingClientRect(),[ox,oy]=toLocal(r.left+r.width/2,r.top+r.height/2),[px,py]=toLocal(e.clientX,e.clientY),c=joy.offsetWidth/2;let dx=px-ox,dy=py-oy;const L=Math.hypot(dx,dy),m=c*.75;if(L>m){dx*=m/L;dy*=m/L}knob.style.transform=`translate(${dx}px,${dy}px)`;jx=dx/m;jy=dy/m}
 joy.addEventListener('pointerdown',e=>{jid=e.pointerId;joy.setPointerCapture(jid);jmove(e)});joy.addEventListener('pointermove',e=>{if(e.pointerId===jid)jmove(e)});
 const jend=e=>{if(e.pointerId===jid){jid=null;jx=jy=0;knob.style.transform=''}};joy.addEventListener('pointerup',jend);joy.addEventListener('pointercancel',jend);joy.addEventListener('lostpointercapture',jend);
+// 浮动摇杆：左半屏任意位置按下即以该点为摇杆中心
+{const cvE=document.getElementById('cv');const home=()=>{joy.style.left=joy.style.top=joy.style.bottom='';joy.classList.remove('float')};
+ cvE.addEventListener('pointerdown',e=>{if(!running||paused||jid!==null)return;const[px,py]=toLocal(e.clientX,e.clientY),aw=ROT?innerHeight:innerWidth,ah=ROT?innerWidth:innerHeight;if(px>aw*.5||py<ah*.25)return;
+  const w=joy.offsetWidth,h=joy.offsetHeight;joy.classList.add('float');joy.style.left=clamp(px-w/2,6,aw*.5-w/2)+'px';joy.style.top=clamp(py-h/2,6,ah-h-6)+'px';joy.style.bottom='auto';
+  jid=e.pointerId;cvE.setPointerCapture(jid);jmove(e);e.preventDefault()});
+ cvE.addEventListener('pointermove',e=>{if(e.pointerId===jid)jmove(e)});const je=e=>{if(e.pointerId===jid){jid=null;jx=jy=0;knob.style.transform='';home()}};['pointerup','pointercancel','lostpointercapture'].forEach(t=>cvE.addEventListener(t,je))}
 addEventListener('blur',()=>{jid=null;jx=jy=0;knob.style.transform='';revHold=false;for(const k in keys)keys[k]=0});
 let revHold=false;const rvb=document.getElementById('rev');rvb.addEventListener('pointerdown',e=>{e.preventDefault();revHold=true;rvb.setPointerCapture(e.pointerId);rvb.classList.add('on')});['pointerup','pointercancel','lostpointercapture'].forEach(t=>rvb.addEventListener(t,()=>{revHold=false;rvb.classList.remove('on')}));
 document.getElementById('dash').addEventListener('pointerdown',e=>{e.preventDefault();dashReq=true});
@@ -300,7 +306,8 @@ function collide(a,b){const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz),min=a.r
  const key=a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;if(pairCD.has(key)&&time-pairCD.get(key)<.45||rv<3){bounce(a,b,nx,nz,rv,1);if(mine&&rv>1.5&&(!pairCD.has(key)||time-pairCD.get(key)>.3))vib('light');return}pairCD.set(key,time);
  const za=zoneOf(a,b.x,b.z),zb=zoneOf(b,a.x,a.z),pa=a.vx*nx+a.vz*nz,pb=-(b.vx*nx+b.vz*nz);
  const atk=pa>=pb?a:b,vic=atk===a?b:a,zAtk=atk===a?za:zb,zVic=atk===a?zb:za;
- const base=rv*1.6,mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,np=nearP(mx,mz);let push=atk.push||1;
+ const dHit=atk.dash>0&&zAtk==='front',base=(dHit?Math.min(rv,atk.spd*1.3)*FEEL.dashDmg:rv)*1.6,mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,np=nearP(mx,mz);let push=(atk.push||1)*(dHit?FEEL.dashPush:1);
+ if(dHit){ft(mx,mz,4.4,'冲撞！','#7df9ff',30,true);spark(mx,mz,14,'#7df9ff');if(mine){shake=Math.max(shake,12);hitstop=Math.max(hitstop,.09);vib('heavy')}}
  spark(mx,mz,8+rv|0);
  if(zAtk==='front'&&zVic==='front'){hurt(a,base*b.dmg*Math.sqrt(b.mass/a.mass)*.6,b);hurt(b,base*a.dmg*Math.sqrt(a.mass/b.mass)*.6,a);
   ft(mx,mz,3.2,'对撞！','#ffffff',26,true);if(np)sfx('hit',np);if(mine){shake=Math.max(shake,7);hitstop=Math.max(hitstop,.06);vib('mid')}debris(mx,mz,4,'#b8c2cc')}
@@ -334,25 +341,40 @@ function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
 // ================= 车辆物理（惯性 / 抓地 / 侧滑 / 悬挂）=================
 function terrainAt(x,z){for(const g of gzones)if(Math.hypot(g.x-x,g.z-z)<g.r)return MAP.zone.k;return null}
 const sgn=v=>v<0?-1:1;
-function drive(c,ix,iz,dsh,dt,revBtn){const mag=Math.min(1,Math.hypot(ix,iz));let d=0;
- if(mag>.15){d=Math.atan2(ix,iz)-c.h;d=Math.atan2(Math.sin(d),Math.cos(d))}
- // 倒车意图：按住倒车键，或摇杆推向与车头大致相反（>125°，倒车中放宽到 >95° 保持）
- const kb=c.isP&&c.kb;const back=revBtn||!kb&&c.isP&&mag>.4&&Math.abs(d)>(c.rev?1.65:2.18);let st;
- if(kb)st=kb.s;else
- if(back&&mag>.15){let dr=d-Math.PI*sgn(d);dr=Math.atan2(Math.sin(dr),Math.cos(dr));st=Math.max(-1,Math.min(1,-dr*1.8))}// 车尾对准摇杆方向（倒车时转向反向）
- else st=mag>.15&&!back?Math.max(-1,Math.min(1,d*1.8)):0;c.steer+=Math.max(-5*dt,Math.min(5*dt,st-c.steer));
- c.dcd-=dt;if(dsh&&c.dcd<=0){c.dash=.4;c.dcd=3*c.dashCd;smoke(c.x-Math.sin(c.h)*1.8,c.z-Math.cos(c.h)*1.8,4);if(c.isP)sfx('dash')}c.dash-=dt;
+// ================= 手感参数（预设 B · 街机）集中于此 =================
+const FEEL={dead:.12,steerGain:2.2,steerDamp:.25,steerRate:10,kbRateLo:8,kbRateHi:5,lowTurn:.35,lowTurnV:5,hiTurnCut:.25,backAng:1.75,backThr:.35,turnLift:.3,
+ accK:1.8,accPow:1.6,accMin:.12,coast:.9,gripG:7,slideLo:3,slideHi:8,slideCut:.45,
+ dashT:.55,dashKick:.7,dashTop:1.85,dashGrip:1.1,dashYaw:.85,dashCd:2.5,dashOut:2.9,dashDmg:1.5,dashPush:1.4,
+ camK:10,camLead:.35,camLeadMax:6,camLeadK:4,camDead:.5,shakeDecay:25,shakeMax:16,zoomIn:.04,zoomOut:.10};
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+const DBG=/[?&]dbg=1/.test(location.search);let camZ=1,dashFxT=-9,leadX=0,leadZ=0;
+function speedLines(){const k=Math.min(1,player.dash/.15),n=QL==='low'?10:18,cx=W/2,cy=H/2,R0=Math.min(W,H)*.32,R1=Math.hypot(W,H)*.6;ctx.save();ctx.lineCap='round';
+ for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+Math.sin(time*37+i*7.1)*.18,r0=R0+((time*900+i*131)%220),l=40+((i*53)%60);ctx.globalAlpha=.4*k;ctx.strokeStyle=i%3?'#ffffff':'#bdf3ff';ctx.lineWidth=1.5+(i%3);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);ctx.lineTo(cx+Math.cos(a)*Math.min(R1,r0+l),cy+Math.sin(a)*Math.min(R1,r0+l));ctx.stroke()}
+ const g=ctx.createRadialGradient(cx,cy,Math.min(W,H)*.35,cx,cy,Math.hypot(W,H)*.6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(20,10,40,${.35*k})`);ctx.globalAlpha=1;ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.restore()}
+function drive(c,ix,iz,dsh,dt,revBtn){const F=FEEL,mag=Math.min(1,Math.hypot(ix,iz));let d=0;
+ if(mag>F.dead){d=Math.atan2(ix,iz)-c.h;d=Math.atan2(Math.sin(d),Math.cos(d))}
+ // 倒车只由倒车键（AI 脱困同样走这里）触发；摇杆往后推 = 小半径掉头
+ const kb=c.isP&&c.kb;const back=!!revBtn;let st;const yr=c.yr||0,pf0=c.fwd||0,fs=pf0<-.2?-1:1;
+ if(kb)st=kb.s;
+ else if(back&&mag>F.dead){let dr=d-Math.PI*sgn(d);dr=Math.atan2(Math.sin(dr),Math.cos(dr));st=clamp(-dr*F.steerGain,-1,1)}// 倒车：车尾对准摇杆方向
+ else st=mag>F.dead?clamp(d*F.steerGain-yr*fs*F.steerDamp,-1,1):0;// PD 转向，消除蛇行
+ const sr=kb?F.kbRateLo+(F.kbRateHi-F.kbRateLo)*clamp(Math.abs(pf0)/c.spd,0,1):F.steerRate;c.steer+=clamp(st-c.steer,-sr*dt,sr*dt);
  const ter=terrainAt(c.x,c.z),fx=Math.sin(c.h),fz=Math.cos(c.h);let fwd=c.vx*fx+c.vz*fz,lx=c.vx-fx*fwd,lz=c.vz-fz*fwd;const lat=Math.hypot(lx,lz),pf=fwd;
- const thr=kb?(kb.t&&!back?1:0):mag>.15&&!back?mag*Math.max(0,Math.cos(Math.min(Math.abs(d),1.5))*1.1-.05):0,top=c.spd*(c.dash>0?1.8*c.dashPow:1)*(ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1);
+ const tmul=ter==='mud'?1-.4*c.terr:ter==='sand'?1-.18*c.terr:1;
+ c.dcd-=dt;if(dsh&&c.dcd<=0){c.dash=F.dashT;c.dcd=F.dashCd*c.dashCd;c.dcdMax=c.dcd;fwd=Math.min(c.spd*F.dashTop*c.dashPow*tmul,Math.max(fwd,c.spd*.6)+c.spd*F.dashKick*c.dashPow);
+  smoke(c.x-fx*1.8,c.z-fz*1.8,6);if(c.isP){sfx('dash');vib('mid');shake=Math.max(shake,5);hitstop=Math.max(hitstop,.03);dashFxT=time}}c.dash-=dt;
+ const thr=kb?(kb.t&&!back?1:0):mag>F.dead&&!back?(Math.abs(d)>F.backAng?mag*F.backThr:mag*(1-F.turnLift*sstep(.6,1.6,Math.abs(d)))):0,top=c.spd*(c.dash>0?F.dashTop*c.dashPow:1)*tmul;
  c.brake=false;const rm=revBtn||kb?1:Math.max(.5,mag);
  if(c.dash>0)fwd+=c.acc*3*dt;
  else if(back){if(fwd>.8){fwd=Math.max(0,fwd-(c.acc*2.6+fwd*2)*dt);c.brake=true}else if(fwd>-top*.4*rm)fwd-=c.acc*.9*dt;else fwd+=(-top*.4*rm-fwd)*3*dt}
- else if(thr>0&&fwd<top*thr)fwd+=c.acc*thr*dt*(fwd<0?2.5:1);else fwd*=Math.exp(-(thr>0?.4:1.6)*dt);
- if(!back&&(kb?!kb.t:mag<=.15)&&Math.abs(fwd)<.6)fwd*=Math.exp(-6*dt);
+ else if(thr>0&&fwd<top*thr)fwd+=c.acc*F.accK*thr*Math.max(F.accMin,1-Math.pow(Math.max(0,fwd)/top,F.accPow))*dt*(fwd<0?2.5:1);// 快起慢收
+ else fwd*=Math.exp(-(thr>0?.4:F.coast)*dt);// 松油门滑行更久
+ if(!back&&thr<=0&&Math.abs(fwd)<.6)fwd*=Math.exp(-6*dt);
  c.rev=fwd<-.3&&back;c.inp=back||thr>.05;
- if(fwd>top)fwd-=(fwd-top)*2.5*dt;if(ter==='mud')fwd*=Math.exp(-1.2*c.terr*dt);
- const yaw=c.steer*c.turn*Math.max(-1,Math.min(1,fwd/6))*(c.dash>0?.7:1);c.h+=yaw*dt;if(kb&&kb.s&&Math.abs(fwd)<1.5)c.h+=kb.s*.7*c.turn/3*(1-Math.abs(fwd)/1.5)*dt;// 静止小幅原地转向防卡
- let G=7*c.turn/3;if(ter==='oil')G*=Math.min(1,.18*c.iceGrip);else if(ter==='sand')G*=1-.4*c.terr;if(c.dash>0)G*=.55;const drift=lat>5.5||ter==='oil'&&lat>2.5;if(drift)G*=.5;
+ if(fwd>top)fwd-=(fwd-top)*(c.dash>0?2.5:F.dashOut)*dt;if(ter==='mud')fwd*=Math.exp(-1.2*c.terr*dt);
+ const sp=Math.abs(fwd),lowF=F.lowTurn+(1-F.lowTurn)*Math.min(1,sp/F.lowTurnV),hiF=1-F.hiTurnCut*clamp((sp-.6*c.spd)/(.4*c.spd),0,1);
+ const yaw=c.steer*c.turn*lowF*hiF*(fwd<-.2?-1:1)*(c.dash>0?F.dashYaw:1);c.h+=yaw*dt;c.yr=yaw;
+ let G=F.gripG*c.turn/3;if(ter==='oil')G*=Math.min(1,.18*c.iceGrip);else if(ter==='sand')G*=1-.4*c.terr;if(c.dash>0)G*=F.dashGrip;const drift=lat>5.5||ter==='oil'&&lat>2.5;G*=1-F.slideCut*sstep(F.slideLo,F.slideHi,lat);// 抓地连续变化
  const gk=Math.exp(-G*dt);lx*=gk;lz*=gk;const nfx=Math.sin(c.h),nfz=Math.cos(c.h);
  // 侧滑速度部分转回前进方向（转向时车速保留，形成甩尾）
  c.vx=nfx*fwd+lx;c.vz=nfz*fwd+lz;c.fwd=fwd;
@@ -381,8 +403,8 @@ function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(z
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
   if(c.isP){const kW=keys.KeyW||keys.ArrowUp?1:0,kS=keys.KeyS||keys.ArrowDown?1:0,kT=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let sx=jx,sy=jy;
-   const jm=Math.hypot(jx,jy);c.kb=jm<=.15&&(kW||kS||kT)&&!testInp?{t:kW&&!kS?1:0,s:kT,b:kS}:null;
-   const m=c.kb?(kW||kS?1:0):Math.min(1,jm),rb=revHold||(c.kb?kS:0);if(jm>.15){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}if(testInp){ix=testInp[0];iz=testInp[1]}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;c._rb=rb&&(!tut||tut.step>=2);if(introT>0){ix=iz=0;dsh=false;c._rb=false}}
+   const jm=Math.hypot(jx,jy);c.kb=jm<=FEEL.dead&&(kW||kS||kT)&&!testInp?{t:kW&&!kS?1:0,s:kT,b:kS}:null;
+   const m=c.kb?(kW||kS?1:0):Math.min(1,jm),rb=revHold||(c.kb?kS:0);if(jm>FEEL.dead){const w=screenToWorld(sx,sy);ix=w[0]*m;iz=w[1]*m}if(testInp){ix=testInp[0];iz=testInp[1]}dsh=dashReq&&(!tut||tut.step>=1);dashReq=false;if(m>.2||dsh)activeT+=dt;c._rb=rb&&(!tut||tut.step>=2);if(introT>0){ix=iz=0;dsh=false;c._rb=false}}
   else if(c.dummy){c.vx*=Math.exp(-3*dt);c.vz*=Math.exp(-3*dt);c.x+=(3-c.x)*dt*.5;c.z+=(3-c.z)*dt*.5}
   else if(introT<=0){const o=aiThink(c,dt);ix=o[0];iz=o[1];dsh=o[2];c._rb=false;
    if(c.ai.back>0){c.ai.back-=dt;c._rb=true;ix=Math.sin(c.h+c.ai.bs*1.2);iz=Math.cos(c.h+c.ai.bs*1.2);ix=-ix;iz=-iz;dsh=false;if(c.ai.back<=0)c.ai.path=null}}
@@ -392,7 +414,7 @@ function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(z
    if(c.isP&&c.stuckT>1.5){unstick(c);c.stuckT=0;ft(c.x,c.z,2.6,'脱困','#7df9ff',16);stuckLog.p++}
    else if(!c.isP&&c.stuckT>1&&!(c.ai.back>0)){c.ai.back=.9;c.ai.bs=Math.random()<.5?-1:1;c.stuckT=0;stuckLog.ai++}}
   if(c.hp/c.maxhp<.35){c.smokeT-=dt;if(c.smokeT<0){c.smokeT=.12;smoke(c.x,c.z,1,true)}}
-  if(c.dash>0&&Math.random()<.5)parts.push({k:'fire',x:c.x-Math.sin(c.h)*2.2,z:c.z-Math.cos(c.h)*2.2,y:.8,vx:-Math.sin(c.h)*4,vz:-Math.cos(c.h)*4,vy:1,t:0,life:.25,s:8});
+  if(c.dash>0&&(c.isP||Math.random()<.5))parts.push({k:'fire',x:c.x-Math.sin(c.h)*2.2,z:c.z-Math.cos(c.h)*2.2,y:.8,vx:-Math.sin(c.h)*4,vz:-Math.cos(c.h)*4,vy:1,t:0,life:.25,s:8});
   if(zoneR<AR-.3&&sdist(ZPOLY,c.x,c.z).s>.3){c.hp-=8*dt;c.flash=Math.max(c.flash,.05);if(Math.random()<dt*10)spark(c.x,c.z,2,'#7df9ff');if(c.isP&&Math.random()<dt*6)sfx('zap');if(c.hp<=0)hurt(c,1,null)}}
  for(const c of cars){c.x+=c.vx*dt;c.z+=c.vz*dt;for(let it=0;it<3;it++){const sd=sdist(POLY,c.x,c.z);if(sd.s>.4){const nx=sd.nx,nz=sd.nz;c.x-=nx*(sd.s-.4);c.z-=nz*(sd.s-.4);const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=(vn>6?1.4:1.05)*vn*nx;c.vz-=(vn>6?1.4:1.05)*vn*nz;if(vn>6){spark(c.x,c.z,5);if(c.isP){vib('light');sfx('block')}}}}
   for(const o of props){if(!o.solid)continue;const dx=c.x-o.x,dz=c.z-o.z,L=Math.hypot(dx,dz),m=c.r+o.r;if(L<m&&L>0){c.x+=dx/L*(m-L+.02);c.z+=dz/L*(m-L+.02);const vn=(c.vx*dx+c.vz*dz)/L;if(vn<0){const k=vn<-6?1.4:1.05;c.vx-=k*vn*dx/L;c.vz-=k*vn*dz/L;if(vn<-6&&it===0){spark(c.x-dx/L*c.r,c.z-dz/L*c.r,4);if(c.isP){vib('light');sfx('block')}}}}}}}
@@ -434,9 +456,12 @@ function drawFull(c2d,k,cs,i,x,y,sc,rl){drawWheels(c2d,k,i,1,rl||0,x,y,WS*sc);dr
 function drawWheels(c2d,k,i,st,rl,x,y,s){const idx=i*9+st*3+rl,img=WHL[k];c2d.drawImage(img,(idx%12)*WF,(idx/12|0)*WF,WF,WF,x-WF/2*s,y-WF*AY*s,WF*s,WF*s)}
 function drawThumb(cnv,k,i,s){const x=cnv.getContext('2d');x.clearRect(0,0,cnv.width,cnv.height);drawFull(x,k,save.cars[k],i,cnv.width/2,cnv.height*.62,s*2)}
 function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx.fillRect(0,0,W,H);
- let tx=0,ty=0;if(player){[tx,ty]=iso(player.x*.85,player.z*.85);ty-=10}camX+=(tx-camX)*.15;camY+=(ty-camY)*.15;
- let shx=0,shy=0;if(shake>0){shx=rnd(-1,1)*shake;shy=rnd(-1,1)*shake}
- ctx.setTransform(DPR*Z,0,0,DPR*Z,DPR*(W/2+shx),DPR*(H/2+shy+H*.04));ctx.translate(-camX,-camY);
+ let tx=camX,ty=camY;const F=FEEL,rdt=Math.min(.05,frameDt||.016);if(player){const dl=player.dash>0?1.6:1;let lx2=clamp(player.vx*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl),lz2=clamp(player.vz*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl);const kL=1-Math.exp(-F.camLeadK*rdt);leadX+=(lx2-leadX)*kL;leadZ+=(lz2-leadZ)*kL;[tx,ty]=iso(player.x+leadX,player.z+leadZ);ty-=10}
+ const kC=1-Math.exp(-F.camK*rdt);if(Math.hypot(tx-camX,ty-camY)>F.camDead){camX+=(tx-camX)*kC;camY+=(ty-camY)*kC}
+ // 冲刺镜头：先推近 80ms，再拉远 200ms，保持，结束后 300ms 回位
+ const de=time-dashFxT,dOn=player&&player.dash>0;let zt=1;if(de<.08)zt=1+F.zoomIn*(de/.08);else if(dOn)zt=1-F.zoomOut*Math.min(1,(de-.08)/.2);camZ+=(zt-camZ)*(de<.08?1:1-Math.exp(-(dOn?10:7)*rdt));
+ let shx=0,shy=0;if(shake>0){const a=FEEL.shakeMax*Math.pow(Math.min(1,shake/14),2);shx=rnd(-1,1)*a;shy=rnd(-1,1)*a}
+ ctx.setTransform(DPR*Z*camZ,0,0,DPR*Z*camZ,DPR*(W/2+shx),DPR*(H/2+shy+H*.04));ctx.translate(-camX,-camY);
  ctx.drawImage(floor,-floor.ox/FSC,-floor.oy/FSC,floor.width/FSC,floor.height/FSC);ctx.drawImage(skid,-floor.ox/FSC,-floor.oy/FSC,skid.width/FSC,skid.height/FSC);
  const fence=zoneR<AR-.3;
  if(fence){ctx.save();ctx.beginPath();ctx.rect(-6000,-6000,12000,12000);ZPOLY.forEach((q,i)=>{const p=iso(q[0],q[1]);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle='rgba(40,20,90,0.38)';ctx.fill('evenodd');ctx.restore();drawFencePoly(true)}
@@ -448,7 +473,7 @@ function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx
  if(tut&&tut.step===3){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
  if(player&&player.alive){const[sx,sy]=iso(player.x,player.z);ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.globalAlpha=.8+.2*Math.sin(time*8);ctx.beginPath();ctx.ellipse(sx,sy,42,21,0,0,7);ctx.stroke();ctx.globalAlpha=1;
   }
- ctx.setTransform(DPR,0,0,DPR,0,0);if(hitstop>0.07){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(0,0,W,H)}
+ ctx.setTransform(DPR,0,0,DPR,0,0);if(player&&player.dash>0&&!paused)speedLines();if(DBG&&player){ctx.font='12px monospace';ctx.textAlign='left';ctx.fillStyle='#0008';ctx.fillRect(8,H-92,250,84);ctx.fillStyle='#7f7';[`fwd ${player.fwd.toFixed(1)}/${player.spd.toFixed(1)}  lat ${Math.hypot(player.vx,player.vz).toFixed(1)}`,`steer ${player.steer.toFixed(2)}  yaw ${(player.yr||0).toFixed(2)}`,`dash ${Math.max(0,player.dash).toFixed(2)}  cd ${Math.max(0,player.dcd).toFixed(2)}`,`camZ ${camZ.toFixed(3)}  shake ${shake.toFixed(1)}`,`joy ${jx.toFixed(2)},${jy.toFixed(2)}`].forEach((t,i)=>ctx.fillText(t,14,H-74+i*15))}if(hitstop>0.07){ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(0,0,W,H)}
  if(player&&player.alive&&fence&&sdist(ZPOLY,player.x,player.z).s>.3){ctx.strokeStyle='rgba(125,249,255,.5)';ctx.lineWidth=16;ctx.strokeRect(0,0,W,H)}}
 function drawFencePoly(back){// 外法线朝向镜头外的边先画（背面），其余后画
  const P=ZPOLY;for(let e=0;e<P.length;e++){const[a,b]=P[e],[c,d]=P[(e+1)%P.length],L=Math.hypot(c-a,d-b);if(L<.1)continue;let nx=(d-b)/L,nz=-(c-a)/L;if(inPoly(P,(a+c)/2+nx*.3,(b+d)/2+nz*.3)){nx=-nx;nz=-nz}if((nx+nz<0)!==back)continue;const N=Math.max(2,Math.round(L/1.5)),posts=[];for(let i=0;i<=N;i++)posts.push(iso(a+(c-a)*i/N,b+(d-b)*i/N));drawFence(posts)}}
@@ -500,14 +525,14 @@ const $=id=>document.getElementById(id);
 function hud(){if(!player||!running)return;const f=Math.max(0,player.hp/player.maxhp);
  $('hpFill').style.width=f*100+'%';$('hpFill').classList.toggle('low',f<.3);$('hpLag').style.width=f*100+'%';$('hpTxt').textContent=Math.ceil(player.hp)+' / '+Math.round(player.maxhp);
  $('aliveN').textContent=cars.filter(c=>c.alive&&!c.dummy).length+'/'+nCars;$('killN').textContent=kills;$('timeN').textContent=time.toFixed(0);$('zoneWarn').classList.toggle('hide',!(!tut&&time>25&&zoneR>10));
- const e=$('dashCd'),cd=Math.max(0,player.dcd/3);e.setAttribute('r',23);e.style.stroke='#1b142077';e.style.strokeWidth=46;e.style.fill='none';e.style.strokeDasharray=`${cd*2*Math.PI*23} 999`}
+ const e=$('dashCd'),cd=Math.max(0,player.dcd/(player.dcdMax||FEEL.dashCd));const db=$('dash'),rdy=player.dcd<=0;if(rdy&&db._cd){db.classList.remove('ready');void db.offsetWidth;db.classList.add('ready');sfx('ui')}db._cd=!rdy;db.classList.toggle('cooling',!rdy);e.setAttribute('r',23);e.style.stroke='#1b142077';e.style.strokeWidth=46;e.style.fill='none';e.style.strokeDasharray=`${cd*2*Math.PI*23} 999`}
 const PANELS=['match','daily','menu','result','hud','garage','settings','pause','maps','tutBox','intro'];
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
 function hideAll(){PANELS.forEach(p=>show(p,0))}
 let toastT=0;function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('hide');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.add('hide'),2200)}
 document.addEventListener('click',e=>{if(e.target.closest('button,.card,.mapc,.tab'))sfx('ui')},true);
 // ================= 新手引导 =================
-const TUT=[['① 移动','拖动左下<b>摇杆</b>（电脑：WASD）开动小车，往哪推就往屏幕哪个方向开','joy'],['② 冲刺','点右下<b>冲刺</b>（电脑：空格），冲刺 0.4 秒，冷却 3 秒','dash'],['③ 倒车','按住<b>倒车</b>键（电脑：S/↓），或把摇杆推向车尾方向：先刹车再倒车，倒车时尾灯亮、转向反向','rev'],['④ 暴击','用<b>车头</b>撞假人的<b>侧面</b>，打出 1.5 倍暴击！撞车头只有 0.6 倍',''],['⑤ 改装','漂亮！新手奖励：',''],];
+const TUT=[['① 移动','在左半屏任意位置按住拖动<b>摇杆</b>：往哪推车就开向哪，推得越远越快；往回推是掉头（倒车请用倒车键）。电脑：W 前进 · S 刹车/倒车 · A/D 左右转','joy'],['② 冲刺','点右下<b>冲刺</b>（电脑：空格），瞬间爆发冲刺约 0.55 秒，冲刺中用车头撞人伤害 ×1.5「冲撞！」，冷却 2.5 秒（按钮圈转满即可再用）','dash'],['③ 倒车','按住<b>倒车</b>键（电脑：S/↓），或把摇杆推向车尾方向：先刹车再倒车，倒车时尾灯亮、转向反向','rev'],['④ 暴击','用<b>车头</b>撞假人的<b>侧面</b>，打出 1.5 倍暴击！撞车头只有 0.6 倍',''],['⑤ 改装','漂亮！新手奖励：',''],];
 function updTut(){['joy','dash','rev'].forEach(i=>$(i).classList.remove('glow'));if(!tut){show('tutBox',0);return}const s=TUT[tut.step];show('tutBox',1);
  $('tutBox').innerHTML=`<div class="tt">新手引导 ${s[0]}</div><div>${s[1]}</div>${tut.step===4?`<div class="rew">${icPart('spike','×10',true)}<small>尖刺碎片 · 去车库合成并装上</small></div>`:''}${tut.step===4?'<button class="btn" id="tutGo">去车库 →</button>':''}<button class="skip" id="tutSkip">跳过引导</button>`;
  if(s[2])$(s[2]).classList.add('glow');if(tut.step===4)$('tutGo').onclick=()=>endTut(true);$('tutSkip').onclick=()=>endTut(false)}
@@ -671,12 +696,13 @@ $('menuSet').onclick=()=>openSettings('menu');$('menuGarage').onclick=()=>openGa
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&running&&!paused)togglePause()});
 // ================= 主循环 + 自动降画质 =================
 let last=performance.now(),fpsN=0,fpsT=0,lowStreak=0;
-function loop(now){requestAnimationFrame(loop);const raw=(now-last)/1000;let dt=Math.min(raw,.05);last=now;
+let frameDt=.016;
+function loop(now){requestAnimationFrame(loop);const raw=(now-last)/1000;let dt=Math.min(raw,.05);last=now;frameDt=dt;
  if(save.settings.quality==='auto'&&running&&!paused){fpsN++;fpsT+=raw;if(fpsT>2){const fps=fpsN/fpsT;fpsN=0;fpsT=0;if(fps<44&&QL==='high'){if(++lowStreak>=1){QL='low';resize();toast('帧率偏低，已自动降低画质')}}else lowStreak=0}}
  if(paused){render();engineUpd();return}
  if(hitstop>0){hitstop-=dt;dt=0}
  if(cars.length&&dt>0){step(dt/2);step(dt/2)}
- updParts(Math.min(raw,.05));shake=Math.max(0,shake-1.2);
+ updParts(Math.min(raw,.05));shake=Math.max(0,shake-FEEL.shakeDecay*Math.min(raw,.05));
  if(floor)render();hud();engineUpd();
  if(!$('garage').classList.contains('hide')){const c=$('gPrev');if(c){const x=c.getContext('2d'),i=Math.floor(now/180)%16;x.clearRect(0,0,300,220);drawFull(x,gKey,save.cars[gKey],i,150,140,1.25,Math.floor(now/60)%3)}}}
 // ================= 菜单 =================
@@ -689,4 +715,4 @@ function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickT
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={FEEL,get camZ(){return camZ},keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
