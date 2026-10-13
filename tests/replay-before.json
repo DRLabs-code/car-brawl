@@ -1,0 +1,182 @@
+[
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "g1",
+  "cv": "1688x780",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": 1
+ },
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "g2",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ },
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "g3",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.388
+ },
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "g4",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ },
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "garage",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -37.471
+ },
+ {
+  "tag": "before",
+  "vt": "844x390",
+  "n": "afterAd",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.429
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "g1",
+  "cv": "1688x780",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": 1
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "g2",
+  "cv": "1688x780",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.404
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "g3",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "g4",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.388
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "garage",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -37.704
+ },
+ {
+  "tag": "before",
+  "vt": "390x844",
+  "n": "afterAd",
+  "cv": "844x390",
+  "css": "844pxx390px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.388
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "g1",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": 1
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "g2",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "g3",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "g4",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.388
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "garage",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -38.179
+ },
+ {
+  "tag": "before",
+  "vt": "1280x720",
+  "n": "afterAd",
+  "cv": "1280x720",
+  "css": "1280pxx720px",
+  "dpr": null,
+  "Z": null,
+  "camZ": -36.396
+ }
+]

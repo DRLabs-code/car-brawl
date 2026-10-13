@@ -7,3 +7,5 @@
 - `node tests/pickups.js`：道具连吃（一局 35+、同类重复、满血修复包、复活后、刷新点可达、连续 10 局）。
 - `node tests/ring-ai.js`：擂台 AI 自己开下台统计。
 - 已有：feel-bench.js（操控）、replay-view.js（再来一局镜头回归）。
+- `node tests/v15.js`：车辆命名（免费/付费/校验/取消不扣费）、涂装试穿/还原/购买扣费、首页。
+- `node tests/result-fit.js`：结算页及弹窗在 iPhone/安卓/桌面各视口（含 Safari 工具栏 390×664、750×340）一屏居中。

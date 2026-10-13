@@ -1,0 +1,59 @@
+{
+ "beast": {
+  "top": 16,
+  "launch80": 0.6,
+  "uturn": {
+   "t": 0.85,
+   "wentReverse": false
+  },
+  "sideStart5": 0.72,
+  "sBend": {
+   "t": 4.97,
+   "weave": 3
+  },
+  "dashNet": 18.3,
+  "dist12_noDash": 19.5,
+  "dashHit": {
+   "dmg": 65.4,
+   "t": 0.57
+  }
+ },
+ "fang": {
+  "top": 20,
+  "launch80": 0.57,
+  "uturn": {
+   "t": 0.93,
+   "wentReverse": false
+  },
+  "sideStart5": 0.62,
+  "sBend": {
+   "t": 5.43,
+   "weave": 2
+  },
+  "dashNet": 24.6,
+  "dist12_noDash": 24.3,
+  "dashHit": {
+   "dmg": 93.6,
+   "t": 0.52
+  }
+ },
+ "tyrant": {
+  "top": 13,
+  "launch80": 0.73,
+  "uturn": {
+   "t": 1.22,
+   "wentReverse": false
+  },
+  "sideStart5": 0.88,
+  "sBend": {
+   "t": 6.97,
+   "weave": 3
+  },
+  "dashNet": 12.7,
+  "dist12_noDash": 15.7,
+  "dashHit": {
+   "dmg": 94.3,
+   "t": 0.63
+  }
+ }
+}
