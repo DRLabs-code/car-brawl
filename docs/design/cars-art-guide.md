@@ -1,4 +1,4 @@
-# 《碰碰改装车》车辆美术风格指南
+# 《车手大作战》车辆美术风格指南
 
 ## 1. 总体风格
 **2D 等距视角（isometric，2:1 菱形网格）精致卡通风**：夸张比例（大轮、宽身、矮重心）、鲜明配色、**粗深色描边 + 三阶卡通光影 + 车窗反光 + 软阴影**，像手游里的玩具车，绝不是平涂色块。
@@ -71,7 +71,7 @@
 
 **原则**：比例贴近真实车型，只稍微放大轮子和车身以保证小屏可读；未装部件的白板状态就是真实车的素车版本，改装件在其上叠加。
 - 铁壁暴君：参考全尺寸皮卡——高车身、长发动机舱、双座驾驶室、后部开放货斗、大镀铬格栅。
-- 霓虹毒牙：参考中置引擎超跑——低矮修长楔形、深色座舱靠后、侧进气口、细长灯带。
+- 霓虹毒牙：美式肌肉车风格（v10 起）——长车头、短尾、宽体轮拱、溜背座舱、进气鼓包引擎盖、左右各三条竖向尾灯、双排气；车头用自创菱形「毒牙」徽标，不使用任何真实品牌车标或车名，也不 1:1 复刻某款真车。
 - 泥岩狂兽：参考硬派越野（牧马人 / 陆巡一类的方正造型）——方盒车身、圆形大灯、七孔竖格栅、黑色轮眉、外挂备胎、车顶行李架；**不是大脚怪兽车**。
 - 精灵分两层烘焙：车身层 16 朝向（`car_<名>_body.png`，4×4，384px），轮子层 16 朝向 × 3 档转向 × 3 帧滚动（`car_<名>_wheels.png`，12×12，160px），两层互为深度遮罩，叠加即为完整车。
 
@@ -83,7 +83,7 @@
 **AI 提示词（中）**：2D 等距视角游戏精灵概念图，精致卡通手游风，比例接近真实车（轮子略放大），粗深色描边，三阶卡通光影，车窗高光反光，软阴影，等距三分之四视角，纯色背景，未改装素车，全尺寸皮卡，高车身，开放货斗，大镀铬格栅，军绿色车身配铁灰与黑色保险杠
 **AI prompt (EN)**: isometric 2D game sprite concept art, polished cartoon mobile game style, realistic car proportions slightly exaggerated wheels, thick dark outline, cel shading with highlights, glossy window reflections, soft drop shadow, three-quarter isometric view (2:1), plain background, stock unmodified version, full-size pickup truck, tall body, open cargo bed, big chrome grille, army green paint with gunmetal and black bumpers
 
-### ② 霓虹毒牙（Neon Fang）· 低矮修长超跑
+### ② 霓虹毒牙（Neon Fang）· 美式肌肉车（v10 起，原为低矮超跑）
 - **性格**：狡猾、傲慢，绕后偷袭残血目标，一击即走。
 - **外观要点**：中置引擎超跑比例——低矮修长楔形车身、深色座舱靠后、侧进气口、细长青色灯带、红色尾灯条；品红 + 炭黑。
 - **属性倾向**：速度 ★★★★★ 加速 ★★★★ 撞击 ★★★ 操控 ★★★ 血量 ★★ 重量 ★

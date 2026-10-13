@@ -10,7 +10,7 @@ const LIVS={stripe:{n:'双赛道条纹',p:200},band:{n:'侧腰线',p:150},number
 const R0=38,DIRS=16;
 const CARS={
  tyrant:{name:'铁壁暴君',en:'IRON TYRANT',tag:'皮卡 · 重型',desc:'车重血厚，正面硬抗',col:'#5d8f3f',col2:'#2f4f22',hp:160,mass:2.0,spd:13,acc:12,turn:2.4,dmg:1.25,wb:3.0},
- fang:{name:'霓虹毒牙',en:'NEON FANG',tag:'超跑 · 刺客',desc:'极快但脆，绕侧偷袭',col:'#f0207f',col2:'#6d0f3c',hp:85,mass:0.8,spd:20,acc:24,turn:3.2,dmg:1.0,wb:2.8},
+ fang:{name:'霓虹毒牙',en:'NEON FANG',tag:'肌肉车 · 刺客',desc:'极快但脆，绕侧偷袭',col:'#f0207f',col2:'#6d0f3c',hp:85,mass:0.8,spd:20,acc:24,turn:3.2,dmg:1.0,wb:2.8},
  beast:{name:'泥岩狂兽',en:'MUD BEAST',tag:'越野 · 均衡',desc:'抓地稳，乱战能手',col:'#ff7a1a',col2:'#7a3a0c',hp:120,mass:1.3,spd:16,acc:18,turn:3.6,dmg:1.1,wb:2.6}};
 const KEYS=Object.keys(CARS);
 const PARTS={
@@ -453,8 +453,8 @@ function finish(){running=false;const win=player.alive,rank=win?1:aliveAtDeath,s
 function frameOf(h){let i=Math.round(h/(Math.PI*2)*DIRS)%DIRS;if(i<0)i+=DIRS;return i}
 function drawCarSprite(c2d,img,i,x,y,s){c2d.drawImage(img,(i%4)*F,(i>>2)*F,F,F,x-F/2*s,y-F*AY*s,F*s,F*s)}
 function drawHalf(c2d,img,i,x,y){const h=F/2;c2d.drawImage(img,(i%4)*h,(i>>2)*h,h,h,x-96,y-192*AY,192,192)}
-function drawParts(c2d,k,eq,i,x,y,sc){const LF=128,LS=192/128;for(const id of eq){const L=LAYI[k+'_part_'+id];if(!L)continue;c2d.drawImage(L,(i%4)*LF,(i>>2)*LF,LF,LF,x-LF/2*LS*sc,y-LF*AY*LS*sc,LF*LS*sc,LF*LS*sc)}}
-function drawFull(c2d,k,cs,i,x,y,sc,rl){drawWheels(c2d,k,i,1,rl||0,x,y,WS*sc);drawCarSprite(c2d,compose(k,cs.paint.color,cs.paint.livery),i,x,y,FS*sc);drawParts(c2d,k,Object.values(cs.equip).filter(Boolean),i,x,y,sc)}
+function drawPartLayers(c2d,k,eq,i,x,y,sc){const LF=128,LS=192/128;for(const id of eq){const L=LAYI[k+'_part_'+id];if(!L)continue;c2d.drawImage(L,(i%4)*LF,(i>>2)*LF,LF,LF,x-LF/2*LS*sc,y-LF*AY*LS*sc,LF*LS*sc,LF*LS*sc)}}
+function drawFull(c2d,k,cs,i,x,y,sc,rl){drawWheels(c2d,k,i,1,rl||0,x,y,WS*sc);drawCarSprite(c2d,compose(k,cs.paint.color,cs.paint.livery),i,x,y,FS*sc);drawPartLayers(c2d,k,Object.values(cs.equip).filter(Boolean),i,x,y,sc)}
 function drawWheels(c2d,k,i,st,rl,x,y,s){const idx=i*9+st*3+rl,img=WHL[k];c2d.drawImage(img,(idx%12)*WF,(idx/12|0)*WF,WF,WF,x-WF/2*s,y-WF*AY*s,WF*s,WF*s)}
 function drawThumb(cnv,k,i,s){const x=cnv.getContext('2d');x.clearRect(0,0,cnv.width,cnv.height);drawFull(x,k,save.cars[k],i,cnv.width/2,cnv.height*.62,s*2)}
 function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx.fillRect(0,0,W,H);
@@ -486,7 +486,7 @@ function drawFence(posts){
  for(let i=0;i<posts.length;i+=4){const p=posts[i];ctx.fillStyle='#2d2a3a';ctx.fillRect(p[0]-2.5,p[1]-30,5,30);ctx.fillStyle='#7df9ff';ctx.beginPath();ctx.arc(p[0],p[1]-31,3+Math.random()*1.5,0,7);ctx.fill()}}
 function drawCar(c){const [sx,sy]=iso(c.x,c.z),i=frameOf(c.h),st=c.steer>.3?2:c.steer<-.3?0:1,rl=((Math.floor(c.roll)%3)+3)%3;
  if(!c.alive){const y=sy+Math.min(6,c.deadT*20);drawWheels(ctx,c.k,i,1,0,sx,y,WS);drawCarSprite(ctx,c.skin,i,sx,y,FS);drawHalf(ctx,DARK[c.k],i,sx,y);return}
- const bx=sx+c.sus.px,by=sy+c.sus.py+c.bump;drawWheels(ctx,c.k,i,st,rl,sx,sy+c.bump*.3,WS);drawCarSprite(ctx,c.skin,i,bx,by,FS);drawParts(ctx,c.k,c.eq,i,bx,by,1);
+ const bx=sx+c.sus.px,by=sy+c.sus.py+c.bump;drawWheels(ctx,c.k,i,st,rl,sx,sy+c.bump*.3,WS);drawCarSprite(ctx,c.skin,i,bx,by,FS);drawPartLayers(ctx,c.k,c.eq,i,bx,by,1);
  if(c.rev||c.brake)TLQ.push([c,bx-sx,by-sy]);
  if(c.flash>0){ctx.globalAlpha=Math.min(1,c.flash*8);drawHalf(ctx,WHITE[c.k],i,bx,by);ctx.globalAlpha=1;c.flash-=1/60}}
 const TLQ=[];
