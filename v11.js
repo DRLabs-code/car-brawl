@@ -16,15 +16,15 @@ const PKT={heal:{n:'修复包',ic:'🔧',col:'#3ddc84',d:'恢复30%耐久',w:1},
 window.PKT=PKT;let PK=[],pkNext=10,pkN=0;
 function pkType(){let s=0;for(const k in PKT)s+=PKT[k].w;let r=Math.random()*s;for(const k in PKT){r-=PKT[k].w;if(r<0)return k}return'heal'}
 function pkPos(near){for(let k=0;k<60;k++){let x,z;if(near&&k<30){const a=Math.random()*7,r=5+Math.random()*6;x=near.x+Math.cos(a)*r;z=near.z+Math.sin(a)*r}else[x,z]=randIn(4);
- if(!inPoly(ZPOLY,x,z)||sdist(ZPOLY,x,z).s>-3||!openCell(x,z,2))continue;if(PK.some(p=>Math.hypot(p.x-x,p.z-z)<8)||cars.some(c=>c.alive&&Math.hypot(c.x-x,c.z-z)<3))continue;return[x,z]}return null}
+ if(!inPoly(ZPOLY,x,z)||sdist(ZPOLY,x,z).s>-3||!openCell(x,z,2))continue;{const[ci,cj]=cellOf(x,z);if(!GRID.ok[cj*GRID.n+ci])continue}/* v14：只刷在车能开到的主战场格（以前会刷进封闭工棚/坑/台地里，吃不到又占满 3 个名额） */if(PK.some(p=>Math.hypot(p.x-x,p.z-z)<8)||cars.some(c=>c.alive&&Math.hypot(c.x-x,c.z-z)<3))continue;return[x,z]}return null}
 function pkSpawn(){const low=cars.filter(c=>c.alive&&!c.dummy&&c.hp<c.maxhp*.4);let k=pkType(),near=null;if(low.length&&Math.random()<.4){k='heal';near=low[Math.random()*low.length|0]}
- const p=pkPos(near);if(!p)return;PK.push({k,x:p[0],z:p[1],t:0,life:25});track('pickup_spawn',{type:k,mode:MODE,lowHp:!!near})}
-function applyPK(c,k,src){const T=PKT[k];
+ const p=pkPos(near);if(!p)return;PK.push({k,x:p[0],z:p[1],t:0,life:25});PKS.spawn++;track('pickup_spawn',{type:k,mode:MODE,lowHp:!!near})}
+const PKS={eaten:0,eatenP:0,spawn:0};function applyPK(c,k,src){const T=PKT[k],full=k==='heal'&&c.hp>=c.maxhp-.5,again=(k==='atk'&&c.atkT>0)||(k==='shield'&&c.shT>0);if(src!=='revive'){PKS.eaten++;if(c.isP)PKS.eatenP++}
  if(k==='heal'){c.hp=Math.min(c.maxhp,c.hp+c.maxhp*.3)}else if(k==='atk')c.atkT=8;else if(k==='shield')c.shT=8;else if(k==='boost'){c.dcd=0}
  else if(k==='spring'){for(const o of cars){if(o===c||!o.alive||o.dummy)continue;const dx=o.x-c.x,dz=o.z-c.z,d=Math.hypot(dx,dz);if(d<9&&d>.01){const im=(26*(1-d/9)+10)/Math.sqrt(o.mass);o.vx+=dx/d*im;o.vz+=dz/d*im;o.lastBy=c;o.lastByT=time;o.flash=.12}}
   parts.push({k:'ring',x:c.x,z:c.z,y:0,t:0,life:.5});spark(c.x,c.z,14,T.col);if(nearP(c.x,c.z)>0)shake=Math.max(shake,8)}
  ft(c.x,c.z,3.2,T.n+'！',T.col,c.isP?26:20,c.isP);
- if(c.isP){toast(`${T.ic} ${T.n}：${T.d}`);sfx('good');vib('hit');if(src!=='revive')dcAdd('pickup')}
+ if(c.isP){toast(full?`${T.ic} ${T.n}：耐久已满（已拾取）`:again?`${T.ic} ${T.n}：时长刷新为 8 秒`:`${T.ic} ${T.n}：${T.d}`);sfx('good');vib('hit');if(src!=='revive')dcAdd('pickup')}
  track('pickup_get',{type:k,isP:!!c.isP,mode:MODE,src:src||'field'})}
 function pkIcon(x,k,cx,cy,s){x.save();x.translate(cx,cy);x.fillStyle='#fff';x.strokeStyle='#fff';x.lineWidth=s*.22;x.lineCap='round';x.lineJoin='round';x.beginPath();
  if(k==='heal'){x.rect(-s*.15,-s*.55,s*.3,s*1.1);x.rect(-s*.55,-s*.15,s*1.1,s*.3);x.fill()}
@@ -142,7 +142,7 @@ const _fin=finish;finish=function(){const win=player.alive;clearInterval(RV.tm);
  track('match_end_v11',{mode:MODE,win,kills,pickups:pkN,revived:RV.ok,t:Math.round(time)});
  const w=hlPick();if(w){HL.t0=w.t0;HL.t1=w.t1;HL.tt=0;HL.fi=0;HL.play=true;$('hl').classList.remove('hide');$('hlTxt').textContent='生成中…';track('hl_build',{score:w.score,dur:+(w.t1-w.t0).toFixed(1)});
   TTREC.clip(Math.ceil(time-w.t0)+1,0,p=>{HL.ttPath=p})}};
-window.__v11={get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
+window.__v11={stats:PKS,get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
 dcDot();modeUI();
 })();
 // v13：结算卡分两列容器（横屏矮屏时左右排布，一屏放下；其他情况 display:contents 保持原样）
