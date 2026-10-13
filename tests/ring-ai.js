@@ -1,0 +1,6 @@
+const p=require('/tmp/pt/node_modules/puppeteer-core');const W=ms=>new Promise(r=>setTimeout(r,ms));
+(async()=>{const b=await p.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--use-gl=swiftshader','--enable-unsafe-swiftshader']});const pg=await b.newPage();await pg.setViewport({width:900,height:500});
+await pg.goto('http://localhost:8765/index.html');await pg.evaluate(()=>localStorage.clear());await pg.reload();await W(1200);let tot={self:0,pushed:0,alive:0,end:[]};
+for(let r=0;r<3;r++){await pg.evaluate(()=>{localStorage.removeItem('carbrawl_track');const g=__game;g.save.tut=true;g.save.tutorialDone=true;g.save.cars.fang.lv=8;g.tut=null;g.noEnd=true;__v11.MODE='ring';buildArena('ring',arenaR(8));g.start('fang',{});const P=g.player;P.alive=false;P.x=999;P.z=999});
+ await W(25000);const s=await pg.evaluate(()=>{const L=JSON.parse(localStorage.getItem('carbrawl_track')||'[]').filter(e=>e.event==='ring_fall');return{dead:__game.cars.filter(c=>!c.alive&&!c.isP).map(c=>(c.fell?"F":"H")+Math.round(c.hp)).join(","),self:L.filter(e=>e.self).length,pushed:L.filter(e=>!e.self).length,t:Math.round(__game.time),alive:__game.cars.filter(c=>c.alive).length}});console.log(JSON.stringify(s));}
+await b.close()})();

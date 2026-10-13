@@ -4,7 +4,7 @@ if(AB.revive===undefined)AB.revive=1;
 // ---------- 推出擂台地图 ----------
 const circ=Array.from({length:40},(_,i)=>{const a=i/40*Math.PI*2;return[Math.cos(a)*30,Math.sin(a)*30]});
 MAPS.ring=Object.assign({},MAPS.site,{name:'推出擂台',en:'PUSH-OUT RING',desc:'圆台持续缩小 · 掉下台即淘汰',tiles:['#4a3f7a','#40366b'],line:'#6a5fa8',speck:['#574c8c','#3a3062'],out:['#0b0816','#120d22','#0a0714'],rail:['#7df9ff','#1b1420'],paint:'#7df9ffaa',logo:'RING',zone:{k:'mud',name:'',n:0,r:[3,5]},dust:'#9a90d0',shape:'圆形擂台',poly:circ,walls:[],pits:[],mesas:[],zc:[0,0]});
-MODE=localStorage.getItem('carbrawl_mode')==='ring'?'ring':'brawl';
+MODE=localStorage.getItem('carbrawl_mode')==='ring'?'ring':'brawl';if(!BUILD.modes.includes(MODE))MODE=BUILD.modes[0];
 const _build=buildArena;buildArena=function(mk,R){_build(mk,R);if(mk==='ring'){props=[];gzones=[];buildGrid();ZC=[0,0];updZone();buildFloor()}};
 window.ringZone=()=>{const t=Math.max(0,time-2.5);let f=1-.62*Math.min(1,t/55);if(t>55)f-=Math.min(.25,(t-55)/12*.25);return AR*Math.max(.12,f)};
 window.ringFall=(c,dt)=>{if(!c.alive||c.dummy)return;if(sdist(ZPOLY,c.x,c.z).s>.4){c.fallT=(c.fallT||0)+dt;if(c.fallT>.18){c.fell=true;c.shT=0;c.invT=0;const by=c.lastBy&&time-c.lastByT<5&&c.lastBy!==c?c.lastBy:null;ft(c.x,c.z,2.4,'落台！','#7df9ff',30,true);track('ring_fall',{isP:!!c.isP,byP:by===player,self:!by});hurt(c,1e6,by)}}else c.fallT=0};
@@ -44,7 +44,7 @@ const _tags=drawTags;drawTags=function(){if(running||PK.length){for(const p of P
  _tags()};
 // HUD 状态图标
 const hudEl=$('hud'),bf=document.createElement('div');bf.id='buffs';hudEl.appendChild(bf);let bfS='';
-function buffHud(){const p=player;let s='';if(p&&p.alive){if(p.atkT>0)s+=`<span class="bf atk">🔥 狂暴 <b>${Math.ceil(p.atkT)}</b></span>`;if(p.shT>0)s+=`<span class="bf sh">🛡️ 护盾 <b>${Math.ceil(p.shT)}</b></span>`;if(p.invT>0)s+=`<span class="bf inv">✨ 无敌</span>`}if(s!==bfS){bf.innerHTML=s;bfS=s}}
+function buffHud(){const p=player;let s='';if(p&&p.alive){if(p.atkT>0)s+=`<span class="buf atk">🔥 狂暴 <b>${Math.ceil(p.atkT)}</b></span>`;if(p.shT>0)s+=`<span class="buf sh">🛡️ 护盾 <b>${Math.ceil(p.shT)}</b></span>`;if(p.invT>0)s+=`<span class="buf inv">✨ 无敌</span>`}if(s!==bfS){bf.innerHTML=s;bfS=s}}
 // ---------- 伤害修正 / 事件 ----------
 const _hurt=hurt;hurt=function(c,d,by){if(!c||!c.alive||c.dummy||!running)return _hurt(c,d,by);
  if(MODE==='ring'&&d<1e5&&!(by&&by!==c))d=Math.min(d,Math.max(0,c.hp-1));if(by&&by!==c){if(c.invT>0)return;if(by.atkT>0)d*=1.4;if(MODE==='ring'&&d<1e5){d=Math.min(d*.4,Math.max(0,c.hp-1));const dx=c.x-by.x,dz=c.z-by.z,l=Math.hypot(dx,dz)||1,im=Math.min(14,d*.35)*(1+(1-c.hp/c.maxhp)*1.5)/Math.sqrt(c.mass);c.vx+=dx/l*im;c.vz+=dz/l*im}if(c.shT>0&&d<1e5){d*=.4;c.shT=0;ft(c.x,c.z,3,'护盾抵挡','#7cc4ff',22);track('shield_block',{isP:!!c.isP})}c.lastBy=by;c.lastByT=time}
@@ -64,7 +64,7 @@ window.reviveHold=()=>{if(tut||!running||!AB.revive)return false;if(RV.pending)r
  if(cars.filter(c=>c.alive&&!c.dummy&&c!==player).length<2)return false;RV.used=true;RV.pending=true;let n=6;track('revive_offer',{mode:MODE,t:Math.round(time)});
  const el=$('revive');const draw=()=>{el.innerHTML=`<div class="rcard rvc"><div class="ptitle">💥 被撞毁了！</div><div class="rvt">看视频立即复活<br><small>恢复 50% 耐久 · 2 秒无敌 · 随机送 1 个道具</small></div><div class="rvcd">${n}</div><div class="col"><button class="btn adbtn" id="rvAd">📺 看视频复活</button><button class="btn ghost" id="rvNo">放弃</button></div><small class="rvn">每局限 1 次</small></div>`;
   $('rvAd').onclick=()=>{clearInterval(RV.tm);show('revive',0);showRewardedAd(ok=>{if(ok)doRevive();else{toast('未看完，无法复活');RV.pending=false}},'revive')};$('rvNo').onclick=()=>{clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_skip',{})}};
- draw();show('revive',1);RV.tm=setInterval(()=>{n--;if(n<=0){clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_timeout',{})}else{const e=el.querySelector('.rvcd');if(e)e.textContent=n}},1000);return true};
+ draw();show('revive',1);RV.tm=setInterval(()=>{if(paused)return;n--;if(n<=0){clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_timeout',{})}else{const e=el.querySelector('.rvcd');if(e)e.textContent=n}},1000);return true};
 function doRevive(){const p=player;let best=[ZC[0],ZC[1]],bs=-1;for(let i=0;i<50;i++){const q=randIn(4);if(!inPoly(ZPOLY,q[0],q[1])||sdist(ZPOLY,q[0],q[1]).s>-5||!openCell(q[0],q[1],3))continue;const m=Math.min(...cars.filter(c=>c.alive&&c!==p).map(c=>Math.hypot(c.x-q[0],c.z-q[1])));if(m>bs){bs=m;best=q}}
  if(MODE==='ring')best=[ZC[0],ZC[1]];p.alive=true;p.hp=p.maxhp*.5;p.x=best[0];p.z=best[1];p.vx=p.vz=0;p.fwd=0;p.deadT=0;p.fell=false;p.fallT=0;p.place=undefined;p.invT=2;p.dcd=0;deadTime=0;
  const k=pkType();applyPK(p,k,'revive');ft(p.x,p.z,4,'复活！','#ffd23f',32,true);sfx('good');RV.pending=false;RV.ok=true;camSnap=true;track('revive_done',{mode:MODE,gift:k})}
@@ -90,15 +90,15 @@ window.openDC=()=>{hideAll();show('dc',1);const d=dcGet();d.seen=1;S('carbrawl_d
 PANELS.push('dc','revive');$('menuDC').onclick=openDC;
 // ---------- 模式选择 ----------
 function modeUI(){document.querySelectorAll('#modeSel [data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===MODE));const h=$('modeHint');if(h)h.textContent=MODE==='ring'?'⭕ 圆台持续缩小，把对手推下台！约 60 秒':'🚗 经典乱斗：电网收缩，撞到最后一个'}
-{const ms=$('modeSel'),h=document.createElement('div');h.id='modeHint';ms.after(h);ms.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{MODE=b.dataset.mode;localStorage.setItem('carbrawl_mode',MODE);sfx('ui');modeUI();track('mode_select',{mode:MODE})})}
+{const ms=$('modeSel'),h=document.createElement('div');if(BUILD.modes.length<2)ms.style.display='none';ms.querySelectorAll('[data-mode]').forEach(b=>{if(!BUILD.modes.includes(b.dataset.mode))b.remove()});h.id='modeHint';ms.after(h);ms.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{MODE=b.dataset.mode;localStorage.setItem('carbrawl_mode',MODE);sfx('ui');modeUI();track('mode_select',{mode:MODE})})}
 const _menu=menu;menu=function(){HL.play=false;_menu();modeUI();dcDot()};
 const _om=openMaps;openMaps=function(k){if(MODE==='ring'){matchThenStart(k,'ring');return}_om(k)};
 const _mts=matchThenStart;matchThenStart=function(k,m){if(MODE!=='ring'&&m==='ring')m=MAPK[0];if(MODE==='ring')m='ring';return _mts(k,m)};
 $('again').onclick=()=>{if(MODE==='ring')mapKey='ring';else if(mapKey==='ring')mapKey=MAPK[0];buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};
 // ---------- 冲撞集锦 ----------
 const HL={fr:[],evs:[],acc:0,play:false,blob:null,rec:null};window.HL=HL;
-const TTREC={rm:null,start(){try{if(window.tt&&tt.getGameRecorderManager){this.rm=tt.getGameRecorderManager();this.rm.start({duration:300})}}catch(e){this.rm=null}},
- clip(before,after,cb){if(!this.rm)return cb&&cb(null);try{this.rm.onStop(r=>{this.rm.clipVideo({path:r.videoPath,timeRange:[before,after],success:o=>cb(o.videoPath),fail:()=>cb(r.videoPath)})});this.rm.stop()}catch(e){cb&&cb(null)}}};
+const TTREC={rm:null,start(){try{if(window.tt&&tt.getGameRecorderManager){this.rm=tt.getGameRecorderManager();if(this.on){try{this.rm.stop()}catch(e){}}this.rm.start({duration:300});this.on=true}}catch(e){this.rm=null}},
+ clip(before,after,cb){if(!this.rm)return cb&&cb(null);try{this.rm.onStop(r=>{this.rm.clipVideo({path:r.videoPath,timeRange:[before,after],success:o=>cb(o.videoPath),fail:()=>cb(r.videoPath)})});this.rm.stop();this.on=false}catch(e){cb&&cb(null)}}};
 window.TTREC=TTREC;
 // 发布到抖音小游戏时：tt 录屏得到 videoPath 后走 tt.shareAppMessage；Web 走 navigator.share / 下载
 window.shareHighlight=function(blob,meta){meta=meta||{};
@@ -114,7 +114,7 @@ function hlPick(){const F=HL.fr;if(F.length<10)return null;const tA=F[0].t,tB=F[
  return{t0:best?best[0]:Math.max(tA,tB-5),t1:best?best[1]:tB,score:Math.round(bs)}}
 function hlApply(T){const F=HL.fr;let i=HL.fi||0;if(i>=F.length||F[i].t>T)i=0;while(i<F.length-1&&F[i+1].t<=T)i++;HL.fi=i;const f=F[i];
  f.c.forEach((s,j)=>{const c=cars[j];if(!c)return;if(c.alive&&!s[3]){boom(s[0],s[1],c.s.col);shake=Math.max(shake,10)}[c.x,c.z,c.h]=s;c.alive=s[3];c.hp=s[4];c.dash=s[5];c.yaw=s[6];c.roll=s[7];c.fwd=s[8];c.vx=c.vz=0})}
-function hlStep(dt){const vis=!$('result').classList.contains('hide');if(!vis){HL.tt=0;hlApply(HL.t0);return}
+function hlStep(dt){const vis=!$('result').classList.contains('hide');if(!vis){HL.tt=0;return}// 结算面板渲染（读取 alive/名次）之前不改车辆状态
  const prev=HL.t0+HL.tt;HL.tt+=dt;const T=HL.t0+HL.tt;
  if(HL.tt<dt*1.5&&!HL.blob&&!HL.rec)hlRecStart();
  for(const e of HL.evs)if(e.t>prev&&e.t<=T){spark(e.x,e.z,18,'#ffd23f');if(e.txt)ft(e.x,e.z,3,e.txt,'#ffd23f',30,true);shake=Math.max(shake,9)}
@@ -145,3 +145,7 @@ const _fin=finish;finish=function(){const win=player.alive;clearInterval(RV.tm);
 window.__v11={get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
 dcDot();modeUI();
 })();
+// v13：结算卡分两列容器（横屏矮屏时左右排布，一屏放下；其他情况 display:contents 保持原样）
+(()=>{const cd=document.querySelector('#result .rcard');if(!cd||cd.querySelector('.rc1'))return;const c1=document.createElement('div'),c2=document.createElement('div');c1.className='rc1';c2.className='rc2';
+ const right=['rShards','rDouble','rHint','hl'];[...cd.children].forEach(e=>{(right.includes(e.id)||e.classList.contains('btns')?c2:c1).appendChild(e)});cd.append(c1,c2)})();
+(()=>{const f=()=>{const a=$('app'),w=a.offsetWidth,h=a.offsetHeight;document.body.classList.toggle('short',w>h);document.body.classList.toggle('tiny',w>h&&h<=540);document.body.style.setProperty('--rw',w+'px');document.body.style.setProperty('--rh',h+'px')};addEventListener('resize',()=>setTimeout(f,60));f();setTimeout(f,300)})();

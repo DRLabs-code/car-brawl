@@ -454,7 +454,7 @@ function finish(){running=false;const win=player.alive,rank=win?1:aliveAtDeath,s
   $('rShards').innerHTML=`<span class="drop" style="animation-delay:.2s">${icCoin('+'+coins)}<small>金币</small></span>`+Object.entries(got).map(([k,v],i)=>k==='uni'?`<span class="drop" style="animation-delay:${.3+i*.12}s">${icUni('+'+v)}<small>通用碎片</small></span>`:`<span class="drop" style="animation-delay:${.3+i*.12}s">${icPart(k,'+'+v,true)}<small>${save.shards[k]}/${PARTS[k].need}</small></span>`).join('');
   const fp=ptsFree(sc),can=Object.keys(PARTS).some(id=>!save.owned[id]&&canCraft(id));
   $('rHint').innerHTML=(sc.lv>lv0?`<b>升级！</b>`:'')+(fp>0?` 有 <b>${fp}</b> 点属性可分配`:'')+(can?' · 有部件可<b>合成</b>':'');$('rHint').classList.toggle('hide',!(fp>0||can));
-  const board=cars.filter(c=>!c.dummy).map(c=>({c,p:c.alive?1:c.place||nCars})).sort((a,b)=>a.p-b.p);$('rBoard').innerHTML=board.map(({c,p})=>`<div class="brow ${c.isP?'me':''}"><span class="bp">${p===1?'👑':'#'+p}</span><span class="bf" style="--f:${c.frame||'#fff'}"></span><b>${esc(c.nick||'')}</b><small>${c.s.name} Lv.${c.lv}</small><span class="bk">💥${c.kc||0}</span></div>`).join('');
+  const alv=cars.filter(c=>!c.dummy&&c.alive).sort((a,b)=>b.hp/b.maxhp-a.hp/a.maxhp),board=cars.filter(c=>!c.dummy).map(c=>({c,p:c.alive?alv.indexOf(c)+1:c.place||nCars})).sort((a,b)=>a.p-b.p);$('rBoard').innerHTML=board.map(({c,p})=>`<div class="brow ${c.isP?'me':''}"><span class="bp">${p===1?'👑':'#'+p}</span><span class="bf" style="--f:${c.frame||'#fff'}"></span><b>${esc(c.nick||'')}</b><small>${c.s.name} Lv.${c.lv}</small><span class="bk">💥${c.kc||0}</span></div>`).join('');
   show('result',1);if(sc.lv>lv0)sfx('good');requestAnimationFrame(()=>requestAnimationFrame(()=>$('rXp').style.width=(sc.lv>=MAXLV?100:sc.xp/need(sc.lv)*100)+'%'))},win?600:300)}
 // ================= 渲染 =================
 function frameOf(h){let i=Math.round(h/(Math.PI*2)*DIRS)%DIRS;if(i<0)i+=DIRS;return i}
@@ -606,7 +606,7 @@ $('garage').addEventListener('click',e=>{const t=e.target.closest('button');if(!
 let mapCar='beast';
 function openMaps(k){mapCar=k;hideAll();show('maps',1);const box=$('mapList');box.innerHTML='';const cs=save.cars[k],ro=roster(cs.lv);
  $('mapsSub').textContent=`${CARS[k].name} Lv.${cs.lv} · 本局 ${ro.n} 辆车 · 场地 ${ro.n===4?'标准':ro.n===6?'2 倍':'3 倍'}大小`;
- [...MAPK,'random'].forEach(mk=>{const d=document.createElement('div');d.className='mapc';if(mk==='random'){d.innerHTML='<div class="rnd">？</div><b>随机</b><small>三选一</small>'}else{const M=MAPS[mk];d.appendChild(mapThumb(mk));d.insertAdjacentHTML('beforeend',`<b>${M.name}</b><small>${M.shape}<br>${M.desc}</small>`)}
+ ((BUILD.maps&&BUILD.maps.filter(m=>MAPK.includes(m)))||[...MAPK,'random']).forEach(mk=>{const d=document.createElement('div');d.className='mapc';if(mk==='random'){d.innerHTML='<div class="rnd">？</div><b>随机</b><small>三选一</small>'}else{const M=MAPS[mk];d.appendChild(mapThumb(mk));d.insertAdjacentHTML('beforeend',`<b>${M.name}</b><small>${M.shape}<br>${M.desc}</small>`)}
   d.onclick=()=>{const m=mk==='random'?MAPK[Math.random()*3|0]:mk;matchThenStart(k,m)};box.appendChild(d)})}
 $('mapsBack').onclick=()=>menu();
 // ================= 设置 / 暂停 =================
@@ -666,10 +666,14 @@ const AB=(()=>{let g=localStorage.getItem('carbrawl_ab_group');if(!g){g=Math.ran
  const q=new URLSearchParams(location.search).get('ab');if(q)q.split(',').forEach(kv=>{const[k,v]=kv.split(':');if(k in base)base[k]=k==='group'?v:+v});return base})();
 function track(event,props){const e={t:Date.now(),event,ab:AB.group,...(props||{})};try{const L=JSON.parse(localStorage.getItem('carbrawl_track')||'[]');L.push(e);if(L.length>500)L.splice(0,L.length-500);localStorage.setItem('carbrawl_track',JSON.stringify(L))}catch(x){}console.log('[track]',event,JSON.stringify(props||{}))}
 // 统一接口：showRewardedAd(cb) → cb(true) 发奖 / cb(false) 中途关闭。上线抖音时替换为 tt.createRewardedVideoAd({adUnitId}) 的 show()/onClose(res.isEnded)。
-function showRewardedAd(cb0,placement){placement=placement||'unknown';track('ad_click',{placement});const cb=ok=>{track(ok?'ad_complete':'ad_close',{placement});cb0(ok)};track('ad_start',{placement});if(window.tt&&tt.createRewardedVideoAd&&window.AD_UNIT_ID){const ad=tt.createRewardedVideoAd({adUnitId:AD_UNIT_ID});const f=r=>{ad.offClose(f);cb(!!(r&&r.isEnded))};ad.onClose(f);ad.show().catch(()=>ad.load().then(()=>ad.show()).catch(()=>cb(false)));return}
- const o=document.createElement('div');o.id='adMock';let t=3;o.innerHTML=`<div class="adbox"><div class="adtag">广告 · 模拟</div><div class="adart"><i></i></div><div class="adtxt">激励视频播放中…</div><div class="adcd"><b>${t}</b> 秒后可领取奖励</div><button class="adx">✕ 关闭（不发奖）</button></div>`;$('app').appendChild(o);
- const iv=setInterval(()=>{t--;if(t>0){o.querySelector('.adcd b').textContent=t;return}clearInterval(iv);o.remove();sfx('good');cb(true)},1000);
- o.querySelector('.adx').onclick=()=>{clearInterval(iv);o.remove();cb(false)}}
+// 激励视频统一走 AdAdapter（ads.js：抖音 tt 实现 / 网页模拟实现）；模拟实现的 UI 由这里注入 window.__mock
+let adBusy=false;
+window.__mock=res=>{const o=document.createElement('div');o.id='adMock';let t=3;o.innerHTML=`<div class="adbox"><div class="adtag">广告 · 模拟</div><div class="adart"><i></i></div><div class="adtxt">激励视频播放中…</div><div class="adcd"><b>${t}</b> 秒后可领取奖励</div><button class="adx">✕ 关闭（不发奖）</button></div>`;$('app').appendChild(o);
+ const iv=setInterval(()=>{t--;if(t>0){o.querySelector('.adcd b').textContent=t;return}clearInterval(iv);o.remove();sfx('good');res(true)},1000);
+ o.querySelector('.adx').onclick=()=>{clearInterval(iv);o.remove();res(false)}};
+function showRewardedAd(cb0,placement){placement=placement||'unknown';if(adBusy){track('ad_busy',{placement});return}adBusy=true;track('ad_click',{placement});
+ const cb=ok=>{adBusy=false;track(ok?'ad_complete':'ad_close',{placement,impl:AdAdapter.impl.name});cb0(ok)};track('ad_start',{placement});
+ AdAdapter.showRewarded(placement).then(cb,()=>cb(false))}
 let lastGot=null;
 function grantShards(id,n,got){const p=PARTS[id];for(let i=0;i<n;i++){if(save.owned[id]){save.uni+=UNI[p.r];got.uni=(got.uni||0)+UNI[p.r]}else{save.shards[id]=(save.shards[id]||0)+1;got[id]=(got[id]||0)+1}}}
 function rollPart(){const q=Math.random(),r=q<.6?'w':q<.88?'b':q<.97?'p':'g',pl=Object.keys(PARTS).filter(id=>PARTS[id].r===r);return pl[Math.random()*pl.length|0]}
