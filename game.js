@@ -130,6 +130,7 @@ function audioLevel(){if(!AU.an)return 0;const d=new Float32Array(AU.an.fftSize)
 // 震动：只对玩家参与的撞击，按强度分档
 function vib(level){if(!save.settings.vibrate)return;const p={light:12,mid:30,heavy:[60,30,90],boom:[120,40,160]}[level];try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
 // ================= 游戏状态 =================
+let MODE='brawl';
 let cars=[],player=null,running=false,paused=false,time=0,zoneR=R0,zone0=R0,pairCD=new Map(),fts=[],parts=[],kills=0,activeT=0,playerKey='beast',aliveAtDeath=0,deadTime=0,shake=0,hitstop=0,ids=0,camX=0,camY=0,tut=null,introT=0,nCars=8;
 function aiCs(lv,sk){const cs=defCar();cs.lv=lv;const ids=Object.keys(PARTS).sort(()=>Math.random()-.5);let np=Math.min(4,Math.floor(lv/3)+(sk>.7?1:0));for(const id of ids){if(np<=0)break;if(!cs.equip[PARTS[id].slot]){cs.equip[PARTS[id].slot]=id;np--}}
  const ck=Object.keys(COLORS).filter(c=>c!=='gray');cs.paint={color:lv>=2?ck[Math.random()*ck.length|0]:'gray',livery:lv>=4?Object.keys(LIVS)[Math.random()*4|0]:null};let n=lv-1;const ks=Object.keys(STATS);while(n>0){const s=ks[Math.random()*6|0];if(cs.pts[s]<PT_MAX){cs.pts[s]++;n--}}
@@ -178,7 +179,7 @@ const MAPS={
  desert:{name:'沙漠',en:'DESERT',desc:'岩石 · 仙人掌 · 软沙扬尘',tiles:['#ebcd8e','#e4c381'],line:'#d5b06a',speck:['#d9b56f','#f5dfab'],out:['#dcab62','#e4b870','#c99a52'],rail:['#8b5a2b','#c9a070'],paint:'#ffffffaa',logo:'DUNE',obst:['rock','cactus'],zone:{k:'sand',name:'软沙',n:6,r:[3.5,6]},dust:'#f2dba2',deco:'desert',shape:'狭长峡谷 · 中部窄口 · 两侧高台',poly:[[-60,-6],[-46,-18],[-22,-16],[-8,-10],[8,-10],[24,-18],[48,-16],[62,-2],[50,14],[26,16],[8,9],[-8,9],[-26,18],[-50,14]],walls:[[0,-1,0,1,'rock']],mesas:[[-38,0,9],[38,0,9]],zc:[0,5]}};
 const MAPK=Object.keys(MAPS);
 let AR=38,MAP=MAPS.site,mapKey='site',floor,skid,skx,FSC=1,props=[],gzones=[];
-const arenaR=n=>n>=8?66:n>=6?54:38;            // 半径当量：4 车=第一版面积；6 车≈2 倍；8 车≈3 倍
+const arenaR=n=>MODE==='ring'?(n>=8?28:n>=6?24:20):n>=8?66:n>=6?54:38;            // 半径当量：4 车=第一版面积；6 车≈2 倍；8 车≈3 倍
 // ---- 多边形工具 ----
 let POLY=[],ZC=[0,0],ZPOLY=[],SC=1,GRID=null;
 function inPoly(P,x,z){let o=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[a,b]=P[i],[c,d]=P[j];if((b>z)!==(d>z)&&x<(c-a)*(z-b)/(d-b)+a)o=!o}return o}
@@ -401,7 +402,7 @@ function unstick(c){let nx=0,nz=0;for(const o of props){if(!o.solid)continue;con
  const sd=sdist(POLY,c.x,c.z);if(sd.s>-3){nx-=sd.nx*.6;nz-=sd.nz*.6}let L=Math.hypot(nx,nz);if(L<1e-3){nx=-Math.sin(c.h);nz=-Math.cos(c.h);L=1}nx/=L;nz/=L;
  c.vx=nx*7;c.vz=nz*7;c.x+=nx*.6;c.z+=nz*.6;smoke(c.x,c.z,3)}
 // ================= 模拟 =================
-function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
+function step(dt){time+=dt;zoneR=tut?AR:MODE==='ring'?ringZone():Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
   if(c.isP){const kW=keys.KeyW||keys.ArrowUp?1:0,kS=keys.KeyS||keys.ArrowDown?1:0,kT=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let sx=jx,sy=jy;
@@ -417,8 +418,8 @@ function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(z
    else if(!c.isP&&c.stuckT>1&&!(c.ai.back>0)){c.ai.back=.9;c.ai.bs=Math.random()<.5?-1:1;c.stuckT=0;stuckLog.ai++}}
   if(c.hp/c.maxhp<.35){c.smokeT-=dt;if(c.smokeT<0){c.smokeT=.12;smoke(c.x,c.z,1,true)}}
   if(c.dash>0&&(c.isP||Math.random()<.5))parts.push({k:'fire',x:c.x-Math.sin(c.h)*2.2,z:c.z-Math.cos(c.h)*2.2,y:.8,vx:-Math.sin(c.h)*4,vz:-Math.cos(c.h)*4,vy:1,t:0,life:.25,s:8});
-  if(zoneR<AR-.3&&sdist(ZPOLY,c.x,c.z).s>.3){c.hp-=8*dt;c.flash=Math.max(c.flash,.05);if(Math.random()<dt*10)spark(c.x,c.z,2,'#7df9ff');if(c.isP&&Math.random()<dt*6)sfx('zap');if(c.hp<=0)hurt(c,1,null)}}
- for(const c of cars){c.x+=c.vx*dt;c.z+=c.vz*dt;for(let it=0;it<3;it++){const sd=sdist(POLY,c.x,c.z);if(sd.s>.4){const nx=sd.nx,nz=sd.nz;c.x-=nx*(sd.s-.4);c.z-=nz*(sd.s-.4);const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=(vn>6?1.4:1.05)*vn*nx;c.vz-=(vn>6?1.4:1.05)*vn*nz;if(vn>6){spark(c.x,c.z,5);if(c.isP){vib('light');sfx('block')}}}}
+  if(MODE==='ring'){ringFall(c,dt)}else if(zoneR<AR-.3&&sdist(ZPOLY,c.x,c.z).s>.3){c.hp-=8*dt;c.flash=Math.max(c.flash,.05);if(Math.random()<dt*10)spark(c.x,c.z,2,'#7df9ff');if(c.isP&&Math.random()<dt*6)sfx('zap');if(c.hp<=0)hurt(c,1,null)}}
+ for(const c of cars){c.x+=c.vx*dt;c.z+=c.vz*dt;for(let it=0;it<3;it++){const sd=MODE==='ring'?{s:-1}:sdist(POLY,c.x,c.z);if(sd.s>.4){const nx=sd.nx,nz=sd.nz;c.x-=nx*(sd.s-.4);c.z-=nz*(sd.s-.4);const vn=c.vx*nx+c.vz*nz;if(vn>0){c.vx-=(vn>6?1.4:1.05)*vn*nx;c.vz-=(vn>6?1.4:1.05)*vn*nz;if(vn>6){spark(c.x,c.z,5);if(c.isP){vib('light');sfx('block')}}}}
   for(const o of props){if(!o.solid)continue;const dx=c.x-o.x,dz=c.z-o.z,L=Math.hypot(dx,dz),m=c.r+o.r;if(L<m&&L>0){c.x+=dx/L*(m-L+.02);c.z+=dz/L*(m-L+.02);const vn=(c.vx*dx+c.vz*dz)/L;if(vn<0){const k=vn<-6?1.4:1.05;c.vx-=k*vn*dx/L;c.vz-=k*vn*dz/L;if(vn<-6&&it===0){spark(c.x-dx/L*c.r,c.z-dz/L*c.r,4);if(c.isP){vib('light');sfx('block')}}}}}}}
  rescueT-=dt;if(rescueT<=0){rescueT=.25;for(const c of cars){if(!c.alive||c.dummy)continue;const[i,j]=cellOf(c.x,c.z);if(GRID.reach[j*GRID.n+i]){c.offT=0;continue}
   // 不在主战场：检查邻格（贴墙时中心可能落在障碍格）
@@ -426,7 +427,7 @@ function step(dt){time+=dt;zoneR=tut?AR:Math.max(10,zone0-Math.max(0,time-25)*(z
   c.offT=(c.offT||0)+(near?.1:.25);if(c.offT>.5){const[a,b]=nearOk(i,j),[x,z]=cellPos(a,b);c.x=x;c.z=z;c.vx=c.vz=0;c.offT=0;smoke(x,z,4);rescueLog++;if(c.isP)ft(x,z,2.6,'已传送回场地','#7df9ff',16)}}}
  for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++)if(cars[i].alive&&cars[j].alive)collide(cars[i],cars[j]);
  if(tut)tutStep(dt);
- else if(running&&!noEnd&&((!player.alive&&time-deadTime>1.6)||cars.filter(c=>c.alive).length<=1))finish()}
+ else if(running&&!noEnd&&((!player.alive&&time-deadTime>1.6&&!reviveHold())||cars.filter(c=>c.alive).length<=1))finish()}
 function updParts(dt){for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t>p.life){parts.splice(i,1);continue}
  if(p.vx!==undefined){p.x+=p.vx*dt;p.z+=p.vz*dt;p.y+=p.vy*dt;if(p.k==='spark'||p.k==='deb'||p.k==='mud'){p.vy-=25*dt;if(p.y<0){p.y=0;p.vy*=-.3;p.vx*=.5;p.vz*=.5}}if(p.k==='deb')p.rot+=p.vr*dt}}
  for(let i=fts.length-1;i>=0;i--){fts[i].t+=dt;if(fts[i].t>1.1)fts.splice(i,1)}
@@ -466,11 +467,11 @@ function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx
  if(!(camZ>=.8&&camZ<=1.1))camZ=1;ctx.setTransform(DPR*Z*camZ,0,0,DPR*Z*camZ,DPR*(W/2+shx),DPR*(H/2+shy+H*.04));ctx.translate(-camX,-camY);
  ctx.drawImage(floor,-floor.ox/FSC,-floor.oy/FSC,floor.width/FSC,floor.height/FSC);ctx.drawImage(skid,-floor.ox/FSC,-floor.oy/FSC,skid.width/FSC,skid.height/FSC);
  const fence=zoneR<AR-.3;
- if(fence){ctx.save();ctx.beginPath();ctx.rect(-6000,-6000,12000,12000);ZPOLY.forEach((q,i)=>{const p=iso(q[0],q[1]);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle='rgba(40,20,90,0.38)';ctx.fill('evenodd');ctx.restore();drawFencePoly(true)}
+ if(MODE==='ring')ringUnder();else if(fence){ctx.save();ctx.beginPath();ctx.rect(-6000,-6000,12000,12000);ZPOLY.forEach((q,i)=>{const p=iso(q[0],q[1]);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle='rgba(40,20,90,0.38)';ctx.fill('evenodd');ctx.restore();drawFencePoly(true)}
  const list=[];for(const p of props){if(p.baked)continue;list.push({d:p.type==='rail'?(p.nx+p.nz>0?1e9:-1e9):p.x+p.z,p})}for(const c of cars)list.push({d:c.x+c.z,c});list.sort((a,b)=>a.d-b.d);
  for(const c of cars){const [sx,sy]=iso(c.x,c.z);shadow(sx+4,sy+4,46,25,c.alive?.5:.3)}
  for(const it of list){if(it.p)drawProp(it.p);else drawCar(it.c)}
- if(fence)drawFencePoly(false);
+ if(fence&&MODE!=='ring')drawFencePoly(false);
  drawParts();for(const q of TLQ)tailLights(...q);TLQ.length=0;drawTags();drawFts();
  if(tut&&tut.step===3){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
  if(player&&player.alive){const[sx,sy]=iso(player.x,player.z);ctx.strokeStyle='#ffd23f';ctx.lineWidth=3;ctx.globalAlpha=.8+.2*Math.sin(time*8);ctx.beginPath();ctx.ellipse(sx,sy,42,21,0,0,7);ctx.stroke();ctx.globalAlpha=1;
