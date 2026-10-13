@@ -144,7 +144,7 @@ function start(k,opt){opt=opt||{};playerKey=k;cars=[];fts=[];parts=[];pairCD.cle
   const opps=opt.opps||Array.from({length:ro.n-1},()=>{const lv=Math.max(1,Math.min(MAXLV,cs.lv+((Math.random()*3|0)-1))),sk=aiSkill(lv);return{k:KEYS[Math.random()*3|0],lv,sk,cs:aiCs(lv,sk),nick:randNick(),frame:FRAMES[Math.random()*FRAMES.length|0]}});
   for(const o of opps){const c=makeCar(o.k,false,o.cs,o.sk);c.nick=o.nick;c.frame=o.frame;cars.push(c)}
   const sp=spawnPts(ro.n);cars.forEach((c,i)=>{c.x=sp[i][0];c.z=sp[i][1];c.h=Math.atan2(ZC[0]-c.x,ZC[1]-c.z)});updZone()}
- time=0;kills=0;activeT=0;deadTime=0;shake=0;hitstop=0;running=true;introT=opt.tutorial?0:2.2;
+ time=0;kills=0;activeT=0;deadTime=0;shake=0;hitstop=0;running=true;resetView();introT=opt.tutorial?0:2.2;
  hideAll();show('hud',1);$('hpName').textContent=CARS[k].name;$('lvTag').textContent='Lv.'+cs.lv;drawThumb(document.querySelector('#avatar canvas'),k,3,.42);
  if(!opt.tutorial){$('intro').innerHTML=`<b>${nCars}</b> 辆车参战<small>Lv.${cs.lv} · ${ {easy:'简单',normal:'普通',hard:'困难'}[save.settings.diff]} · 存活到最后！</small>`;show('intro',1);setTimeout(()=>show('intro',0),2000)}
  updTut()}
@@ -347,7 +347,9 @@ const FEEL={dead:.12,steerGain:2.2,steerDamp:.25,steerRate:10,kbRateLo:8,kbRateH
  dashT:.55,dashKick:.7,dashTop:1.85,dashGrip:1.1,dashYaw:.85,dashCd:2.5,dashOut:2.9,dashDmg:1.5,dashPush:1.4,
  camK:10,camLead:.35,camLeadMax:6,camLeadK:4,camDead:.5,shakeDecay:25,shakeMax:16,zoomIn:.04,zoomOut:.10};
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
-const DBG=/[?&]dbg=1/.test(location.search);let camZ=1,dashFxT=-9,leadX=0,leadZ=0;
+const DBG=/[?&]dbg=1/.test(location.search);let camZ=1,dashFxT=-9,leadX=0,leadZ=0,camSnap=true;
+// 开局统一重置镜头/缩放/画布状态（防止上一局的冲刺镜头时间戳等残留）
+function resetView(){camZ=1;dashFxT=-9;leadX=leadZ=0;shake=0;hitstop=0;camSnap=true;resize()}
 function speedLines(){const k=Math.min(1,player.dash/.15),n=QL==='low'?10:18,cx=W/2,cy=H/2,R0=Math.min(W,H)*.32,R1=Math.hypot(W,H)*.6;ctx.save();ctx.lineCap='round';
  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2+Math.sin(time*37+i*7.1)*.18,r0=R0+((time*900+i*131)%220),l=40+((i*53)%60);ctx.globalAlpha=.4*k;ctx.strokeStyle=i%3?'#ffffff':'#bdf3ff';ctx.lineWidth=1.5+(i%3);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0);ctx.lineTo(cx+Math.cos(a)*Math.min(R1,r0+l),cy+Math.sin(a)*Math.min(R1,r0+l));ctx.stroke()}
  const g=ctx.createRadialGradient(cx,cy,Math.min(W,H)*.35,cx,cy,Math.hypot(W,H)*.6);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(20,10,40,${.35*k})`);ctx.globalAlpha=1;ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.restore()}
@@ -457,11 +459,11 @@ function drawWheels(c2d,k,i,st,rl,x,y,s){const idx=i*9+st*3+rl,img=WHL[k];c2d.dr
 function drawThumb(cnv,k,i,s){const x=cnv.getContext('2d');x.clearRect(0,0,cnv.width,cnv.height);drawFull(x,k,save.cars[k],i,cnv.width/2,cnv.height*.62,s*2)}
 function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx.fillRect(0,0,W,H);
  let tx=camX,ty=camY;const F=FEEL,rdt=Math.min(.05,frameDt||.016);if(player){const dl=player.dash>0?1.6:1;let lx2=clamp(player.vx*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl),lz2=clamp(player.vz*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl);const kL=1-Math.exp(-F.camLeadK*rdt);leadX+=(lx2-leadX)*kL;leadZ+=(lz2-leadZ)*kL;[tx,ty]=iso(player.x+leadX,player.z+leadZ);ty-=10}
- const kC=1-Math.exp(-F.camK*rdt);if(Math.hypot(tx-camX,ty-camY)>F.camDead){camX+=(tx-camX)*kC;camY+=(ty-camY)*kC}
+ if(camSnap&&player){camX=tx;camY=ty;camSnap=false}const kC=1-Math.exp(-F.camK*rdt);if(Math.hypot(tx-camX,ty-camY)>F.camDead){camX+=(tx-camX)*kC;camY+=(ty-camY)*kC}
  // 冲刺镜头：先推近 80ms，再拉远 200ms，保持，结束后 300ms 回位
- const de=time-dashFxT,dOn=player&&player.dash>0;let zt=1;if(de<.08)zt=1+F.zoomIn*(de/.08);else if(dOn)zt=1-F.zoomOut*Math.min(1,(de-.08)/.2);camZ+=(zt-camZ)*(de<.08?1:1-Math.exp(-(dOn?10:7)*rdt));
+ const de=time-dashFxT,dOn=player&&player.dash>0;let zt=1;if(de>=0&&de<.08)zt=1+F.zoomIn*(de/.08);else if(dOn)zt=1-F.zoomOut*Math.min(1,(de-.08)/.2);camZ+=(zt-camZ)*(de>=0&&de<.08?1:1-Math.exp(-(dOn?10:7)*rdt));
  let shx=0,shy=0;if(shake>0){const a=FEEL.shakeMax*Math.pow(Math.min(1,shake/14),2);shx=rnd(-1,1)*a;shy=rnd(-1,1)*a}
- ctx.setTransform(DPR*Z*camZ,0,0,DPR*Z*camZ,DPR*(W/2+shx),DPR*(H/2+shy+H*.04));ctx.translate(-camX,-camY);
+ if(!(camZ>=.8&&camZ<=1.1))camZ=1;ctx.setTransform(DPR*Z*camZ,0,0,DPR*Z*camZ,DPR*(W/2+shx),DPR*(H/2+shy+H*.04));ctx.translate(-camX,-camY);
  ctx.drawImage(floor,-floor.ox/FSC,-floor.oy/FSC,floor.width/FSC,floor.height/FSC);ctx.drawImage(skid,-floor.ox/FSC,-floor.oy/FSC,skid.width/FSC,skid.height/FSC);
  const fence=zoneR<AR-.3;
  if(fence){ctx.save();ctx.beginPath();ctx.rect(-6000,-6000,12000,12000);ZPOLY.forEach((q,i)=>{const p=iso(q[0],q[1]);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle='rgba(40,20,90,0.38)';ctx.fill('evenodd');ctx.restore();drawFencePoly(true)}
@@ -715,4 +717,4 @@ function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickT
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k]]=await Promise.all(['base','paint','wheels'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png')));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png').then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
  buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
-window.__game={FEEL,get camZ(){return camZ},keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
+window.__game={get DPR(){return DPR},get Z(){return Z},get camX(){return camX},FEEL,get camZ(){return camZ},keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};
