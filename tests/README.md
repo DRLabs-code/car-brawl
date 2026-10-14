@@ -9,3 +9,4 @@
 - 已有：feel-bench.js（操控）、replay-view.js（再来一局镜头回归）。
 - `node tests/v15.js`：车辆命名（免费/付费/校验/取消不扣费）、涂装试穿/还原/购买扣费、首页。
 - `node tests/result-fit.js`：结算页及弹窗在 iPhone/安卓/桌面各视口（含 Safari 工具栏 390×664、750×340）一屏居中。
+- `node tests/team.js`：队伍乱斗（分队 2v2/3v3/4v4、友伤免疫、AI 不锁队友/集火/支援/避让、阵亡观战、全灭判负、结算 MVP、道具兼容、队伍任务、埋点）。

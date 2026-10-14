@@ -289,3 +289,9 @@ body #result .rcard.r15{display:flex;flex-direction:column;gap:8px;width:min(900
 .r15 #rBoard{max-height:none;margin:2px 0;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px}.r15 .brow{padding:1px 6px;font-size:11px}
 .r15 .btns{display:flex;gap:8px;margin:0;justify-content:center}.r15 #again{flex:1;max-width:380px;font-size:22px;padding:12px}.r15 #toGarage,.r15 #back{flex:none;padding:10px 16px}.r15 #toGarage{position:relative}
 .r15 #toGarage.dot:after{content:'';position:absolute;right:-3px;top:-3px;width:10px;height:10px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 2px #1b1420}
+/* v16 队伍 */
+.mteams{display:flex;align-items:center;gap:14px;justify-content:center}.mteam{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 10px;border-radius:14px;border:3px solid #1b1420}.mteam.t0{background:#3d9bff33}.mteam.t1{background:#ff5a5a33}.mteam .mcards{flex-wrap:wrap;justify-content:center;max-width:340px}
+.mth{font-weight:900}.mvs{font:900 30px system-ui;color:#ffd23f;text-shadow:0 3px 0 #1b1420}
+#teamSb{position:absolute;top:96px;left:50%;transform:translateX(-50%);background:#1b1420cc;border:2px solid #fff3;border-radius:12px;padding:3px 14px;font:900 15px system-ui;color:#fff;pointer-events:none;z-index:6;text-align:center}#teamSb small{display:block;font-size:11px;color:#ffd23f}#teamSb.hide{display:none}
+.mvp{font-size:13px;margin-top:4px;text-align:left}.mvp em{font-style:normal;color:#ffd23f;font-weight:900}.tsc{font-size:14px;opacity:.85}
+.r15 #rBoard .tcol{display:flex;flex-direction:column;gap:2px}

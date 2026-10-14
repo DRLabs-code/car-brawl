@@ -71,10 +71,11 @@ function doRevive(){const p=player;let best=[ZC[0],ZC[1]],bs=-1;for(let i=0;i<50
 // ---------- 每日挑战 ----------
 const DCP={dashKill:{n:'冲撞击杀',d:'冲刺中撞毁对手',ic:'💥',g:2,r:{coins:80}},kill:{n:'撞毁对手',d:'任意模式撞毁对手',ic:'🚗',g:5,r:{coins:60}},play:{n:'完成对局',d:'完成任意对局',ic:'🎮',g:3,r:{coins:50}},
  pickup:{n:'拾取道具',d:'对战中拾取道具',ic:'🎁',g:4,r:{shards:3}},win:{n:'乱斗夺冠',d:'在乱斗模式获得第一',ic:'👑',g:1,r:{shards:4}},ringWin:{n:'擂台称王',d:'在推出擂台获胜',ic:'⭕',g:1,r:{coins:120}},ringFall:{n:'推下擂台',d:'把对手推下擂台',ic:'🌀',g:3,r:{coins:80}}};
-const DC_SLOTS=[['dashKill','kill','play'],['pickup','win'],['ringWin','ringFall']],DC_CHEST={coins:150,shards:5};
-function dcGet(){let d=L('carbrawl_dc',null);const td=today();if(!d||d.d!==td){let h=0;for(const ch of String(td))h=(h*31+ch.charCodeAt(0))>>>0;d={d:td,t:DC_SLOTS.map((s,i)=>({id:s[(h>>(i*3))%s.length],p:0,c:0})),chest:0,seen:0};S('carbrawl_dc',d);track('dc_new_day',{tasks:d.t.map(t=>t.id).join(',')})}return d}
+Object.assign(DCP,{teamWin:{n:'队伍获胜',d:'在队伍乱斗中赢下一局',ic:'👥',g:1,r:{coins:100}},teamPlay:{n:'并肩作战',d:'完成队伍乱斗对局',ic:'🤝',g:2,r:{shards:3}},teamAssist:{n:'协同集火',d:'队伍乱斗中撞毁队友正在攻击的对手',ic:'🎯',g:2,r:{coins:80}}});/* v16 队伍任务（定义放这里，避免读档时先于 v16 加载） */
+const DC_SLOTS=BUILD.modes.includes('team')?[['dashKill','kill','play','teamPlay'],['pickup','win','teamWin'],['ringWin','ringFall','teamAssist']]:[['dashKill','kill','play'],['pickup','win'],['ringWin','ringFall']],DC_CHEST={coins:150,shards:5};
+function dcGet(){let d=L('carbrawl_dc',null);const td=today();if(!d||d.d!==td){let h=0;for(const ch of String(td))h=(h*31+ch.charCodeAt(0))>>>0;d={d:td,t:DC_SLOTS.map((s,i)=>({id:s[(h>>(i*3))%s.length],p:0,c:0})),chest:0,seen:0};S('carbrawl_dc',d);track('dc_new_day',{tasks:d.t.map(t=>t.id).join(',')})}d.t=d.t.filter(t=>DCP[t.id]);return d}
 window.dcAdd=(id,n=1)=>{const d=dcGet();for(const t of d.t){if(t.id!==id||t.p>=DCP[id].g)continue;t.p=Math.min(DCP[id].g,t.p+n);if(t.p>=DCP[id].g){toast(`📋 挑战完成：${DCP[id].n}，去领奖！`);track('dc_complete',{id})}}S('carbrawl_dc',d);dcDot()};
-const dcBadge=()=>{const d=dcGet();return!d.seen||d.t.some(t=>t.p>=DCP[t.id].g&&!t.c)||(d.t.every(t=>t.c)&&!d.chest)};
+const dcBadge=()=>{const d=dcGet();d.t=d.t.filter(t=>DCP[t.id]);return!d.seen||d.t.some(t=>t.p>=DCP[t.id].g&&!t.c)||(d.t.every(t=>t.c)&&!d.chest)};
 function dcDot(){const e=$('dcDot');if(e)e.classList.toggle('hide',!dcBadge())}
 function giveR(r){const got={};if(r.coins)save.coins+=r.coins;for(let i=0;i<(r.shards||0);i++)grantShards(rollPart(),1,got);persist();
  return[r.coins?`${r.coins} 金币`:'',...Object.entries(got).map(([k,v])=>k==='uni'?`通用碎片×${v}`:`${PARTS[k].n}碎片×${v}`)].filter(Boolean).join('、')}
@@ -142,7 +143,7 @@ const _fin=finish;finish=function(){const win=player.alive;clearInterval(RV.tm);
  track('match_end_v11',{mode:MODE,win,kills,pickups:pkN,revived:RV.ok,t:Math.round(time)});
  const w=hlPick();if(w){HL.t0=w.t0;HL.t1=w.t1;HL.tt=0;HL.fi=0;HL.play=true;$('hl').classList.remove('hide');$('hlTxt').textContent='生成中…';track('hl_build',{score:w.score,dur:+(w.t1-w.t0).toFixed(1)});
   TTREC.clip(Math.ceil(time-w.t0)+1,0,p=>{HL.ttPath=p})}};
-window.__v11={stats:PKS,get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
+window.__v11={DC_SLOTS,modeUI,stats:PKS,get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
 dcDot();modeUI();
 })();
 // v13：结算卡分两列容器（横屏矮屏时左右排布，一屏放下；其他情况 display:contents 保持原样）

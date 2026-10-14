@@ -9,7 +9,7 @@ const VP={desk:{width:1280,height:720,deviceScaleFactor:1},land:{width:844,heigh
   await pg.goto(URL);await pg.evaluate(()=>localStorage.clear());await pg.reload();await W(1500);
   await pg.evaluate(()=>{const g=__game;g.save.tut=true;g.save.tutorialDone=true;g.tut=null;g.save.nick='矩阵测试';menu()});
   const games=[];const combos=[];
-  if(vn==='desk'){for(const mode of['brawl','ring'])for(const map of mode==='ring'?['ring']:['site','junk','desert'])for(const car of['tyrant','fang','beast'])for(const lv of[1,5,10])combos.push({mode,map,car,lv})}
+  if(vn==='desk'){for(const mode of['brawl','ring'])for(const map of mode==='ring'?['ring']:['site','junk','desert'])for(const car of['tyrant','fang','beast'])for(const lv of[1,5,10])combos.push({mode,map,car,lv});['site','junk','desert'].forEach((map,i)=>[1,5,10].forEach((lv,j)=>combos.push({mode:'team',map,car:['tyrant','fang','beast'][(i+j)%3],lv})))}
   else for(let i=0;i<10;i++)combos.push({mode:i%3===2?'ring':'brawl',map:i%3===2?'ring':['site','junk','desert'][i%3],car:['tyrant','fang','beast'][i%3],lv:[1,5,10][i%3],again:i>0&&i%3!==0});
   for(const [gi,c] of combos.entries()){
    await pg.evaluate(c=>{const g=__game;document.querySelector(`#modeSel [data-mode="${c.mode}"]`)?.click();g.save.cars[c.car].lv=c.lv;if(c.again&&!document.getElementById('result').classList.contains('hide')){mapKey=c.map;document.getElementById('again').click()}else{menu();matchThenStart(c.car,c.map)}},c);
@@ -30,7 +30,7 @@ const VP={desk:{width:1280,height:720,deviceScaleFactor:1},land:{width:844,heigh
   const heap=games.map(g=>g.heap).filter(Boolean);
   report[vn]={games,errs,heapStart:heap[0],heapEnd:heap[heap.length-1]};await pg.close()}
  fs.writeFileSync(OUT+'matrix-report.json',JSON.stringify(report,null,1));
- for(const vn in report){const r=report[vn],bad=r.games.filter(g=>!g.vis||g.nan||g.stuck>1||!g.fit||g.hOver||g.camZ<.8||g.camZ>1.1||(g.mode==='ring')!==(g.map==='ring'));
+ for(const vn in report){const r=report[vn],bad=r.games.filter(g=>!g.vis||g.nan||g.stuck>1||!g.fit||g.hOver||g.camZ<.8||g.camZ>1.1||(g.mode==='ring')!==(g.map==='ring')||(g.mode==='team'&&g.n!==({1:4,5:6,10:8})[g.lv]));
   console.log(`[${vn}] games=${r.games.length} errs=${r.errs.length} heap ${r.heapStart}→${r.heapEnd}MB fps min ${Math.min(...r.games.map(g=>g.fps))} avg ${(r.games.reduce((a,g)=>a+g.fps,0)/r.games.length).toFixed(1)} result-fit ${r.games.filter(g=>g.fit).length}/${r.games.length} problems=${bad.length}`);
   for(const g of bad)console.log('  ✗',JSON.stringify(g));for(const e of [...new Set(r.errs)].slice(0,10))console.log('  ERR',e)}
  await b.close()})();
