@@ -15,3 +15,4 @@
 - `node tests/perf.js`：8 车 + 机关场景（工地/废车场/沙漠）每帧 render/step 耗时、FPS、堆；v19 起用于对比优化前后。
 - 模块文件（v19 起）：battle-extras.js（原 v11）、ui-shell.js（原 v15）、mode-team.js（原 v16）、map-hazards.js（原 v17）、skin-patterns.js（原 v18）；数值参数集中在 tune.js。
 - `node tests/v20.js`：车库可读性（844×390/667×375/1280×720 下部件图标 ≥36px 可见、名称说明字号、碎片进度条缩小、部件行不溢出）。
+- `node tests/race.js`：竞速（入口、发车格、HUD、重生、完赛名次/用时、加速带、跳台、AI 捷径/吃道具、对撞平衡新旧对比、埋点、FPS）；matrix 增加 3 局竞速。

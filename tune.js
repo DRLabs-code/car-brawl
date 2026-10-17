@@ -14,6 +14,10 @@ window.TUNE={
   barrelR:6.5,barrelDmg:[8,26],barrelKick:18,crateCoin:.3,crateCoinV:[5,10],crateDrop:.15,hzMargin:2.6,creditWin:4},
  // 涂装：传说保底与概率、动态叠加缓存上限
  skin:{legPity:30,legSpin:.03,legChest:.06,dynCache:96},
+ // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
+ hit:{headOnSpeedW:.8,selfCap:24},
+ // 竞速模式：圈数、重生、加速带、跳台、AI
+ race:{laps:3,respawn:1.6,respawnHp:.6,respawnInv:1.5,boostT:1.4,boostMul:1.38,boostKick:6,jumpMin:9,jumpK:.045,jumpMax:.95,jumpH:46,lateT:20,maxT:240,aiShortcut:.55,aiRam:.5},
  // 商店：看广告领金币
  coinAd:{max:3,v:100}
 };

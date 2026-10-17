@@ -329,9 +329,10 @@ function collide(a,b){const dx=b.x-a.x,dz=b.z-a.z,dist=Math.hypot(dx,dz),min=a.r
  const dHit=atk.dash>0&&zAtk==='front',base=(dHit?Math.min(rv,atk.spd*1.3)*FEEL.dashDmg:rv)*1.6,mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,np=nearP(mx,mz);let push=(atk.push||1)*(dHit?FEEL.dashPush:1);
  if(dHit){ft(mx,mz,4.4,'冲撞！','#7df9ff',30,true);spark(mx,mz,14,'#7df9ff');if(mine){shake=Math.max(shake,12);hitstop=Math.max(hitstop,.09);vib('heavy')}}
  spark(mx,mz,8+rv|0);
- if(zAtk==='front'&&zVic==='front'){hurt(a,base*b.dmg*Math.sqrt(b.mass/a.mass)*.6,b);hurt(b,base*a.dmg*Math.sqrt(a.mass/b.mass)*.6,a);
+ if(zAtk==='front'&&zVic==='front'){const sa=Math.max(0,pa)/(Math.max(0,pa)+Math.max(0,pb)||1),hk=TUNE.hit.headOnSpeedW*(2*sa-1);// 对撞：谁冲得快谁伤害高、自伤低
+  hurt(a,base*b.dmg*Math.sqrt(b.mass/a.mass)*.6*(1-hk),b);hurt(b,base*a.dmg*Math.sqrt(a.mass/b.mass)*.6*(1+hk),a);
   ft(mx,mz,3.2,'对撞！','#ffffff',26,true);if(np)sfx('hit',np);if(mine){shake=Math.max(shake,7);hitstop=Math.max(hitstop,.06);vib('mid')}debris(mx,mz,4,'#b8c2cc')}
- else{const atkMul=zAtk==='front'?1:.5,selfMul=zAtk==='front'?.2:.5,dv=base*atk.dmg*Math.sqrt(atk.mass/vic.mass)*atkMul*ZMUL[zVic]*(zVic==='side'?atk.sideBonus*vic.critRes:zVic==='rear'?vic.rearRes:1);hurt(vic,dv,atk);if(vic.thorns>0&&atk.alive){hurt(atk,dv*vic.thorns,vic);if(nearP(mx,mz))ft(atk.x,atk.z,2.6,'反伤 -'+Math.round(dv*vic.thorns),'#c9c3ff',16)}hurt(atk,base*selfMul*.5,vic);const n=Math.round(dv);
+ else{const atkMul=zAtk==='front'?1:.5,selfMul=zAtk==='front'?.2:.5,dv=base*atk.dmg*Math.sqrt(atk.mass/vic.mass)*atkMul*ZMUL[zVic]*(zVic==='side'?atk.sideBonus*vic.critRes:zVic==='rear'?vic.rearRes:1);hurt(vic,dv,atk);if(vic.thorns>0&&atk.alive){hurt(atk,dv*vic.thorns,vic);if(nearP(mx,mz))ft(atk.x,atk.z,2.6,'反伤 -'+Math.round(dv*vic.thorns),'#c9c3ff',16)}hurt(atk,Math.min(base,TUNE.hit.selfCap)*selfMul*.5,vic);const n=Math.round(dv);
   if(zVic==='side'){ft(vic.x,vic.z,3.6,'暴击！ -'+n,'#ffd23f',34,true);spark(mx,mz,18,'#ffffff');debris(vic.x,vic.z,6,vic.s.col);if(np)sfx('crit');if(mine){shake=Math.max(shake,11);hitstop=Math.max(hitstop,.09);vib('heavy')}
    if(tut&&tut.step===3&&atk.isP){tut.step=4;tut.t=0;sfx('good');updTut()}}
   else if(zVic==='rear'){push*=1.5;ft(vic.x,vic.z,3.3,'追尾 -'+n,'#ff9a3c',26);smoke(vic.x,vic.z,3);if(np)sfx('hit',np*.8);if(mine){shake=Math.max(shake,6);vib('mid')}}
@@ -418,7 +419,7 @@ function unstick(c){let nx=0,nz=0;for(const o of props){if(!o.solid)continue;con
  const sd=sdist(POLY,c.x,c.z);if(sd.s>-3){nx-=sd.nx*.6;nz-=sd.nz*.6}let L=Math.hypot(nx,nz);if(L<1e-3){nx=-Math.sin(c.h);nz=-Math.cos(c.h);L=1}nx/=L;nz/=L;
  c.vx=nx*7;c.vz=nz*7;c.x+=nx*.6;c.z+=nz*.6;smoke(c.x,c.z,3)}
 // ================= 模拟 =================
-function step(dt){time+=dt;zoneR=tut?AR:MODE==='ring'?ringZone():Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
+function step(dt){time+=dt;zoneR=tut||MODE==='race'?AR:MODE==='ring'?ringZone():Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
   if(c.isP){const kW=keys.KeyW||keys.ArrowUp?1:0,kS=keys.KeyS||keys.ArrowDown?1:0,kT=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let sx=jx,sy=jy;
@@ -616,7 +617,7 @@ let mapCar='beast';
 function openMaps(k){mapCar=k;hideAll();show('maps',1);const box=$('mapList');box.innerHTML='';const cs=save.cars[k],ro=roster(cs.lv);
  $('mapsSub').textContent=`${CARS[k].name} Lv.${cs.lv} · 本局 ${ro.n} 辆车 · 场地 ${ro.n===4?'标准':ro.n===6?'2 倍':'3 倍'}大小`;
  ((BUILD.maps&&BUILD.maps.filter(m=>MAPK.includes(m)))||[...MAPK,'random']).forEach(mk=>{const d=document.createElement('div');d.className='mapc';if(mk==='random'){d.innerHTML='<div class="rnd">？</div><b>随机</b><small>三选一</small>'}else{const M=MAPS[mk];d.appendChild(mapThumb(mk));d.insertAdjacentHTML('beforeend',`<b>${M.name}</b><small>${M.shape}<br>${M.desc}</small>`)}
-  d.onclick=()=>{const m=mk==='random'?MAPK[Math.random()*3|0]:mk;matchThenStart(k,m)};box.appendChild(d)})}
+  d.onclick=()=>{const m=mk==='random'?MAPK[Math.random()*MAPK.length|0]:mk;matchThenStart(k,m)};box.appendChild(d)})}
 $('mapsBack').onclick=()=>menu();
 // ================= 设置 / 暂停 =================
 let settingsFrom='menu';
