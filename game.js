@@ -280,7 +280,9 @@ function drawProp(p){const [sx,sy]=iso(p.x,p.z),s=p.s||1;
   ctx.beginPath();ctx.moveTo(a[0],a[1]-h);ctx.lineTo(b[0],b[1]-h);ctx.lineTo(b[0],b[1]-h+12);ctx.lineTo(a[0],a[1]-h+12);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.strokeStyle='#ffffff77';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(a[0],a[1]-h+2);ctx.lineTo(b[0],b[1]-h+2);ctx.stroke();
   ctx.fillStyle='#6c7480';ctx.fillRect(a[0]-3,a[1]-h-4,6,h+4);ctx.strokeStyle='#1b1420';ctx.strokeRect(a[0]-3,a[1]-h-4,6,h+4)}}
-function shadow(x,y,rx,ry,a){const g=ctx.createRadialGradient(x,y,0,x,y,rx);g.addColorStop(0,`rgba(20,10,30,${a})`);g.addColorStop(.6,`rgba(20,10,30,${a*.6})`);g.addColorStop(1,'rgba(20,10,30,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,7);ctx.fill()}
+// 阴影贴图缓存：每种尺寸只建一次渐变，绘制用 globalAlpha（原来每帧每物体 createRadialGradient）
+const SHC=new Map();function shadow(x,y,rx,ry,a){const k=rx*1e3+ry;let c=SHC.get(k);if(!c){const w=Math.ceil(rx*2)+2,h=Math.ceil(ry*2)+2;c=mkC(w,h);const q=c.getContext('2d'),g=q.createRadialGradient(w/2,h/2,0,w/2,h/2,rx);g.addColorStop(0,'rgba(20,10,30,1)');g.addColorStop(.6,'rgba(20,10,30,.6)');g.addColorStop(1,'rgba(20,10,30,0)');q.fillStyle=g;q.beginPath();q.ellipse(w/2,h/2,rx,ry,0,0,7);q.fill();if(SHC.size>256)SHC.clear();SHC.set(k,c)}
+ const o=ctx.globalAlpha;ctx.globalAlpha=o*a;ctx.drawImage(c,x-c.width/2,y-c.height/2);ctx.globalAlpha=o}
 function mapThumb(mk){const c=mkC(200,120),x=c.getContext('2d'),M=MAPS[mk];x.fillStyle=M.out[0];x.fillRect(0,0,200,120);for(let i=0;i<300;i++){x.fillStyle=M.out[1+(i%2)];x.fillRect(Math.random()*200,Math.random()*120,3,2)}
  const P=M.poly.map(([a,b])=>iso(a,b));let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;P.forEach(([a,b])=>{x0=Math.min(x0,a);x1=Math.max(x1,a);y0=Math.min(y0,b);y1=Math.max(y1,b)});const k=Math.min(184/(x1-x0),104/(y1-y0)),ox=100-(x0+x1)/2*k,oy=60-(y0+y1)/2*k,T=(a,b)=>{const p=iso(a,b);return[ox+p[0]*k,oy+p[1]*k]};
  const path=()=>{x.beginPath();M.poly.forEach(([a,b],i)=>{const p=T(a,b);i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()};
@@ -360,10 +362,7 @@ function aiThink(c,dt){const ai=c.ai,sk=c.sk;ai.re-=dt;
 function terrainAt(x,z){for(const g of gzones)if(Math.hypot(g.x-x,g.z-z)<g.r)return MAP.zone.k;return null}
 const sgn=v=>v<0?-1:1;
 // ================= 手感参数（预设 B · 街机）集中于此 =================
-const FEEL={dead:.12,steerGain:2.2,steerDamp:.25,steerRate:10,kbRateLo:8,kbRateHi:5,lowTurn:.35,lowTurnV:5,hiTurnCut:.25,backAng:1.75,backThr:.35,turnLift:.3,
- accK:1.8,accPow:1.6,accMin:.12,coast:.9,gripG:7,slideLo:3,slideHi:8,slideCut:.45,
- dashT:.55,dashKick:.7,dashTop:1.85,dashGrip:1.1,dashYaw:.85,dashCd:2.5,dashOut:2.9,dashDmg:1.5,dashPush:1.4,
- camK:10,camLead:.35,camLeadMax:6,camLeadK:4,camDead:.5,shakeDecay:25,shakeMax:16,zoomIn:.04,zoomOut:.10};
+const FEEL=TUNE.feel;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const DBG=/[?&]dbg=1/.test(location.search);let camZ=1,dashFxT=-9,leadX=0,leadZ=0,camSnap=true;
 // 开局统一重置镜头/缩放/画布状态（防止上一局的冲刺镜头时间戳等残留）
@@ -475,6 +474,7 @@ function drawPartLayers(c2d,k,eq,i,x,y,sc){const LF=128,LS=192/128;for(const id 
 function drawFull(c2d,k,cs,i,x,y,sc,rl){drawWheels(c2d,k,i,1,rl||0,x,y,WS*sc);drawCarSprite(c2d,compose(k,cs.paint.color,cs.paint.livery),i,x,y,FS*sc);drawPartLayers(c2d,k,Object.values(cs.equip).filter(Boolean),i,x,y,sc)}
 function drawWheels(c2d,k,i,st,rl,x,y,s){const idx=i*9+st*3+rl,img=WHL[k];c2d.drawImage(img,(idx%12)*WF,(idx/12|0)*WF,WF,WF,x-WF/2*s,y-WF*AY*s,WF*s,WF*s)}
 function drawThumb(cnv,k,i,s){const x=cnv.getContext('2d');x.clearRect(0,0,cnv.width,cnv.height);drawFull(x,k,save.cars[k],i,cnv.width/2,cnv.height*.62,s*2)}
+const RL=[],byD=(a,b)=>a._d-b._d;
 function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx.fillRect(0,0,W,H);
  let tx=camX,ty=camY;const F=FEEL,rdt=Math.min(.05,frameDt||.016);if(player){const dl=player.dash>0?1.6:1;let lx2=clamp(player.vx*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl),lz2=clamp(player.vz*F.camLead*dl,-F.camLeadMax*dl,F.camLeadMax*dl);const kL=1-Math.exp(-F.camLeadK*rdt);leadX+=(lx2-leadX)*kL;leadZ+=(lz2-leadZ)*kL;[tx,ty]=iso(player.x+leadX,player.z+leadZ);ty-=10}
  if(camSnap&&player){camX=tx;camY=ty;camSnap=false}const kC=1-Math.exp(-F.camK*rdt);if(Math.hypot(tx-camX,ty-camY)>F.camDead){camX+=(tx-camX)*kC;camY+=(ty-camY)*kC}
@@ -485,9 +485,9 @@ function render(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=MAP.out[0];ctx
  ctx.drawImage(floor,-floor.ox/FSC,-floor.oy/FSC,floor.width/FSC,floor.height/FSC);ctx.drawImage(skid,-floor.ox/FSC,-floor.oy/FSC,skid.width/FSC,skid.height/FSC);
  const fence=zoneR<AR-.3;
  if(MODE==='ring')ringUnder();else if(fence){ctx.save();ctx.beginPath();ctx.rect(-6000,-6000,12000,12000);ZPOLY.forEach((q,i)=>{const p=iso(q[0],q[1]);i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fillStyle='rgba(40,20,90,0.38)';ctx.fill('evenodd');ctx.restore();drawFencePoly(true)}
- const list=[];for(const p of props){if(p.baked)continue;list.push({d:p.type==='rail'?(p.nx+p.nz>0?1e9:-1e9):p.x+p.z,p})}for(const c of cars)list.push({d:c.x+c.z,c});list.sort((a,b)=>a.d-b.d);
+ const list=RL;list.length=0;for(const p of props){if(p.baked)continue;p._d=p.type==='rail'?(p.nx+p.nz>0?1e9:-1e9):p.x+p.z;list.push(p)}for(const c of cars){c._d=c.x+c.z;list.push(c)}list.sort(byD);// 复用数组，不再每帧分配包装对象
  for(const c of cars){const [sx,sy]=iso(c.x,c.z);shadow(sx+4,sy+4,46,25,c.alive?.5:.3)}
- for(const it of list){if(it.p)drawProp(it.p);else drawCar(it.c)}
+ for(const it of list){if(it.isP===undefined)drawProp(it);else drawCar(it)}
  if(fence&&MODE!=='ring')drawFencePoly(false);
  drawParts();for(const q of TLQ)tailLights(...q);TLQ.length=0;drawTags();drawFts();
  if(tut&&tut.step===3){const d=cars[1],[sx,sy]=iso(d.x,d.z),b=Math.sin(time*6)*6;ctx.font='900 18px system-ui';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='#1b1420';ctx.strokeText('撞它侧面 ↓',sx,sy-110+b);ctx.fillStyle='#7df9ff';ctx.fillText('撞它侧面 ↓',sx,sy-110+b)}
@@ -577,8 +577,6 @@ function renderGarage(){const cs=save.cars[gKey],st=carStats(gKey,cs),b=CARS[gKe
    return`<span class="cmp ${good?'g':'b'}">${MODN[k]} ${fmt(va)}→<b>${fmt(vb)}</b> ${up?'▲':'▼'}</span>`}).join('');
   const own=!id||save.owned[id],act=id===cur?(cur?`<button class="btn sm ghost" data-eq="${sl}" data-id="">卸下</button>`:'<span class="owned">当前</span>'):own?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-eq="${sl}" data-id="${id||''}">${id?(cur?'装备（替换 '+PARTS[cur].n+'）':'装备'):'卸下 '+PARTS[cur].n}</button>`:'<span class="lack">未拥有 · 去下方合成</span>';
   return`<div class="cmpbox">${id?icPart(id,undefined,false,true):''}<b>${id?PARTS[id].n:'空槽'}</b> <small>${id?PARTS[id].desc:'不装部件（素车）'}</small><div class="cmps">${id===cur?'<span class="cmp">当前装备中</span>':rows||'<span class="cmp">属性无变化</span>'}</div>${act}</div>`};
- const slots=Object.keys(SLOTS).map(sl=>{const opts=Object.keys(PARTS).filter(id=>PARTS[id].slot===sl);const cur=cs.equip[sl],sel=gSel&&gSel.sl===sl?gSel.id:undefined;
-  return`<div class="slot"><span class="sn">${SLOTS[sl]}<em>${cur?PARTS[cur].n:'空'}</em></span><button class="pchip ipc x ${!cur?'on':''} ${sel===null?'sel':''}" data-sel="${sl}" data-id=""><span class="ic empty"><i></i></span><small>空槽</small></button>${opts.map(id=>`<button class="pchip ipc ${cur===id?'on':''} ${sel===id?'sel':''} ${save.owned[id]?'':'lock'}" data-sel="${sl}" data-id="${id}">${icPart(id,undefined,false,true)}${save.owned[id]?'':'<em class="lk">🔒</em>'}<small>${PARTS[id].n}</small></button>`).join('')}${sel!==undefined?cmpRow(sl,sel):cur?`<small>${PARTS[cur].desc}</small>`:''}</div>`}).join('');
  const fillShown=[];const craft=Object.keys(PARTS).map(id=>{const p=PARTS[id],have=save.shards[id]||0,own=save.owned[id],gap=Math.max(0,p.need-have),uniNeed=gap*UNI[p.r];
   const dl=daily(),canFill=AB.fill&&!own&&gap>0&&gap<=Math.ceil(p.need*AB.fillPct)&&(dl.fill||0)<3&&have<p.need;if(canFill)fillShown.push(id);
   const btn=canFill?`<span class="bcol"><button class="btn sm adbtn" data-fill="${id}">📺 补齐 +${gap} 碎片</button><small>今日 ${3-(dl.fill||0)}/3</small></span>`:own?'<span class="owned">已拥有</span>':have>=p.need?`<button class="btn sm ${garageGuide&&id==='spike'?'glow':''}" data-craft="${id}">合成</button>`:save.uni>=uniNeed?`<button class="btn sm ghost" data-craft="${id}">${icUni('')} 通用×${uniNeed} 补齐</button>`:`<span class="lack">差 ${gap}</span>`;
@@ -641,7 +639,6 @@ $('pauseBtn').onclick=togglePause;$('pResume').onclick=togglePause;$('pSet').onc
 // ================= 昵称 / 匹配 =================
 const NA=['小','老','阿','大','暴躁','佛系','快乐','无敌','秋名山','深夜','路口','隔壁','甩尾','漂移','飙车','追风','铁头','咸鱼','奶茶','柠檬','橘子','月下','南城','北巷','夏天的','不吃香菜的','爱吃辣的','会飞的','迷路的','早睡的'];
 const NB=['车神','老司机','小飞侠','铁皮','旋风','排气管','螺丝钉','方向盘','轮胎','油门','刹车片','后视镜','小卡车','皮卡丘丘','大G','老爷车','碰碰车','涡轮','火花塞','加油站','停车场','洗车工','交警队长','驾校学员','小绵羊'];
-const NSUF=['','','','','','666','520','007','2026','_','丶','~','哈','呀','嘻嘻','✨','😎','🔥','⚡','🚗','💨','yyds','Pro','v2','99'];
 const EN=['Tom','Jack','Kiki','momo','Leo','Amy','Max','Coco','Ray','Zed','Nana','Ken','Lucky','Sunny','Ace','Neo','Bobo','Yuki','Vivi','Sam'];
 const PY=['xiaoming','dage','laowang','ahua','zhuzhu','qiuqiu','miaomiao','tuzi','dudu','yangyang'];
 const ABBR=['zzz','xswl','yyds','awsl','QAQ','orz','GG','nb','ok','hhh','TT','LOL','666','2333','emmm'];

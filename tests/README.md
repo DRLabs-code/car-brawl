@@ -12,3 +12,5 @@
 - `node tests/team.js`：队伍乱斗（分队 2v2/3v3/4v4、友伤免疫、AI 不锁队友/集火/支援/避让、阵亡观战、全灭判负、结算 MVP、道具兼容、队伍任务、埋点）。
 - `node tests/hazards.js`：地图机关（布置与出生/道具点可达、钢梁/压扁机/流沙/沙尘暴、油桶 AoE、木箱掉落、击杀归属与集锦加权、AI 躲避/利用、埋点）。
 - `node tests/v18.js`：花纹涂装（稀有度分组、试穿还原、购买扣费、传说仅抽奖+30 次保底、存档、8 车动态涂装 FPS、各车各涂装截图）。
+- `node tests/perf.js`：8 车 + 机关场景（工地/废车场/沙漠）每帧 render/step 耗时、FPS、堆；v19 起用于对比优化前后。
+- 模块文件（v19 起）：battle-extras.js（原 v11）、ui-shell.js（原 v15）、mode-team.js（原 v16）、map-hazards.js（原 v17）、skin-patterns.js（原 v18）；数值参数集中在 tune.js。

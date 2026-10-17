@@ -1,9 +1,9 @@
-// v16 队伍乱斗：2v2/3v3/4v4（随等级）、AI 队友协同、友伤免疫、全灭判负、队伍色光环/血条、两队匹配页、队伍结算+MVP、队伍任务
+// 模块 mode-team（原 v16）队伍乱斗：2v2/3v3/4v4（随等级）、AI 队友协同、友伤免疫、全灭判负、队伍色光环/血条、两队匹配页、队伍结算+MVP、队伍任务
 (()=>{if(!BUILD.modes.includes('team')){window.__v16={off:true};return}
 const TC=['#3d9bff','#ff5a5a'],TN=['蓝队','红队'];
 if(localStorage.getItem('carbrawl_mode')==='team')MODE='team';
 const isT=()=>MODE==='team'&&!tut;
-const teamOf=c=>c&&c.team,mates=(c,alive=true)=>cars.filter(q=>q!==c&&!q.dummy&&q.team===c.team&&(!alive||q.alive)),foes=c=>cars.filter(q=>!q.dummy&&q.alive&&q.team!==c.team);
+const mates=(c,alive=true)=>cars.filter(q=>q!==c&&!q.dummy&&q.team===c.team&&(!alive||q.alive)),foes=c=>cars.filter(q=>!q.dummy&&q.alive&&q.team!==c.team);
 const teamAlive=t=>cars.filter(c=>!c.dummy&&c.alive&&c.team===t).length;
 // 模式页签说明
 const tHint=()=>{const h=$('modeHint');if(h&&MODE==='team')h.textContent='👥 队伍乱斗：和 AI 队友组队，全灭对面即胜'};document.querySelectorAll('#modeSel [data-mode]').forEach(b=>b.addEventListener('click',tHint));{const _m=menu;menu=function(){_m.apply(this,arguments);__v11.modeUI();tHint()}}
@@ -66,9 +66,9 @@ const reviveHoldPending=()=>{try{return __v11.RV().pending}catch(e){return false
 // 结算：队伍胜负 + MVP
 const _f=finish;finish=function(){if(!isT())return _f.apply(this,arguments);const A0=teamAlive(0),A1=teamAlive(1),tw=A0>0,P=player,was=P.alive;if(tw&&!was)P.alive=true;let r;try{r=_f.apply(this,arguments)}finally{P.alive=was}
  const real=cars.filter(c=>!c.dummy),AL=new Map(real.map(c=>[c,c===P?was:c.alive])),mvp=real.slice().sort((a,b)=>((b.kc||0)*120+(b.dmgDone||0))-((a.kc||0)*120+(a.dmgDone||0)))[0],me=mvp===P;
- if(me){save.coins+=30;persist()}dcAdd('teamPlay');track('team_end',{win:tw,mvp:me,n:real.length/2,kills,alive:A0});
+ if(me){save.coins+=TUNE.team.mvpCoins;persist()}dcAdd('teamPlay');track('team_end',{win:tw,mvp:me,n:real.length/2,kills,alive:A0});
  setTimeout(()=>{if($('result').classList.contains('hide'))return;$('rTitle').innerHTML=`${tw?'🏆 '+TN[0]+'胜利！':'💔 '+TN[0]+'全灭'}<small class="tsc"> 存活 ${A0} : ${A1}</small>`;$('rRank').textContent=tw?'🏆':'✖';$('rRank').className=tw?'':'lose';
-  const mv=document.createElement('div');mv.className='mvp';mv.innerHTML=`⭐ MVP <b style="color:${mvp.team===0?TC[0]:TC[1]}">${esc(mvp.nick||'')}</b> 💥${mvp.kc||0} · ${Math.round(mvp.dmgDone||0)} 伤害${me?' <em>你是 MVP！+30 金币</em>':''}`;const st=$('rStats');st.parentElement.querySelectorAll('.mvp').forEach(e=>e.remove());st.after(mv);
+  const mv=document.createElement('div');mv.className='mvp';mv.innerHTML=`⭐ MVP <b style="color:${mvp.team===0?TC[0]:TC[1]}">${esc(mvp.nick||'')}</b> 💥${mvp.kc||0} · ${Math.round(mvp.dmgDone||0)} 伤害${me?' <em>你是 MVP！+${TUNE.team.mvpCoins} 金币</em>':''}`;const st=$('rStats');st.parentElement.querySelectorAll('.mvp').forEach(e=>e.remove());st.after(mv);
   const row=c=>`<div class="brow ${c.isP?'me':''}" style="border-left:4px solid ${TC[c.team]}"><span class="bp">${c===mvp?'⭐':AL.get(c)?'✔':'✖'}</span><b>${esc(c.nick||'')}</b><small>${c.s.name} Lv.${c.lv}</small><span class="bk">💥${c.kc||0}</span></div>`;
   $('rBoard').innerHTML=[0,1].map(t=>`<div class="tcol"><div class="mth" style="color:${TC[t]}">${TN[t]}${t===(tw?0:1)?' 🏆':''}</div>${real.filter(c=>c.team===t).map(row).join('')}</div>`).join('');
   const s=document.querySelector('#result details summary');if(s)s.textContent='👥 两队战绩 ▾';const hb=document.querySelector('#hl .hlb b');if(hb)hb.textContent='💥 队伍集锦';window.fitAll&&fitAll()},(tw?600:300)+140);return r};

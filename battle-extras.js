@@ -1,4 +1,4 @@
-// ===== v11：对战道具 / 广告复活 / 推出擂台 / 每日挑战 / 冲撞集锦 =====
+// ===== 模块 battle-extras（原 v11）：对战道具 / 广告复活 / 推出擂台 / 每日挑战 / 冲撞集锦 =====
 (()=>{const L=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},S=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 if(AB.revive===undefined)AB.revive=1;
 // ---------- 推出擂台地图 ----------

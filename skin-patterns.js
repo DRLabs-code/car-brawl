@@ -1,4 +1,4 @@
-// v18 花纹涂装：稀有图案（迷彩×3/火焰/斑马/碳纤维）+ 传说动态（幻彩/霓虹流光/金属电镀）
+// 模块 skin-patterns（原 v18）花纹涂装：稀有图案（迷彩×3/火焰/斑马/碳纤维）+ 传说动态（幻彩/霓虹流光/金属电镀）
 (()=>{const RAR=k=>COLORS[k].rar||'n';
 // ---- 图案纹理（世界空间，沿车头方向 +x），一次生成缓存 ----
 const TEX={};function rng(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
@@ -29,7 +29,7 @@ const PH=12,GR={};function grad(mode,ph){const key=mode+ph;if(GR[key])return GR[
  return GR[key]=c}
 let dynKey=null;const DC=new Map();
 // 缓存帧：车型×方向×相位的叠加层；shortcut: 上限 96 张(~14MB)，超出按最早淘汰
-function dynCell(mode,k,i,ph){const key=mode+k+i+'|'+ph;let c=DC.get(key);if(c)return c;const S=192;c=mkC(S,S);const x=c.getContext('2d'),sh=mode==='iri'?(i*PH/16|0):0;x.drawImage(PAINT[k],(i%4)*F,(i>>2)*F,F,F,0,0,S,S);x.globalCompositeOperation='source-in';x.drawImage(grad(mode,(ph+sh)%PH),0,0);if(DC.size>=96)DC.delete(DC.keys().next().value);DC.set(key,c);return c}
+function dynCell(mode,k,i,ph){const key=mode+k+i+'|'+ph;let c=DC.get(key);if(c)return c;const S=192;c=mkC(S,S);const x=c.getContext('2d'),sh=mode==='iri'?(i*PH/16|0):0;x.drawImage(PAINT[k],(i%4)*F,(i>>2)*F,F,F,0,0,S,S);x.globalCompositeOperation='source-in';x.drawImage(grad(mode,(ph+sh)%PH),0,0);if(DC.size>=TUNE.skin.dynCache)DC.delete(DC.keys().next().value);DC.set(key,c);return c}
 const _dcs=drawCarSprite;drawCarSprite=function(c2d,img,i,x,y,s){_dcs(c2d,img,i,x,y,s);if(!img||!img._dyn||!PAINT[dynKey])return;const mode=img._dyn,ph=((performance.now()/(mode==='iri'?140:90))|0)%PH,S=192;
  const oc=dynCell(mode,dynKey,i,ph);
  c2d.save();c2d.globalCompositeOperation=mode==='chrome'?'overlay':'color';c2d.globalAlpha=mode==='chrome'?.8:.75;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s);if(mode==='neon'){c2d.globalCompositeOperation='lighter';c2d.globalAlpha=.35;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s)}c2d.restore()};
@@ -37,10 +37,10 @@ const _dcs=drawCarSprite;drawCarSprite=function(c2d,img,i,x,y,s){_dcs(c2d,img,i,
 {const _d=drawCar;drawCar=function(c){dynKey=c.k;return _d(c)}}{const _f=drawFull;drawFull=function(c2d,k){dynKey=k;return _f.apply(this,arguments)}}
 // ---- 抽奖/宝箱：传说涂装 + 保底 ----
 const LEG=()=>Object.keys(COLORS).filter(k=>COLORS[k].lim&&!save.colors[k]);
-const LP_N=30;// 保底：连续 30 次抽奖/开箱未出传说 → 下一次必出
+const LP_N=TUNE.skin.legPity;// 保底：连续 30 次抽奖/开箱未出传说 → 下一次必出
 function legRoll(got,base){const l=LEG();if(!l.length)return false;save.legPity=(save.legPity||0)+1;if(Math.random()<base||save.legPity>=LP_N){const k=l[Math.random()*l.length|0];save.colors[k]=true;got['col:'+k]=1;track('legend_skin_get',{id:k,pity:save.legPity>=LP_N,n:save.legPity});save.legPity=0;persist();return true}return false}
-{const _s=spinOnce;spinOnce=function(){const got=_s();legRoll(got,.03);persist();return got}}
-{const _o=openChest;openChest=function(){const got=_o();legRoll(got,.06);persist();return got}}
+{const _s=spinOnce;spinOnce=function(){const got=_s();legRoll(got,TUNE.skin.legSpin);persist();return got}}
+{const _o=openChest;openChest=function(){const got=_o();legRoll(got,TUNE.skin.legChest);persist();return got}}
 
 // ---- 车库：按稀有度分组 + 色框 + 图案缩略图；传说款仅抽奖/宝箱 ----
 const THUMB={};function thumb(id){if(THUMB[id])return THUMB[id];const C=COLORS[id],c=mkC(48,48),x=c.getContext('2d');if(C.pat&&!C.dyn){x.drawImage(tex(id),0,0,96,96,0,0,48,48)}else if(C.dyn){x.drawImage(grad(C.dyn,3),0,0,192,192,0,0,48,48)}else{x.fillStyle=C.c;x.fillRect(0,0,48,48)}return THUMB[id]=c.toDataURL()}

@@ -1,17 +1,17 @@
-// v17 地图机关：工地坠落钢梁 / 废车场压扁机 / 沙漠流沙+沙尘暴；可撞碎油桶(爆炸AoE)与木箱(掉金币/道具)；AI 躲避与利用；集锦机关击杀加权
-(()=>{let HZ=[],BR=[],BEAM={next:8},STORM={next:22,t:0,on:0},SS=[];const HS={beamHit:0,crush:0,sandT:0,boom:0,crate:0,hzKill:0,coin:0,drop:0};
+// 模块 map-hazards（原 v17）地图机关：工地坠落钢梁 / 废车场压扁机 / 沙漠流沙+沙尘暴；可撞碎油桶(爆炸AoE)与木箱(掉金币/道具)；AI 躲避与利用；集锦机关击杀加权
+(()=>{const T=TUNE.hz;let HZ=[],BR=[],BEAM={next:8},STORM={next:22,t:0,on:0},SS=[];const HS={beamHit:0,crush:0,sandT:0,boom:0,crate:0,hzKill:0,coin:0,drop:0};
 const on=()=>!tut&&running&&mapKey!=='ring'&&MAPS[mapKey]&&['site','junk','desert'].includes(mapKey);
-const credit=(c,win=4)=>c.lastBy&&c.lastBy.alive!==undefined&&time-(c.lastByT||-9)<win&&c.lastBy!==c?c.lastBy:null;
+const credit=(c,win=T.creditWin)=>c.lastBy&&c.lastBy.alive!==undefined&&time-(c.lastByT||-9)<win&&c.lastBy!==c?c.lastBy:null;
 function hzKill(c,d,src,by){const was=c.alive;by=by===undefined?credit(c):by;hurt(c,d,by);if(was&&!c.alive){HS.hzKill++;ft(c.x,c.z,4.6,{beam:'钢梁砸中！',crush:'压扁！',boom:'炸飞！'}[src]||'机关击杀！','#ff9a3c',30,true);
   if(by===player||c===player)HL.evs.push({t:time,s:by===player?160:70,x:c.x,z:c.z,txt:by===player?'机关击杀！':'被机关淘汰'});track('hazard_kill',{src,map:mapKey,byP:by===player,victimP:c===player})}}
 const free=(x,z,cl)=>{const[i,j]=cellOf(x,z);return GRID.ok[j*GRID.n+i]&&openCell(x,z,cl)};
 function pickOpen(cl,avoid){for(let t=0;t<300;t++){const[x,z]=randIn(6);if(!free(x,z,cl))continue;if(avoid.some(a=>Math.hypot(a.x-x,a.z-z)<a.r+cl+4))continue;return[x,z]}return null}
-function markGrid(x,z,r){const g=GRID;for(let j=0;j<g.n;j++)for(let i=0;i<g.n;i++){const[a,b]=cellPos(i,j);if(Math.hypot(a-x,b-z)<r+2.6)g.ok[j*g.n+i]=0}}
+function markGrid(x,z,r){const g=GRID;for(let j=0;j<g.n;j++)for(let i=0;i<g.n;i++){const[a,b]=cellPos(i,j);if(Math.hypot(a-x,b-z)<r+T.hzMargin)g.ok[j*g.n+i]=0}}
 // 布置：在 buildArena 末尾生成（出生点、道具点都从 GRID.ok 取 → 自动避开机关）
-const _ba=buildArena;buildArena=function(mk,R){_ba(mk,R);HZ=[];BR=[];SS=[];BEAM={next:8+Math.random()*3};STORM={next:20+Math.random()*6,t:0,on:0};if(!['site','junk','desert'].includes(mk))return;
+const _ba=buildArena;buildArena=function(mk,R){_ba(mk,R);HZ=[];BR=[];SS=[];BEAM={next:T.beamFirst+Math.random()*3};STORM={next:rnd(...T.stormFirst),t:0,on:0};if(!['site','junk','desert'].includes(mk))return;
  const k=AR/38;
- if(mk==='junk'){const n=AR>42?2:1;for(let i=0;i<n;i++){const p=pickOpen(4.5,HZ);if(p)HZ.push({k:'crush',x:p[0],z:p[1],r:3.3,t:Math.random()*3,ph:'open'})}}
- if(mk==='desert'){const n=AR>42?3:2;for(let i=0;i<n;i++){const p=pickOpen(5.5,HZ);if(p)HZ.push({k:'sand',x:p[0],z:p[1],r:4.6})}}
+ if(mk==='junk'){const n=AR>42?2:1;for(let i=0;i<n;i++){const p=pickOpen(4.5,HZ);if(p)HZ.push({k:'crush',x:p[0],z:p[1],r:T.crushR,t:Math.random()*3,ph:'open'})}}
+ if(mk==='desert'){const n=AR>42?3:2;for(let i=0;i<n;i++){const p=pickOpen(5.5,HZ);if(p)HZ.push({k:'sand',x:p[0],z:p[1],r:T.sandR})}}
  for(const h of HZ)markGrid(h.x,h.z,h.r);
  // 可撞碎障碍
  const nb=Math.round(3+AR/14),avoid=HZ.slice();for(let i=0;i<nb;i++){const p=pickOpen(3,avoid.concat(BR.map(b=>({x:b.x,z:b.z,r:2}))));if(!p)continue;const t=i%2===0?'xbarrel':'crate',o={type:t,x:p[0],z:p[1],r:t==='xbarrel'?1.25:1.4,solid:true,brk:true,seed:Math.random()};props.push(o);BR.push(o)}
@@ -20,27 +20,27 @@ const _ba=buildArena;buildArena=function(mk,R){_ba(mk,R);HZ=[];BR=[];SS=[];BEAM=
 // 撞碎
 function breakIt(o,by){const i=props.indexOf(o);if(i<0)return;props.splice(i,1);BR.splice(BR.indexOf(o),1);
  if(o.type==='xbarrel'){HS.boom++;boom(o.x,o.z,'#ff7a1a');spark(o.x,o.z,24,'#ffd23f');smoke(o.x,o.z,6);if(nearP(o.x,o.z)>0)sfx('boom');if(nearP(o.x,o.z)>.5){shake=Math.max(shake,10);vib('heavy')}
-  for(const c of cars){if(!c.alive||c.dummy)continue;const dx=c.x-o.x,dz=c.z-o.z,d=Math.hypot(dx,dz);if(d<6.5){const f=1-d/6.5;c.vx+=dx/(d||1)*18*f;c.vz+=dz/(d||1)*18*f;hzKill(c,8+26*f,'boom',by===c?null:by)}}track('hazard_break',{t:'barrel',byP:by===player})}
+  for(const c of cars){if(!c.alive||c.dummy)continue;const dx=c.x-o.x,dz=c.z-o.z,d=Math.hypot(dx,dz);if(d<T.barrelR){const f=1-d/T.barrelR;c.vx+=dx/(d||1)*T.barrelKick*f;c.vz+=dz/(d||1)*T.barrelKick*f;hzKill(c,T.barrelDmg[0]+T.barrelDmg[1]*f,'boom',by===c?null:by)}}track('hazard_break',{t:'barrel',byP:by===player})}
  else{HS.crate++;debris(o.x,o.z,12,'#b0763a');spark(o.x,o.z,8,'#e8c58a');if(nearP(o.x,o.z)>0)sfx('block');const r=Math.random();
-  if(r<.3){const v=5+(Math.random()*6|0);if(by===player){save.coins+=v;persist();HS.coin+=v}ft(o.x,o.z,3,`+${v} 金币`,'#ffd23f',20,true)}else if(r<.45&&__v11.PK.length<4){__v11.PK.push({k:['heal','atk','shield','boost','spring'][Math.random()*5|0],x:o.x,z:o.z,t:0,life:14});HS.drop++}
-  track('hazard_break',{t:'crate',byP:by===player,drop:r<.45})}
+  if(r<T.crateCoin){const v=T.crateCoinV[0]+(Math.random()*(T.crateCoinV[1]-T.crateCoinV[0]+1)|0);if(by===player){save.coins+=v;persist();HS.coin+=v}ft(o.x,o.z,3,`+${v} 金币`,'#ffd23f',20,true)}else if(r<T.crateCoin+T.crateDrop&&__v11.PK.length<4){__v11.PK.push({k:['heal','atk','shield','boost','spring'][Math.random()*5|0],x:o.x,z:o.z,t:0,life:14});HS.drop++}
+  track('hazard_break',{t:'crate',byP:by===player,drop:r<T.crateCoin+T.crateDrop})}
  buildGrid();for(const h of HZ)markGrid(h.x,h.z,h.r)}
 let pre=new Map();
 const _st=step;step=function(dt){const act=on();if(act)for(const c of cars)pre.set(c,Math.hypot(c.vx,c.vz));_st(dt);if(!act||!running)return;
  for(const o of BR.slice())for(const c of cars){if(!c.alive||c.dummy)continue;const d=Math.hypot(c.x-o.x,c.z-o.z);if(d<o.r+c.r+.35&&(pre.get(c)||0)>5.5){breakIt(o,c);break}}
  // 坠落钢梁
  if(mapKey==='site'){if(time>=BEAM.next&&!SS.some(s=>s.k==='warn')){let x,z;const al=cars.filter(c=>c.alive&&!c.dummy);if(Math.random()<.55&&al.length){const c=al[Math.random()*al.length|0];x=c.x+c.vx*.9+rnd(-2,2);z=c.z+c.vz*.9+rnd(-2,2)}else{const p=pickOpen(2,[]);if(p)[x,z]=p}
-   if(x!=null&&sdist(POLY,x,z).s<-2){SS.push({k:'warn',x,z,a:Math.random()*Math.PI,t:0,T:1.5});if(nearP(x,z)>.3)sfx('zap')}BEAM.next=time+6+Math.random()*4}
+   if(x!=null&&sdist(POLY,x,z).s<-2){SS.push({k:'warn',x,z,a:Math.random()*Math.PI,t:0,T:T.beamWarn});if(nearP(x,z)>.3)sfx('zap')}BEAM.next=time+rnd(...T.beamGap)}
   for(const s of SS){s.t+=dt;if(s.k==='warn'&&s.t>=s.T){s.k='fall';s.t=0;boom(s.x,s.z,'#9aa3ad');debris(s.x,s.z,10,'#6c7480');if(nearP(s.x,s.z)>0)sfx('boom');if(nearP(s.x,s.z)>.6){shake=Math.max(shake,9);vib('heavy')}
-    for(const c of cars){if(!c.alive||c.dummy)continue;if(beamHit(s,c.x,c.z,c.r*.8)){HS.beamHit++;c.vx*=.2;c.vz*=.2;hzKill(c,48,'beam')}}}}
+    for(const c of cars){if(!c.alive||c.dummy)continue;if(beamHit(s,c.x,c.z,c.r*.8)){HS.beamHit++;c.vx*=.2;c.vz*=.2;hzKill(c,T.beamDmg,'beam')}}}}
   SS=SS.filter(s=>!(s.k==='fall'&&s.t>2.5))}
  // 压扁机：开 4s → 警示 1.2s → 合 0.5s（中心区直接淘汰）→ 回开
- for(const h of HZ){if(h.k==='crush'){h.t+=dt;const ph=h.ph;if(ph==='open'&&h.t>4){h.ph='warn';h.t=0;if(nearP(h.x,h.z)>.4)sfx('zap')}else if(ph==='warn'&&h.t>1.2){h.ph='close';h.t=0}else if(ph==='close'&&h.t>.5){h.ph='shut';h.t=0;if(nearP(h.x,h.z)>0)sfx('boom');if(nearP(h.x,h.z)>.6)shake=Math.max(shake,8);
-     for(const c of cars)if(c.alive&&!c.dummy&&Math.hypot(c.x-h.x,c.z-h.z)<h.r){HS.crush++;c.invT=0;c.shT=0;hzKill(c,1e6,'crush')}}else if(ph==='shut'&&h.t>.6){h.ph='open';h.t=0}
+ for(const h of HZ){if(h.k==='crush'){h.t+=dt;const ph=h.ph;if(ph==='open'&&h.t>T.crushOpen){h.ph='warn';h.t=0;if(nearP(h.x,h.z)>.4)sfx('zap')}else if(ph==='warn'&&h.t>T.crushWarn){h.ph='close';h.t=0}else if(ph==='close'&&h.t>T.crushClose){h.ph='shut';h.t=0;if(nearP(h.x,h.z)>0)sfx('boom');if(nearP(h.x,h.z)>.6)shake=Math.max(shake,8);
+     for(const c of cars)if(c.alive&&!c.dummy&&Math.hypot(c.x-h.x,c.z-h.z)<h.r){HS.crush++;c.invT=0;c.shT=0;hzKill(c,1e6,'crush')}}else if(ph==='shut'&&h.t>T.crushShut){h.ph='open';h.t=0}
     if(h.ph==='shut'||h.ph==='close'&&h.t>.3)for(const c of cars){if(!c.alive)continue;const dx=c.x-h.x,dz=c.z-h.z,d=Math.hypot(dx,dz);if(d>=h.r&&d<h.r+c.r){c.x=h.x+dx/d*(h.r+c.r);c.z=h.z+dz/d*(h.r+c.r)}}}
-  else if(h.k==='sand'){for(const c of cars){if(!c.alive||c.dummy)continue;const dx=h.x-c.x,dz=h.z-c.z,d=Math.hypot(dx,dz);if(d<h.r+1){const f=1-d/(h.r+1);c.vx+=dx/(d||1)*18*(.35+f)*dt;c.vz+=dz/(d||1)*18*(.35+f)*dt;c.vx*=Math.exp(-1.6*f*dt);c.vz*=Math.exp(-1.6*f*dt);if(c.isP)HS.sandT+=dt;if(d<1.4){c.hp-=4*dt;if(c.hp<=0)hzKill(c,1,'sand')}if(Math.random()<dt*8)parts.push({k:'dust',x:c.x,z:c.z,y:.3,vx:rnd(-1,1),vz:rnd(-1,1),vy:.6,t:0,life:.6,s:7})}}}}
- if(mapKey==='desert'){if(!STORM.on&&time>=STORM.next){STORM.on=1;STORM.t=0;toast('🌪 沙尘暴来袭！视野降低');track('sandstorm',{})}if(STORM.on){STORM.t+=dt;if(STORM.t>7){STORM.on=0;STORM.next=time+22+Math.random()*8}}}};
-function beamHit(s,x,z,pad){const ca=Math.cos(s.a),sa=Math.sin(s.a),dx=x-s.x,dz=z-s.z,u=dx*ca+dz*sa,v=-dx*sa+dz*ca;return Math.abs(u)<3.6+pad&&Math.abs(v)<.9+pad}
+  else if(h.k==='sand'){for(const c of cars){if(!c.alive||c.dummy)continue;const dx=h.x-c.x,dz=h.z-c.z,d=Math.hypot(dx,dz);if(d<h.r+1){const f=1-d/(h.r+1);c.vx+=dx/(d||1)*T.sandPull*(.35+f)*dt;c.vz+=dz/(d||1)*T.sandPull*(.35+f)*dt;c.vx*=Math.exp(-1.6*f*dt);c.vz*=Math.exp(-1.6*f*dt);if(c.isP)HS.sandT+=dt;if(d<1.4){c.hp-=T.sandDps*dt;if(c.hp<=0)hzKill(c,1,'sand')}if(Math.random()<dt*8)parts.push({k:'dust',x:c.x,z:c.z,y:.3,vx:rnd(-1,1),vz:rnd(-1,1),vy:.6,t:0,life:.6,s:7})}}}}
+ if(mapKey==='desert'){if(!STORM.on&&time>=STORM.next){STORM.on=1;STORM.t=0;toast('🌪 沙尘暴来袭！视野降低');track('sandstorm',{})}if(STORM.on){STORM.t+=dt;if(STORM.t>T.stormDur){STORM.on=0;STORM.next=time+rnd(...T.stormGap)}}}};
+function beamHit(s,x,z,pad){const ca=Math.cos(s.a),sa=Math.sin(s.a),dx=x-s.x,dz=z-s.z,u=dx*ca+dz*sa,v=-dx*sa+dz*ca;return Math.abs(u)<T.beamHalf[0]+pad&&Math.abs(v)<T.beamHalf[1]+pad}
 // AI：躲开预警区；有概率把目标推向机关
 const _ai=aiThink;aiThink=function(c,dt){let o=_ai(c,dt);if(!on())return o;let[ix,iz,ds]=o;let rx=0,rz=0;const add=(x,z,r,w)=>{const dx=c.x-x,dz=c.z-z,d=Math.hypot(dx,dz);if(d<r+4){const f=w*(1-d/(r+4));rx+=dx/(d||1)*f;rz+=dz/(d||1)*f}};
  for(const s of SS)if(s.k==='warn')add(s.x,s.z,3.6,2.4);for(const h of HZ){if(h.k==='crush')add(h.x,h.z,h.r,h.ph==='open'?.5:2.6);else add(h.x,h.z,h.r,1.2)}

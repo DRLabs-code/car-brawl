@@ -1,4 +1,4 @@
-// ===== v15：车辆命名 + 游戏内输入框组件 + 首页精简 =====
+// ===== 模块 ui-shell（原 v15）：车辆命名 + 游戏内输入框组件 + 首页精简 =====
 // ---------- 输入框组件（DOM 绘制，跟随 #app 旋转；支持中文输入法；抖音走 tt.showKeyboard） ----------
 window.TextInput=(()=>{let cur=null;
  function close(){if(!cur)return;cur.el.remove();if(cur.tt){try{tt.hideKeyboard();tt.offKeyboardInput&&tt.offKeyboardInput(cur.ttIn);tt.offKeyboardConfirm&&tt.offKeyboardConfirm(cur.ttOk)}catch(e){}}cur=null}
@@ -65,7 +65,7 @@ let PV=null;window.__pv=()=>PV;
 const skinInfo=(t,id)=>t==='color'?{n:COLORS[id].n,p:COLORS[id].p}:{n:LIVS[id].n,p:LIVS[id].p};
 window.skinTry=(t,id)=>{if(!t){PV=null;return}PV={k:gKey,t,id};track('skin_preview',{car:gKey,type:t,id});renderGarage()};
 {const _df=drawFull;drawFull=function(c2d,k,cs,...a){if(PV){if($('garage').classList.contains('hide')||PV.k!==gKey)PV=null;else if(k===PV.k&&cs===save.cars[k]){cs={...cs,paint:{...cs.paint,[PV.t]:PV.id}}}}return _df(c2d,k,cs,...a)}}
-const COINAD_MAX=3,COINAD_V=100;const coinAd=()=>{let d=null;try{d=JSON.parse(localStorage.getItem('carbrawl_coinad'))}catch(e){}if(!d||d.d!==today())d={d:today(),n:0};return d};
+const COINAD_MAX=TUNE.coinAd.max,COINAD_V=TUNE.coinAd.v;const coinAd=()=>{let d=null;try{d=JSON.parse(localStorage.getItem('carbrawl_coinad'))}catch(e){}if(!d||d.d!==today())d={d:today(),n:0};return d};
 function tryBar(){const old=document.querySelector('#garage .trybar');if(old)old.remove();if(!PV||$('garage').classList.contains('hide'))return;const cv=$('gPrev');if(!cv)return;
  const S=skinInfo(PV.t,PV.id),gap=S.p-save.coins,ca=coinAd(),b=document.createElement('div');b.className='trybar';cv.insertAdjacentElement('afterend',b);
  b.innerHTML=`<span class="trytag">试穿中</span><b>${S.n}</b>${gap>0?`<button class="btn sm" disabled>还差 ${gap} 金币</button>${ca.n<COINAD_MAX?`<button class="btn sm adbtn" id="coinAdBtn">📺 领 ${COINAD_V} 金币 ${COINAD_MAX-ca.n}/${COINAD_MAX}</button>`:'<small>今日广告金币已领完</small>'}`:`<button class="btn sm" id="tryBuy">购买 · ${S.p} 金币</button>`}<button class="btn sm ghost" id="tryX">还原</button>`;
