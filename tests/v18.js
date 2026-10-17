@@ -4,7 +4,7 @@ const p=require('/tmp/pt/node_modules/puppeteer-core'),fs=require('fs');const W=
  const pg=await b.newPage();await pg.setViewport({width:1280,height:720});const errs=[];pg.on('pageerror',e=>errs.push(e.message));pg.on('console',m=>m.type()==='error'&&!/favicon/.test(m.text())&&errs.push(m.text()));const ev=(f,a)=>pg.evaluate(f,a);
  await pg.goto(URL);await ev(()=>localStorage.clear());await pg.reload();await W(1500);
  await ev(()=>{const g=__game;g.save.tut=true;g.save.tutorialDone=true;g.save.coins=5000;window.__ev=[];const t=window.track;window.track=(e,p)=>{__ev.push(e);t(e,p)};persist()});
- const R=await ev(()=>({r:Object.keys(COLORS).filter(k=>COLORS[k].rar==='r'),l:Object.keys(COLORS).filter(k=>COLORS[k].rar==='l')}));ok('稀有 6 + 传说 3',R.r.length===6&&R.l.length===3,R);
+ const R=await ev(()=>({r:Object.keys(COLORS).filter(k=>COLORS[k].rar==='r'),l:Object.keys(COLORS).filter(k=>COLORS[k].rar==='l')}));ok('稀有 ≥6 + 传说 ≥3（v24：8+4）',R.r.length>=8&&R.l.length>=4,R);
  // 截图：各车 × 各涂装（游戏内实际尺寸 + 2× 放大），16 方向条
  const shots=await ev(()=>{const ids=['gray',...Object.keys(COLORS).filter(k=>COLORS[k].rar)],out={};
   for(const k of KEYS){const cw=150,ch=130,c=document.createElement('canvas');c.width=cw*ids.length;c.height=ch*2+30;const x=c.getContext('2d');x.fillStyle='#2a2340';x.fillRect(0,0,c.width,c.height);x.font='bold 14px sans-serif';x.textAlign='center';
@@ -13,7 +13,7 @@ const p=require('/tmp/pt/node_modules/puppeteer-core'),fs=require('fs');const W=
  for(const[k,v]of Object.entries(shots))fs.writeFileSync(`${OUT}/${k.startsWith('dirs')?k:'all_'+k}.png`,Buffer.from(v.split(',')[1],'base64'));
  // 车库分组
  await ev(()=>{openGarage('fang');gTab='look';renderGarage()});await W(400);
- const g=await ev(()=>({h:[...document.querySelectorAll('#garage .rarh')].map(e=>e.textContent),r:document.querySelectorAll('#garage .sw2.rar-r').length,l:document.querySelectorAll('#garage .sw2.rar-l').length}));ok('车库按稀有度分组+色框',g.h.length===3&&g.r===6&&g.l===3,g);
+ const g=await ev(()=>({h:[...document.querySelectorAll('#garage .rarh')].map(e=>e.textContent),r:document.querySelectorAll('#garage .sw2.rar-r').length,l:document.querySelectorAll('#garage .sw2.rar-l').length}));ok('车库按稀有度分组+色框',g.h.length===3&&g.r===R.r.length&&g.l===R.l.length,g);
  // 稀有：试穿不扣、离开还原、购买扣费+装备
  await ev(()=>document.querySelector('[data-col="flame"]').click());await W(500);await pg.screenshot({path:`${OUT}/garage_try_flame.png`});
  let s=await ev(()=>({c:__game.save.coins,col:__game.save.cars.fang.paint.color,pv:__pv()&&__pv().id,buy:!!document.getElementById('tryBuy')}));ok('稀有试穿不扣费',s.c===5000&&s.col==='gray'&&s.pv==='flame'&&s.buy,s);

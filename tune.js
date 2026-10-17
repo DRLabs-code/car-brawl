@@ -22,9 +22,12 @@ window.TUNE={
  items:{aiHold:9,missile:{w:.7,dmg:22,spd:32,turn:3.2,life:2.6,range:40,kick:14,aiRange:26},mine:{w:.7,dmg:26,arm:.7,life:12,r:2.4,kick:18,max:2},oil:{w:.6,life:10,r:3.6},magnet:{w:.5,t:4,r:16,pull:22}},
  // 竞速追赶：名次在后 from 比例之后的车，拾取时按 up×落后程度 的概率升级为强道具
  catchUp:{from:.4,up:.8,strong:['missile','magnet','boost']},
- // v23 新地图机关。冰湖：冰窟窿 关 shut 秒 → 裂纹预警 warn → 开 open（掉进去淘汰）。工厂：传送带推车 + 电地板 idle → warn → on（持续伤害+减速）
- ice:{holes:[2,3],holeR:3.2,shut:[5,9],warn:1.6,open:3.5},
+ // v23 新地图机关。冰湖：冰窟窿 关 shut 秒 → 裂纹预警 warn → 开 open（掉进去重伤并弹出）。工厂：传送带推车 + 电地板 idle → warn → on（持续伤害+减速）
+ ice:{holes:[2,3],holeR:3.2,shut:[5,9],warn:1.6,open:3.5,fallDmg:.6,fallKick:20,fallCd:1.5},// fallDmg=掉进冰窟窿扣最大耐久比例，随后弹到洞外；fallCd 秒内不重复判定
  fac:{belts:2,beltL:16,beltW:2.6,beltSpd:7,pads:[2,3],padR:3,idle:[4,7],warn:1.2,on:2.2,dps:24,slow:2.5},
+ // v24 特效部件：drill 撞击伤害转回血比例；shockRam 撞击≥min 伤害时对手失控 t 秒；shieldGen 每 cd 秒自动护盾 t 秒；magShell 吸附 r 米内道具；
+ // twinDash 第 2 次充能间隔 gap 秒；regenEngine 未受伤 wait 秒后每秒回 hps；boostTire 加速带/加速道具 速度×mul、额外推力 kick、对战加速 t 秒；driftTire 侧滑速度>lat 时冲刺冷却额外 ×k 速度恢复
+ parts:{drill:{steal:.3},shockRam:{t:.7,min:6},shieldGen:{cd:14,t:3},magShell:{r:11,spd:16},twinDash:{gap:.35},regenEngine:{wait:3,hps:1.6},boostTire:{mul:1.18,kick:4,t:2.5},driftTire:{lat:4,k:1.2}},
  // 商店：看广告领金币
  coinAd:{max:3,v:100}
 };

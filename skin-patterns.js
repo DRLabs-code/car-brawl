@@ -9,6 +9,8 @@ function tex(id){if(TEX[id])return TEX[id];const S=256,c=mkC(S,S),x=c.getContext
  else if(C.pat==='zebra'){x.fillStyle='#f2f2ee';x.fillRect(0,0,S,S);x.fillStyle='#16151c';for(let i=0;i<9;i++){const y0=i*S/9;x.beginPath();x.moveTo(0,y0);for(let X=0;X<=S;X+=16)x.lineTo(X,y0+Math.sin(X/S*Math.PI*2+i)*7);for(let X=S;X>=0;X-=16)x.lineTo(X,y0+S/22+Math.sin(X/S*Math.PI*2+i+1)*5);x.closePath();x.fill()}}
  else if(C.pat==='carbon'){x.fillStyle='#24252b';x.fillRect(0,0,S,S);for(let j=0;j<S;j+=8)for(let i=0;i<S;i+=8){const o=((i+j)/8)%2;const g=x.createLinearGradient(i,j,i+(o?8:0),j+(o?0:8));g.addColorStop(0,'#3a3c44');g.addColorStop(.5,'#5a5d68');g.addColorStop(1,'#2b2c33');x.fillStyle=g;x.fillRect(i+1,j+1,6,6)}}
  else if(C.pat==='flame'){x.fillStyle='#2b1a1a';x.fillRect(0,0,S,S);for(let n=0;n<7;n++){const y=n*S/7+r()*10,len=S*(.55+r()*.35);for(const[col,w]of[['#ff3b1f',18],['#ff9a1a',12],['#ffe14a',6]]){x.fillStyle=col;x.beginPath();x.moveTo(S,y-w);x.quadraticCurveTo(S-len*.5,y-w*1.4,S-len,y+r()*6-3);x.quadraticCurveTo(S-len*.5,y+w*1.4,S,y+w);x.closePath();x.fill()}}}
+ else if(C.pat==='digi'){const q=8;for(let j=0;j<S;j+=q)for(let i=0;i<S;i+=q){x.fillStyle=C.cols[0];x.fillRect(i,j,q,q)}for(let L=1;L<C.cols.length;L++){x.fillStyle=C.cols[L];for(let n=0;n<40;n++){const cx=(r()*S/q|0)*q,cy=(r()*S/q|0)*q,w=(1+r()*4|0)*q,h=(1+r()*3|0)*q;for(const[ox,oy]of[[0,0],[S,0],[-S,0],[0,S],[0,-S]])x.fillRect(cx+ox,cy+oy,w,h)}}}
+ else if(C.pat==='tiger'){x.fillStyle='#ff9a1a';x.fillRect(0,0,S,S);x.fillStyle='#16151c';for(let i=0;i<10;i++){const y=i*S/10+r()*8,w=6+r()*8,len=S*(.35+r()*.4),x0=r()*S;for(const ox of[-S,0,S]){x.beginPath();x.moveTo(x0+ox,y-w);x.quadraticCurveTo(x0+ox+len*.5,y-w*.2+r()*8,x0+ox+len,y);x.quadraticCurveTo(x0+ox+len*.5,y+w*.6,x0+ox,y+w);x.closePath();x.fill()}}}
  return TEX[id]=c}
 // ---- 在每个方向格把纹理按车头朝向旋转 + 等距压扁后铺满（贴合 16 方向）----
 function patSheet(k,id){const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d'),T=tex(id),pt=x.createPattern(T,'repeat');
@@ -25,14 +27,15 @@ function tag(o,C){if(C&&C.dyn)o._dyn=C.dyn;return o}
 const PH=12,GR={};function grad(mode,ph){const key=mode+ph;if(GR[key])return GR[key];const S=192,c=mkC(S,S),x=c.getContext('2d'),f=ph/PH;
  if(mode==='iri'){const g=x.createLinearGradient(0,0,S,S);for(let i=0;i<=6;i++)g.addColorStop(i/6,`hsl(${(f*360+i*60)%360},95%,60%)`);x.fillStyle=g;x.fillRect(0,0,S,S)}
  else if(mode==='neon'){x.fillStyle='#1a1030';x.fillRect(0,0,S,S);const b=(f*S*2)%(S*2)-S/2;const g=x.createLinearGradient(b-50,0,b+50,S*.4);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(.35,'#39f3ff');g.addColorStop(.65,'#ff3bd4');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,S,S)}
+ else if(mode==='lava'){x.fillStyle='#3a0a05';x.fillRect(0,0,S,S);for(let n=0;n<6;n++){const y=((n/6+f)%1)*S*1.2-S*.1;const g=x.createLinearGradient(0,y-18,0,y+18);g.addColorStop(0,'rgba(255,80,0,0)');g.addColorStop(.5,n%2?'#ffb02e':'#ff3b1f');g.addColorStop(1,'rgba(255,80,0,0)');x.fillStyle=g;x.beginPath();x.moveTo(0,y);for(let X=0;X<=S;X+=16)x.lineTo(X,y+Math.sin(X/30+n)*10);x.lineTo(S,y+18);x.lineTo(0,y+18);x.closePath();x.fill()}}
  else{const g=x.createLinearGradient(0,0,0,S);g.addColorStop(0,'#f4f6fa');g.addColorStop(.45,'#9aa3b0');g.addColorStop(.55,'#5d6470');g.addColorStop(1,'#d8dde6');x.fillStyle=g;x.fillRect(0,0,S,S);const b=(f*S*2)%(S*2)-S/2;x.fillStyle='rgba(255,255,255,.85)';x.beginPath();x.moveTo(b,0);x.lineTo(b+22,0);x.lineTo(b-30,S);x.lineTo(b-52,S);x.fill()}
  return GR[key]=c}
 let dynKey=null;const DC=new Map();
 // 缓存帧：车型×方向×相位的叠加层；shortcut: 上限 96 张(~14MB)，超出按最早淘汰
 function dynCell(mode,k,i,ph){const key=mode+k+i+'|'+ph;let c=DC.get(key);if(c)return c;const S=192;c=mkC(S,S);const x=c.getContext('2d'),sh=mode==='iri'?(i*PH/16|0):0;x.drawImage(PAINT[k],(i%4)*F,(i>>2)*F,F,F,0,0,S,S);x.globalCompositeOperation='source-in';x.drawImage(grad(mode,(ph+sh)%PH),0,0);if(DC.size>=TUNE.skin.dynCache)DC.delete(DC.keys().next().value);DC.set(key,c);return c}
-const _dcs=drawCarSprite;drawCarSprite=function(c2d,img,i,x,y,s){_dcs(c2d,img,i,x,y,s);if(!img||!img._dyn||!PAINT[dynKey])return;const mode=img._dyn,ph=((performance.now()/(mode==='iri'?140:90))|0)%PH,S=192;
+const _dcs=drawCarSprite;drawCarSprite=function(c2d,img,i,x,y,s){_dcs(c2d,img,i,x,y,s);if(!img||!img._dyn||!PAINT[dynKey])return;const mode=img._dyn,ph=((performance.now()/(mode==='iri'?140:mode==='lava'?120:90))|0)%PH,S=192;
  const oc=dynCell(mode,dynKey,i,ph);
- c2d.save();c2d.globalCompositeOperation=mode==='chrome'?'overlay':'color';c2d.globalAlpha=mode==='chrome'?.8:.75;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s);if(mode==='neon'){c2d.globalCompositeOperation='lighter';c2d.globalAlpha=.35;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s)}c2d.restore()};
+ c2d.save();c2d.globalCompositeOperation=mode==='chrome'?'overlay':mode==='lava'?'source-atop':'color';c2d.globalAlpha=mode==='chrome'?.8:mode==='lava'?.85:.75;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s);if(mode==='neon'){c2d.globalCompositeOperation='lighter';c2d.globalAlpha=.35;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s)}c2d.restore()};
 // drawCarSprite 只拿到 img，需要知道车型：包住 drawCar / drawFull 传递
 {const _d=drawCar;drawCar=function(c){dynKey=c.k;return _d(c)}}{const _f=drawFull;drawFull=function(c2d,k){dynKey=k;return _f.apply(this,arguments)}}
 // ---- 抽奖/宝箱：传说涂装 + 保底 ----

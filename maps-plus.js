@@ -1,4 +1,4 @@
-// 模块 maps-plus（v23）：新对战地图 冰湖（冰面打滑 + 冰窟窿周期开裂）、工厂（传送带 + 周期电地板）。AI 躲开危险，也会把对手往里推。参数在 TUNE.ice / TUNE.fac
+// 模块 maps-plus（v23）：新对战地图 冰湖（冰面打滑 + 冰窟窿周期开裂，掉进去重伤弹出）、工厂（传送带 + 周期电地板）。AI 躲开危险，也会把对手往里推。参数在 TUNE.ice / TUNE.fac
 (()=>{const TI=TUNE.ice,TF=TUNE.fac;
 MAPS.ice={name:'冰湖',en:'FROZEN LAKE',desc:'冰面打滑 · 冰窟窿周期开裂',tiles:['#e3eef6','#d8e6f0'],line:'#bcd2e2',speck:['#c9dceb','#f6fbff'],out:['#b9cfdf','#c7dae8','#a9c1d4'],rail:['#3d8fd1','#ffffff'],paint:'#4a86b8aa',logo:'ICE',obst:['snow','pine'],zone:{k:'ice',name:'冰面',n:7,r:[4,7]},dust:'#ffffff',deco:'ice',shape:'圆湖 · 中央雪堆 · 开阔冰面',
  poly:[[-44,-8],[-34,-24],[-12,-32],[14,-31],[34,-22],[45,-4],[40,16],[22,29],[-4,32],[-26,27],[-41,12]],walls:[[-4,-2,4,2,'snow'],[-26,-14,-22,-8,'snow'],[24,10,28,16,'snow']],zc:[0,-14]};
@@ -10,7 +10,7 @@ const on=()=>!tut&&running&&(mapKey==='ice'||mapKey==='factory');
 // 冰面 = 打滑地形（和油污同一套抓地规则，防滑链有效）
 {const _t=terrainAt;terrainAt=function(x,z){const r=_t(x,z);return r==='ice'?'oil':r}}
 const credit=c=>c.lastBy&&c.lastBy!==c&&time-(c.lastByT||-9)<TUNE.hz.creditWin?c.lastBy:null;
-function hzHurt(c,d,src){const was=c.alive,by=credit(c);hurt(c,d,by);if(was&&!c.alive){HS.kill++;ft(c.x,c.z,4.6,src==='hole'?'掉进冰窟窿！':'电击淘汰！','#7df9ff',30,true);
+function hzHurt(c,d,src){const was=c.alive,by=credit(c);hurt(c,d,by);if(was&&!c.alive){HS.kill++;ft(c.x,c.z,4.6,src==='hole'?'冰窟窿淘汰！':'电击淘汰！','#7df9ff',30,true);
  if(by===player||c===player)HL.evs.push({t:time,s:by===player?160:70,x:c.x,z:c.z,txt:by===player?'机关击杀！':'被机关淘汰'});track('hazard_kill',{src,map:mapKey,byP:by===player,victimP:c===player})}}
 const free=(x,z,cl)=>{const[i,j]=cellOf(x,z);return GRID.ok[j*GRID.n+i]&&openCell(x,z,cl)};
 function pick(cl,ok){for(let t=0;t<400;t++){const[x,z]=randIn(6);if(free(x,z,cl)&&HZ.every(a=>Math.hypot(a.x-x,a.z-z)>a.r+cl+4)&&(!ok||ok(x,z)))return[x,z]}return null}
@@ -30,7 +30,10 @@ const inPad=(c,h)=>Math.abs(c.x-h.x)<h.r&&Math.abs(c.z-h.z)<h.r;
 const _st=step;step=function(dt){_st(dt);if(!on())return;
  for(const h of HZ){
   if(h.k==='hole'){if((h.t+=dt)>h.T){h.t=0;if(h.ph==='shut'){h.ph='warn';h.T=TI.warn;if(nearP(h.x,h.z)>.4)sfx('zap')}else if(h.ph==='warn'){h.ph='open';h.T=TI.open;splash(h);if(nearP(h.x,h.z)>0)sfx('boom')}else{h.ph='shut';h.T=rnd(...TI.shut);h.cr=cracks()}}
-   if(h.ph==='open')for(const c of cars)if(c.alive&&!c.dummy&&!(c.air>0)&&Math.hypot(c.x-h.x,c.z-h.z)<h.r-.5){HS.fall++;c.invT=0;c.shT=0;splash(h);hzHurt(c,1e6,'hole')}}
+   if(h.ph==='open')for(const c of cars){if(!c.alive||c.dummy||c.air>0||time<(c.holeCd||0))continue;const dx=c.x-h.x,dz=c.z-h.z,d=Math.hypot(dx,dz);if(d>=h.r-.5)continue;
+    // 掉进冰窟窿：重伤（最大耐久 fallDmg）+ 弹到洞外
+    HS.fall++;c.holeCd=time+TI.fallCd;splash(h);const ux=d>.1?dx/d:Math.sin(c.h),uz=d>.1?dz/d:Math.cos(c.h);c.x=h.x+ux*(h.r+c.r+.4);c.z=h.z+uz*(h.r+c.r+.4);c.vx=ux*TI.fallKick;c.vz=uz*TI.fallKick;c.flash=.2;
+    ft(c.x,c.z,3.6,'掉进冰窟窿！','#7df9ff',c.isP?28:20,c.isP);if(c.isP){vib('heavy');shake=Math.max(shake,10)}hzHurt(c,c.maxhp*TI.fallDmg,'hole')}}
   else if(h.k==='pad'){if((h.t+=dt)>h.T){h.t=0;h.ph=h.ph==='idle'?'warn':h.ph==='warn'?'on':'idle';h.T=h.ph==='idle'?rnd(...TF.idle):h.ph==='warn'?TF.warn:TF.on;if(h.ph==='on'&&nearP(h.x,h.z)>.3)sfx('zap')}
    if(h.ph==='on')for(const c of cars)if(c.alive&&!c.dummy&&inPad(c,h)){if(c.isP)HS.shockT+=dt;const f=Math.exp(-TF.slow*dt);c.vx*=f;c.vz*=f;c.hp-=TF.dps*dt*(c.shT>0?.3:1);c.flash=.06;if(c.hp<=0){c.hp=.01;hzHurt(c,1,'shock')}if(Math.random()<dt*10)spark(c.x,c.z,3,'#7df9ff')}}
   else for(const c of cars)if(c.alive&&!c.dummy&&!(c.air>0)&&Math.abs(c.x-h.x)<h.L/2&&Math.abs(c.z-h.z)<h.w/2+.6){c.x+=h.dir*TF.beltSpd*dt;if(c.isP)HS.beltT+=dt}}};
@@ -66,6 +69,6 @@ const _dp=drawProp;drawProp=function(p){const[sx,sy]=iso(p.x,p.z),s=p.s||(p.soli
  if(p.type==='snow'){shadow(sx+3,sy+3,36*s,16*s,.3);ctx.strokeStyle='#1b1420';ctx.lineWidth=3;ctx.fillStyle='#c9dbe8';ctx.beginPath();ctx.ellipse(sx,sy-6*s,30*s,16*s,0,0,7);ctx.fill();ctx.stroke();
   ctx.fillStyle='#f4f9fd';ctx.beginPath();ctx.ellipse(sx-3*s,sy-12*s,25*s,13*s,0,0,7);ctx.fill();ctx.beginPath();ctx.ellipse(sx+6*s,sy-20*s,14*s,9*s,0,0,7);ctx.fill();ctx.strokeStyle='#1b1420';ctx.lineWidth=2.5;ctx.stroke();ctx.fillStyle='#ffffff';ctx.beginPath();ctx.ellipse(sx+2*s,sy-24*s,6*s,3*s,0,0,7);ctx.fill();return}
  return _dp(p)};
-{const _s=start;start=function(k,opt){_s(k,opt);if(opt&&opt.tutorial)return;const tip={ice:'⚠ 冰面会打滑；冰面裂纹闪红=冰窟窿要开了，掉进去直接淘汰',factory:'⚠ 传送带会带着车走；电地板闪黄后通电，别停在上面'}[mapKey];const key='carbrawl_hzTip_'+mapKey;if(tip&&!localStorage.getItem(key)){localStorage.setItem(key,'1');setTimeout(()=>toast(tip),2300)}if(tip)track('map_hazard_start',{map:mapKey,n:HZ.length})}}
+{const _s=start;start=function(k,opt){_s(k,opt);if(opt&&opt.tutorial)return;const tip={ice:'⚠ 冰面会打滑；冰面裂纹闪红=冰窟窿要开了，掉进去重伤',factory:'⚠ 传送带会带着车走；电地板闪黄后通电，别停在上面'}[mapKey];const key='carbrawl_hzTip_'+mapKey;if(tip&&!localStorage.getItem(key)){localStorage.setItem(key,'1');setTimeout(()=>toast(tip),2300)}if(tip)track('map_hazard_start',{map:mapKey,n:HZ.length})}}
 window.__maps={get HZ(){return HZ},HS};
 })();

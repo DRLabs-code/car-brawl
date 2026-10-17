@@ -4,12 +4,13 @@ const K=16;                    // 等距投影：1 世界单位 → 屏幕 x 16p
 const HK=K/Math.SQRT1_2*Math.cos(Math.PI/6); // 高度 1 单位 → 屏幕像素
 const F=288,FS=192/288,AY=0.58,WF=112,WS=192/112,LF=144,LS=192/144; // 车身 288、轮子 112、部件/涂装层 144（均绘制为 192 世界像素）
 
-const COLORS={gray:{n:'素灰',c:'#9aa0a8',p:0},red:{n:'烈焰红',c:'#e63946',p:120},blue:{n:'天际蓝',c:'#2e86de',p:120},green:{n:'荧光绿',c:'#7bd94f',p:150},yellow:{n:'柠檬黄',c:'#ffd23f',p:150},black:{n:'午夜黑',c:'#2b2d36',p:180},white:{n:'珍珠白',c:'#eeeeea',p:180},pink:{n:'霓虹粉',c:'#f0207f',p:200},orange:{n:'越野橙',c:'#ff7a1a',p:200},army:{n:'军绿',c:'#5d8f3f',p:200},
+const COLORS={gray:{n:'素灰',c:'#9aa0a8',p:0},red:{n:'烈焰红',c:'#e63946',p:120},blue:{n:'天际蓝',c:'#2e86de',p:120},green:{n:'荧光绿',c:'#7bd94f',p:150},yellow:{n:'柠檬黄',c:'#ffd23f',p:150},black:{n:'午夜黑',c:'#2b2d36',p:180},white:{n:'珍珠白',c:'#eeeeea',p:180},pink:{n:'霓虹粉',c:'#f0207f',p:200},orange:{n:'越野橙',c:'#ff7a1a',p:200},army:{n:'军绿',c:'#5d8f3f',p:200},teal:{n:'冰川青',c:'#2ec4c4',p:220},grape:{n:'葡萄紫',c:'#7b4fd6',p:220},
  camoJ:{n:'丛林迷彩',c:'#5d7a3a',p:450,rar:'r',pat:'camo',cols:['#7f9a52','#4f6a2e','#2f3f1c','#a8b47a']},camoD:{n:'沙漠迷彩',c:'#c9a46a',p:450,rar:'r',pat:'camo',cols:['#d8bb84','#b08a52','#8a6a3c','#efdcae']},camoS:{n:'雪地迷彩',c:'#d8dde4',p:450,rar:'r',pat:'camo',cols:['#eef1f5','#b9c2cc','#7d8894','#ffffff']},
  flame:{n:'火焰',c:'#ff5a1f',p:600,rar:'r',pat:'flame'},zebra:{n:'斑马条纹',c:'#cfcfcf',p:550,rar:'r',pat:'zebra'},carbon:{n:'碳纤维',c:'#33343b',p:650,rar:'r',pat:'carbon'},
- iri:{n:'幻彩',c:'#c9a6ff',p:0,rar:'l',lim:true,dyn:'iri'},neonFlow:{n:'霓虹流光',c:'#3a2a66',p:0,rar:'l',lim:true,dyn:'neon'},chrome:{n:'金属电镀',c:'#c4cad4',p:0,rar:'l',lim:true,dyn:'chrome'}};
+ digi:{n:'数码迷彩',c:'#6b7f8f',p:500,rar:'r',pat:'digi',cols:['#8796a3','#5a6b78','#3a4650','#b6c2cc']},tiger:{n:'虎纹',c:'#ff9a1a',p:600,rar:'r',pat:'tiger'},
+ iri:{n:'幻彩',c:'#c9a6ff',p:0,rar:'l',lim:true,dyn:'iri'},neonFlow:{n:'霓虹流光',c:'#3a2a66',p:0,rar:'l',lim:true,dyn:'neon'},chrome:{n:'金属电镀',c:'#c4cad4',p:0,rar:'l',lim:true,dyn:'chrome'},lava:{n:'熔岩流动',c:'#8a1a0a',p:0,rar:'l',lim:true,dyn:'lava'}};
 const LIVS={stripe:{n:'双赛道条纹',p:200},band:{n:'侧腰线',p:150},number:{n:'号码圆标',p:220},roof:{n:'撞色车顶',p:150},
- goldStripe:{n:'鎏金条纹',p:0,lim:true,src:'stripe',c:'#ffc300'},neonBand:{n:'霓虹腰线',p:0,lim:true,src:'band',c:'#39f3ff'},flameNum:{n:'烈焰号码',p:0,lim:true,src:'number',c:'#ff5a1f'}};// lim=限定，仅抽奖获得
+ goldStripe:{n:'鎏金条纹',p:0,lim:true,src:'stripe',c:'#ffc300'},neonBand:{n:'霓虹腰线',p:0,lim:true,src:'band',c:'#39f3ff'},flameNum:{n:'烈焰号码',p:0,lim:true,src:'number',c:'#ff5a1f'},iceRoof:{n:'冰晶车顶',p:0,lim:true,src:'roof',c:'#7df9ff'}};// lim=限定，仅抽奖获得
 const R0=38,DIRS=16;
 const CARS={
  tyrant:{name:'铁壁暴君',en:'IRON TYRANT',tag:'皮卡 · 重型',desc:'车重血厚，正面硬抗',col:'#5d8f3f',col2:'#2f4f22',hp:160,mass:2.0,spd:13,acc:12,turn:2.4,dmg:1.25,wb:3.0},
@@ -36,14 +37,23 @@ const PARTS={
  offTire:{n:'越野胎',slot:'tire',r:'w',mod:{turn:1.08,spd:.96,terr:.5}},
  wide:{n:'宽胎',slot:'tire',r:'b',mod:{turn:1.18,spd:.94}},
  chains:{n:'防滑链',slot:'tire',r:'b',mod:{iceGrip:3,spd:.95,terr:.8}},
- tracks:{n:'履带',slot:'tire',r:'b',mod:{mass:1.15,hp:1.1,turn:.9,spd:.88,terr:0}}};
+ tracks:{n:'履带',slot:'tire',r:'b',mod:{mass:1.15,hp:1.1,turn:.9,spd:.88,terr:0}},
+ // v24 特效部件（效果逻辑在 parts-plus.js，参数在 TUNE.parts）
+ drill:{n:'吸血钻头',slot:'front',mod:{dmg:1.05,spd:.97},fx:`撞击伤害 ${TUNE.parts.drill.steal*100}% 转为回血`},
+ shockRam:{n:'电击撞角',slot:'front',mod:{push:1.1},fx:`撞击让对手失控 ${TUNE.parts.shockRam.t} 秒`},
+ shieldGen:{n:'护盾发生器',slot:'armor',mod:{hp:1.05,mass:1.05},fx:`每 ${TUNE.parts.shieldGen.cd} 秒自动开 ${TUNE.parts.shieldGen.t} 秒护盾`},
+ magShell:{n:'磁力外壳',slot:'armor',mod:{hp:1.06},fx:`吸来 ${TUNE.parts.magShell.r} 米内的道具`},
+ twinDash:{n:'双冲刺引擎',slot:'engine',mod:{dashCd:1.15},fx:'冲刺 2 次充能（可连冲）'},
+ regenEngine:{n:'回收引擎',slot:'engine',mod:{spd:.97},fx:`${TUNE.parts.regenEngine.wait} 秒没受伤后每秒回 ${TUNE.parts.regenEngine.hps} 耐久`},
+ boostTire:{n:'加速带轮胎',slot:'tire',mod:{turn:.96},fx:`加速带/加速道具效果 +${Math.round((TUNE.parts.boostTire.mul-1)*100)}%`},
+ driftTire:{n:'漂移胎',slot:'tire',mod:{turn:1.06,spd:.97},fx:'漂移时冲刺冷却加快'}};
 const MODN={hp:'血量',mass:'重量',spd:'速度',acc:'加速',turn:'操控',dmg:'撞击',push:'推力',sideBonus:'侧撞伤害',rearRes:'车尾受伤',critRes:'暴击受伤',thorns:'反伤',dashCd:'冲刺冷却',dashPow:'冲刺推力',terr:'地形减速',iceGrip:'油污抓地'};
-const RAR_OF={spike:'w',plow:'w',lightArmor:'w',cage:'w',stdEngine:'w',turbo:'w',road:'w',offTire:'w',ram:'b',heavyArmor:'b',rageEngine:'b',wide:'b',dozer:'p',reactive:'p',electric:'p',chains:'p',saw:'g',spikeArmor:'g',nitro:'g',tracks:'g'};const RARN={w:'普通',b:'稀有',p:'史诗',g:'传说'};
-const ICO=['spike','plow','ram','dozer','saw','lightArmor','cage','heavyArmor','reactive','spikeArmor','stdEngine','turbo','rageEngine','nitro','electric','road','offTire','wide','chains','tracks'];
-// 图标：sprites/icons.png（8×3，每格 128）；部件 0-19、金币 20、通用碎片 21
-function ico(n,cls,cnt,title){const c=n%8,r=n/8|0;return`<span class="ic ${cls||''}" title="${title||''}"><i style="background-position:${c/7*100}% ${r/2*100}%"></i>${cnt!==undefined?`<b>${cnt}</b>`:''}</span>`}
-const icPart=(id,cnt,shard,noLbl)=>{const h=ico(ICO.indexOf(id),'r-'+PARTS[id].r+(shard?' sh':''),cnt,PARTS[id].n+(shard?'碎片':''));return noLbl?h:`<span class="icw">${h}<em class="lbl">${PARTS[id].n}${shard?'碎片':''}</em></span>`},icCoin=cnt=>ico(20,'cur',cnt,'金币'),icUni=cnt=>ico(21,'cur',cnt,'通用碎片');
-for(const id in PARTS){const p=PARTS[id];p.r=RAR_OF[id];p.need={w:10,b:20,p:30,g:40}[p.r];p.desc=Object.entries(p.mod).map(([k,v])=>k==='thorns'?`反伤 ${v*100}%`:k==='terr'?(v===0?'无视地形减速':`地形减速 −${Math.round((1-v)*100)}%`):k==='iceGrip'?'油污抓地 ×3':`${MODN[k]} ${v>=1?'+':'−'}${Math.round(Math.abs(v-1)*100)}%`).join(' · ')}
+const RAR_OF={spike:'w',plow:'w',lightArmor:'w',cage:'w',stdEngine:'w',turbo:'w',road:'w',offTire:'w',ram:'b',heavyArmor:'b',rageEngine:'b',wide:'b',dozer:'p',reactive:'p',electric:'p',chains:'p',saw:'g',spikeArmor:'g',nitro:'g',tracks:'g',magShell:'b',driftTire:'b',shockRam:'p',regenEngine:'p',boostTire:'p',drill:'g',shieldGen:'g',twinDash:'g'};const RARN={w:'普通',b:'稀有',p:'史诗',g:'传说'};
+const ICO=['spike','plow','ram','dozer','saw','lightArmor','cage','heavyArmor','reactive','spikeArmor','stdEngine','turbo','rageEngine','nitro','electric','road','offTire','wide','chains','tracks'],ICO2=['drill','shockRam','shieldGen','magShell','twinDash','regenEngine','boostTire','driftTire'];
+// 图标：sprites/icons.png（8×4，每格 128）；部件 0-19、金币 20、通用碎片 21、碎片角标 22；v24 特效部件 24-31（ICO2）
+function ico(n,cls,cnt,title){const c=n%8,r=n/8|0;return`<span class="ic ${cls||''}" title="${title||''}"><i style="background-position:${c/7*100}% ${r/3*100}%"></i>${cnt!==undefined?`<b>${cnt}</b>`:''}</span>`}
+const icPart=(id,cnt,shard,noLbl)=>{const h=ico(ICO.includes(id)?ICO.indexOf(id):24+ICO2.indexOf(id),'r-'+PARTS[id].r+(shard?' sh':''),cnt,PARTS[id].n+(shard?'碎片':''));return noLbl?h:`<span class="icw">${h}<em class="lbl">${PARTS[id].n}${shard?'碎片':''}</em></span>`},icCoin=cnt=>ico(20,'cur',cnt,'金币'),icUni=cnt=>ico(21,'cur',cnt,'通用碎片');
+for(const id in PARTS){const p=PARTS[id];p.r=RAR_OF[id];p.need={w:10,b:20,p:30,g:40}[p.r];p.desc=Object.entries(p.mod).map(([k,v])=>k==='thorns'?`反伤 ${v*100}%`:k==='terr'?(v===0?'无视地形减速':`地形减速 −${Math.round((1-v)*100)}%`):k==='iceGrip'?'油污抓地 ×3':`${MODN[k]} ${v>=1?'+':'−'}${Math.round(Math.abs(v-1)*100)}%`).join(' · ');if(p.fx)p.desc=(p.desc?p.desc+' · ':'')+'✦ '+p.fx}
 const NAME2ID={};for(const id in PARTS)NAME2ID[PARTS[id].n]=id;
 const SLOTS={front:'车头',armor:'装甲',engine:'引擎',tire:'轮胎'};
 const STATS={hp:'血量',mass:'重量',spd:'速度',acc:'加速',turn:'操控',dmg:'撞击'};

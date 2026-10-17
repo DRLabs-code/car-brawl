@@ -130,11 +130,11 @@ body.rot #app{left:var(--vl,100vw);transform:rotate(90deg)}
 body.land #rev{right:calc(max(24px,env(safe-area-inset-right)) + 106px);width:66px;height:66px}
 /* ===== 图标 ===== */
 .ic{position:relative;display:inline-block;width:46px;height:46px;flex:none;border-radius:11px;border:3px solid #eef1f6;background:radial-gradient(circle at 50% 35%,#4a4560,#24203a);box-shadow:0 2px 0 #0008,inset 0 0 0 2px #1b1420;vertical-align:middle}
-.ic i{position:absolute;inset:2px;background:url(sprites/icons.png) no-repeat;background-size:800% 300%}
+.ic i{position:absolute;inset:2px;background:url(sprites/icons.png?v=24) no-repeat;background-size:800% 400%}
 .ic b{position:absolute;right:-5px;bottom:-6px;font-size:10px;font-weight:900;line-height:1;padding:2px 4px;border-radius:6px;background:#1b1420;color:#fff;border:1.5px solid #ffffff55;white-space:nowrap}
 .ic.r-w{border-color:#eef1f6}.ic.r-b{border-color:#4dabf7;background:radial-gradient(circle at 50% 35%,#2f5c8a,#16263f)}.ic.r-p{border-color:#b26bff;background:radial-gradient(circle at 50% 35%,#5b3592,#24163f)}.ic.r-g{border-color:#ffc300;background:radial-gradient(circle at 50% 35%,#8a6a1a,#3a2a08);box-shadow:0 0 8px #ffc30088,0 2px 0 #0008}
 .ic.sh::before{content:'';position:absolute;inset:0;border-radius:8px;background:linear-gradient(135deg,transparent 46%,#ffffff55 47%,transparent 49%,transparent 62%,#ffffff40 63%,transparent 65%);z-index:1;pointer-events:none}
-.ic.sh::after{content:'';position:absolute;left:-7px;top:-7px;width:22px;height:22px;background:url(sprites/icons.png) no-repeat;background-size:800% 300%;background-position:85.714% 100%;z-index:2;filter:drop-shadow(0 1px 0 #0009)}
+.ic.sh::after{content:'';position:absolute;left:-7px;top:-7px;width:22px;height:22px;background:url(sprites/icons.png?v=24) no-repeat;background-size:800% 400%;background-position:85.714% 66.667%;z-index:2;filter:drop-shadow(0 1px 0 #0009)}
 .ic.cur{border:none;background:none;box-shadow:none;width:26px;height:26px}.ic.cur b{position:static;margin-left:28px;display:inline-block;transform:translateY(5px);background:none;border:none;font-size:13px}.ic.cur{width:auto;min-width:26px;margin-right:8px}.ic.cur i{width:26px;height:26px;inset:auto;left:0;top:0}
 .ic.empty{border-style:dashed;border-color:#ffffff55}
 .pchip.ipc{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:4px 4px 3px;background:#00000030;color:#fff;border-color:transparent;position:relative}.pchip.ipc small{font-size:9px;width:auto;padding:0;color:#ddd}.pchip.ipc.on{background:#ffd23f33}.pchip.ipc .lk{position:absolute;right:2px;top:2px;font-style:normal;font-size:11px}.pchip.ipc.lock .ic{filter:grayscale(.8) brightness(.7)}
@@ -323,3 +323,6 @@ body.land #itemBtn{right:calc(max(24px,env(safe-area-inset-right)) + 112px);bott
 /* v23 地图增至 5 张 + 随机：横屏一排 6 张 */
 body.land #mapList{grid-template-columns:repeat(6,minmax(0,1fr));width:min(1000px,calc(var(--aw,100vw)*0.95));gap:8px}
 body.land .mapc small{font-size:9.5px}body.land .mapc .rnd{height:auto;aspect-ratio:200/120;min-height:0}
+/* v24 双冲刺引擎：冲刺键显示可用次数 */
+#dash[data-ch]::after{content:'×' attr(data-ch);position:absolute;right:-4px;top:-6px;background:#1b1420;color:#ffd23f;border-radius:9px;padding:1px 6px;font:900 14px system-ui;border:2px solid #ffd23f}
+#dash[data-ch="0"]::after{color:#888;border-color:#888}

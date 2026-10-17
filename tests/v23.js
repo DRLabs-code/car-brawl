@@ -23,7 +23,8 @@ for(const [vn,vp] of [['desk',{width:1280,height:720}],['mob',{width:844,height:
   const e=await g.evaluate(async()=>{const S=ms=>new Promise(r=>setTimeout(r,ms));const R={};MODE='brawl';__game.noEnd=true;
    const prep=()=>{const P=__game.player,cs=__game.cars,E=cs.find(c=>!c.isP&&c.alive);for(const c of cs)if(c!==P&&c!==E){c.alive=false;c.x=c.z=-999}E.ai.hz=99;return{P,E}};
    // 冰窟窿：对手被玩家撞过后掉进去 → 淘汰并记玩家击杀
-   buildArena('ice',arenaR(6));start('fang');await S(2600);{const{P,E}=prep();const h=__maps.HZ.find(h=>h.k==='hole');const k0=kills;E.x=h.x;E.z=h.z;E.vx=E.vz=0;E.lastBy=P;E.lastByT=time;h.ph='open';h.t=0;h.T=5;await S(300);R.hole={dead:!E.alive,credit:kills-k0}}
+   buildArena('ice',arenaR(6));start('fang');await S(2600);{const{P,E}=prep();const h=__maps.HZ.find(h=>h.k==='hole');const k0=kills;E.hp=E.maxhp;E.x=h.x;E.z=h.z;E.vx=E.vz=0;E.lastBy=P;E.lastByT=time;h.ph='open';h.t=0;h.T=5;await S(300);R.hole={alive:E.alive,hpPct:+(E.hp/E.maxhp).toFixed(2),out:+(Math.hypot(E.x-h.x,E.z-h.z)-h.r).toFixed(1)};
+    E.hp=E.maxhp*.3;E.x=h.x;E.z=h.z;E.vx=E.vz=0;E.holeCd=0;E.lastBy=P;E.lastByT=time;await S(300);R.hole.dead=!E.alive;R.hole.credit=kills-k0}
    // AI 躲预警冰窟窿：AI 停在边缘，冰窟窿预警 → 应远离
    start('fang');await S(2600);{const P=__game.player;const h=__maps.HZ.find(h=>h.k==='hole');const A=__game.cars.find(c=>!c.isP);for(const c of __game.cars)if(c!==A&&!c.isP){c.alive=false;c.x=c.z=-999}P.x=h.x+30;P.z=h.z;A.x=h.x+h.r+1;A.z=h.z;A.vx=A.vz=0;A.ai.t=null;h.ph='warn';h.t=0;h.T=9;const d0=Math.hypot(A.x-h.x,A.z-h.z);await S(1500);R.avoid={d0:+d0.toFixed(1),d1:+Math.hypot(A.x-h.x,A.z-h.z).toFixed(1),alive:A.alive};h.T=.1}
    // 电地板：通电时扣血、减速
@@ -31,7 +32,7 @@ for(const [vn,vp] of [['desk',{width:1280,height:720}],['mob',{width:844,height:
     // 传送带：玩家不动也被带走
     const bt=__maps.HZ.find(h=>h.k==='belt');__game.testInp=[0,0];P.x=bt.x;P.z=bt.z;P.vx=P.vz=0;P.h=Math.PI/2;const x0=P.x;await S(800);R.belt={dx:+((P.x-x0)*bt.dir).toFixed(1)};__game.testInp=null}
    R.hs=JSON.parse(JSON.stringify(__maps.HS));return R});
-  ok(e.hole.dead&&e.hole.credit===1,'冰窟窿开启掉入淘汰 + 击杀归属',e.hole);ok(e.avoid.alive&&e.avoid.d1>e.avoid.d0+1.5,'AI 躲开预警冰窟窿',e.avoid);ok(e.pad.dmg>=15,'电地板通电扣血',e.pad);ok(e.belt.dx>=3,'传送带带着车走',e.belt);
+  ok(e.hole.alive&&Math.abs(e.hole.hpPct-.4)<.03&&e.hole.out>0&&e.hole.dead&&e.hole.credit===1,'冰窟窿：满血掉入扣 60% 并弹出；残血掉入淘汰 + 击杀归属',e.hole);ok(e.avoid.alive&&e.avoid.d1>e.avoid.d0+1.5,'AI 躲开预警冰窟窿',e.avoid);ok(e.pad.dmg>=15,'电地板通电扣血',e.pad);ok(e.belt.dx>=3,'传送带带着车走',e.belt);
   // AI 利用机关：目标站在开着的冰窟窿边，AI 应绕到目标另一侧往坑里推
   const use=await g.evaluate(async()=>{const S=ms=>new Promise(r=>setTimeout(r,ms));buildArena('ice',arenaR(6));start('fang');await S(2600);const P=__game.player,h=__maps.HZ.find(h=>h.k==='hole'),A=__game.cars.find(c=>!c.isP&&c.alive);
    __game.testInp=[0,0];h.ph='open';h.t=0;h.T=99;const s=sdist(POLY,h.x+h.r+3,h.z).s<-2?1:-1;P.x=h.x+s*(h.r+2.5);P.z=h.z;P.vx=P.vz=0;A.x=h.x+s*(h.r+2.5);A.z=h.z+8;A.vx=A.vz=0;A.ai.t=P;A.ai.tgtT=9;A.ai.mpUse=true;A.ai.mpT=9;const p0=__maps.HS.push;
