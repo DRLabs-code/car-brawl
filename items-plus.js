@@ -1,19 +1,32 @@
-// 模块 items-plus：新道具 导弹 / 地雷 / 油污 / 磁铁。对战、竞速通用；和原有道具一样「开过去即拾取、立即生效」，AI 会主动去吃、会躲地雷油污。
+// 模块 items-plus：攻击道具 导弹 / 地雷 / 油污 / 磁铁。对战、竞速通用；拾取后放进道具栏（1 个），玩家按 E / 道具键释放，AI 见机释放、会躲地雷油污。回血/护盾等原有道具仍即吃即用。
 (()=>{const T=TUNE.items;
-Object.assign(PKT,{missile:{n:'导弹',ic:'🚀',col:'#ff7b29',d:'自动锁定前方最近的对手',w:T.missile.w},mine:{n:'地雷',ic:'💣',col:'#9aa0a6',d:'在身后布下地雷',w:T.mine.w},
+Object.assign(PKT,{missile:{n:'导弹',ic:'🚀',col:'#ff7b29',d:'释放后锁定前方最近的对手',w:T.missile.w},mine:{n:'地雷',ic:'💣',col:'#9aa0a6',d:'在身后布下地雷',w:T.mine.w},
  oil:{n:'油污',ic:'🛢️',col:'#8f7bd6',d:'在身后泼油，踩到会打滑',w:T.oil.w},magnet:{n:'磁铁',ic:'🧲',col:'#e63946',d:`${T.magnet.t} 秒内把附近对手吸过来`,w:T.magnet.w}});
 let MS=[],MN=[],OIL=[];const ST={missile:0,mine:0,oil:0,magnet:0,hitM:0,hitN:0,aiUse:0};
 const foe=(c,o)=>o!==c&&o.alive&&!o.dummy&&!(MODE==='team'&&o.team!=null&&o.team===c.team);
 function aim(c,x,z,h){const fx=Math.sin(h),fz=Math.cos(h);let best=null,bs=1e9;for(const o of cars){if(!foe(c,o))continue;const dx=o.x-x,dz=o.z-z,d=Math.hypot(dx,dz);if(d>T.missile.range)continue;const s=d*((dx*fx+dz*fz)/(d||1)>.3?1:3);if(s<bs){bs=s;best=o}}return best}
-window.onPK=(c,k)=>{if(!T[k])return;ST[k]++;if(!c.isP)ST.aiUse++;const fx=Math.sin(c.h),fz=Math.cos(c.h);
+// 拾取 = 放进道具栏（每车 1 个，新的替换旧的）；释放 = fire()：玩家按 E / 道具键，AI 见机释放
+window.onPK=(c,k)=>{if(!T[k]||!T[k].w)return;c.held=k;c.heldT=0;if(c.isP)pkUI()};
+function fire(c,how){const k=c.held;if(!k||!c.alive||!running||paused)return false;c.held=null;ST[k]++;if(!c.isP)ST.aiUse++;const fx=Math.sin(c.h),fz=Math.cos(c.h);
  if(k==='missile'){MS.push({x:c.x+fx*2.6,z:c.z+fz*2.6,h:c.h,by:c,t:aim(c,c.x,c.z,c.h),life:T.missile.life,st:0});if(nearP(c.x,c.z))sfx('dash')}
- else if(k==='mine')MN.push({x:c.x-fx*3.2,z:c.z-fz*3.2,by:c,t:0});
+ else if(k==='mine'){MN.push({x:c.x-fx*3.2,z:c.z-fz*3.2,by:c,t:0});const my=MN.filter(n=>n.by===c);if(my.length>T.mine.max)MN.splice(MN.indexOf(my[0]),1)}
  else if(k==='oil')OIL.push({x:c.x-fx*3.8,z:c.z-fz*3.8,r:T.oil.r,t:0});
  else if(k==='magnet')c.magT=T.magnet.t;
- if(c.isP)track('item_use',{k,mode:MODE})};
+ ft(c.x,c.z,3.2,PKT[k].n+'！',PKT[k].col,c.isP?24:18,c.isP);
+ if(c.isP){track('item_use',{k,mode:MODE,how:how||'key'});pkUI()}return true}
+// AI 释放时机：导弹=前方有目标；地雷/油污=身后有人追；磁铁=附近有对手；拿太久就直接放
+function aiWant(c){const k=c.held,fx=Math.sin(c.h),fz=Math.cos(c.h);if(c.heldT>T.aiHold)return true;
+ if(k==='missile'){const t=aim(c,c.x,c.z,c.h);if(!t)return false;const dx=t.x-c.x,dz=t.z-c.z,d=Math.hypot(dx,dz);return d<T.missile.aiRange&&(dx*fx+dz*fz)/(d||1)>.4}
+ for(const o of cars){if(!foe(c,o))continue;const dx=o.x-c.x,dz=o.z-c.z,d=Math.hypot(dx,dz),dot=(dx*fx+dz*fz)/(d||1);
+  if((k==='mine'||k==='oil')&&d<14&&dot<-.3)return true;if(k==='magnet'&&d<T.magnet.r*.7&&d>5&&(MODE!=='race'||dot>.3))return true}return false}
+// 道具按钮（冲刺旁）+ 键盘 E
+const IB=$('itemBtn');function pkUI(){if(!IB||!player)return;const k=player.held;IB.classList.toggle('empty',!k);IB.querySelector('i').textContent=k?PKT[k].ic:'';IB.title=k?PKT[k].n:'道具'}
+if(IB)IB.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(player&&player.held)fire(player,'btn')});
+addEventListener('keydown',e=>{if(e.code==='KeyE'&&!e.repeat&&player&&player.held&&running&&!tut)fire(player,'key')});
 const hit=(o,d,by,dx,dz,kick,txt)=>{o.lastBy=by;o.lastByT=time;const L=Math.hypot(dx,dz)||1,im=kick/Math.sqrt(o.mass);o.vx+=dx/L*im;o.vz+=dz/L*im;hurt(o,d,by);ft(o.x,o.z,3.6,txt,'#ff9a3c',o.isP||by===player?26:18,o.isP||by===player);if(nearP(o.x,o.z)>0){sfx('boom');shake=Math.max(shake,o.isP?10:5)}if(o.isP)vib('heavy')};
 const blast=(x,z,col)=>{spark(x,z,16,col);smoke(x,z,5);debris(x,z,3,'#555')};
 const _s=step;step=function(dt){_s(dt);if(!running||tut)return;
+ for(const c of cars){if(c.isP||!c.held||!c.alive||c.dummy)continue;c.heldT+=dt;if((c.aiIt=(c.aiIt||0)-dt)>0)continue;c.aiIt=.25;if(aiWant(c))fire(c)}
  for(let i=MS.length-1;i>=0;i--){const m=MS[i];m.life-=dt;if(m.t&&!m.t.alive)m.t=aim(m.by,m.x,m.z,m.h);
   if(m.t){let d=Math.atan2(m.t.x-m.x,m.t.z-m.z)-m.h;d=Math.atan2(Math.sin(d),Math.cos(d));m.h+=clamp(d,-T.missile.turn*dt,T.missile.turn*dt)}
   m.x+=Math.sin(m.h)*T.missile.spd*dt;m.z+=Math.cos(m.h)*T.missile.spd*dt;m.st-=dt;if(m.st<=0){m.st=.05;parts.push({k:'smoke',x:m.x,z:m.z,y:.6,vx:0,vz:0,vy:.6,t:0,life:.5,s:6,dark:false})}
@@ -30,7 +43,7 @@ const _s=step;step=function(dt){_s(dt);if(!running||tut)return;
 {const _ai=aiThink;aiThink=function(c,dt){const o=_ai(c,dt);let[ix,iz,ds]=o;const L=Math.hypot(ix,iz);if(L<.01)return o;const ux=ix/L,uz=iz/L;
  for(const h of MN.length||OIL.length?MN.concat(OIL):[]){const dx=h.x-c.x,dz=h.z-c.z,d=Math.hypot(dx,dz);if(d<8&&d>.1&&(dx*ux+dz*uz)/d>.6){const s=(dx*uz-dz*ux)>0?-1:1;ix=ux*.5+uz*s*.9;iz=uz*.5-ux*s*.9;break}}return[ix,iz,ds]}}
 // 新局清空
-{const _st=start;start=function(){MS=[];MN=[];OIL=[];const r=_st.apply(this,arguments);for(const c of cars)c.magT=0;return r}}
+{const _st=start;start=function(){MS=[];MN=[];OIL=[];const r=_st.apply(this,arguments);for(const c of cars){c.magT=0;c.held=null;c.heldT=0}pkUI();return r}}
 // 绘制：地面层（油污、地雷）跟着第一次 shadow()；空中层（导弹、磁铁圈）跟 drawTags
 let gDone=false;{const _r=render;render=function(){gDone=false;return _r.apply(this,arguments)}}
 const ell=(x,z,r)=>{ctx.beginPath();for(let k=0;k<=16;k++){const a=k/16*Math.PI*2,[s,t]=iso(x+Math.cos(a)*r,z+Math.sin(a)*r);k?ctx.lineTo(s,t):ctx.moveTo(s,t)}ctx.closePath()};
@@ -42,5 +55,5 @@ const ell=(x,z,r)=>{ctx.beginPath();for(let k=0;k<=16;k++){const a=k/16*Math.PI*
   ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(-9,0);ctx.lineTo(-17-Math.random()*5,-3);ctx.lineTo(-17-Math.random()*5,3);ctx.closePath();ctx.fill();ctx.fillStyle='#e8edf2';ctx.strokeStyle='#1b1420';ctx.lineWidth=2;ctx.beginPath();ctx.rect(-9,-3.5,14,7);ctx.fill();ctx.stroke();ctx.fillStyle='#e63946';ctx.beginPath();ctx.moveTo(5,-3.5);ctx.lineTo(10,0);ctx.lineTo(5,3.5);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
  for(const c of cars)if(c.magT>0&&c.alive){const[sx,sy]=iso(c.x,c.z),k=(time*1.5)%1;ctx.save();ctx.strokeStyle='#e63946';ctx.lineWidth=2;ctx.globalAlpha=.6*(1-k);ctx.beginPath();ctx.ellipse(sx,sy,40*(1-k)+10,20*(1-k)+5,0,0,7);ctx.stroke();ctx.restore()}
  return _dt.apply(this,arguments)}}
-window.__items={get MS(){return MS},get MN(){return MN},get OIL(){return OIL},ST};
+window.__items={get MS(){return MS},get MN(){return MN},get OIL(){return OIL},ST,fire,aiWant};
 })();

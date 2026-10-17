@@ -18,10 +18,13 @@ window.TUNE={
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI
  race:{laps:5,respawn:1.6,respawnHp:.6,respawnInv:1.5,boostT:1.4,boostMul:1.38,boostKick:6,jumpMin:9,jumpK:.045,jumpMax:.95,jumpH:46,lateT:20,maxT:240,aiShortcut:.55,aiRam:.5},
- // 新道具（拾取即用）：w 为刷新权重（原有道具各约 1）
- items:{missile:{w:.7,dmg:22,spd:32,turn:3.2,life:2.6,range:40,kick:14},mine:{w:.7,dmg:26,arm:.7,life:20,r:2.4,kick:18},oil:{w:.6,life:10,r:3.6},magnet:{w:.5,t:4,r:16,pull:22}},
+ // 攻击道具（持有 1 个，E / 道具键 释放）：w 为刷新权重（原有道具各约 1）；aiHold 为 AI 最长持有秒数；mine.max 为每车场上最多地雷数
+ items:{aiHold:9,missile:{w:.7,dmg:22,spd:32,turn:3.2,life:2.6,range:40,kick:14,aiRange:26},mine:{w:.7,dmg:26,arm:.7,life:12,r:2.4,kick:18,max:2},oil:{w:.6,life:10,r:3.6},magnet:{w:.5,t:4,r:16,pull:22}},
  // 竞速追赶：名次在后 from 比例之后的车，拾取时按 up×落后程度 的概率升级为强道具
  catchUp:{from:.4,up:.8,strong:['missile','magnet','boost']},
+ // v23 新地图机关。冰湖：冰窟窿 关 shut 秒 → 裂纹预警 warn → 开 open（掉进去淘汰）。工厂：传送带推车 + 电地板 idle → warn → on（持续伤害+减速）
+ ice:{holes:[2,3],holeR:3.2,shut:[5,9],warn:1.6,open:3.5},
+ fac:{belts:2,beltL:16,beltW:2.6,beltSpd:7,pads:[2,3],padR:3,idle:[4,7],warn:1.2,on:2.2,dps:24,slow:2.5},
  // 商店：看广告领金币
  coinAd:{max:3,v:100}
 };

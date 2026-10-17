@@ -250,7 +250,7 @@ function buildProps0(){const M=MAP;props=wallProps(M,SC);const no=Math.round(3*A
 function buildProps1(){const M=MAP,R=AR;
  let ri=0;for(let e=0;e<POLY.length;e++){const[a,b]=POLY[e],[c,d]=POLY[(e+1)%POLY.length],L=Math.hypot(c-a,d-b),n=Math.max(1,Math.round(L/4.6));let nx=(d-b)/L,nz=-(c-a)/L;if(inPoly(POLY,(a+c)/2+nx*.5,(b+d)/2+nz*.5)){nx=-nx;nz=-nz}
   for(let i=0;i<n;i++){const x0=a+(c-a)*i/n+nx*2.2,z0=b+(d-b)*i/n+nz*2.2,x1=a+(c-a)*(i+1)/n+nx*2.2,z1=b+(d-b)*(i+1)/n+nz*2.2;props.push({type:'rail',x0,z0,x1,z1,x:(x0+x1)/2,z:(z0+z1)/2,nx,nz,i:ri++})}}
- const decoT={site:['barrel','block','cone'],junk:['tires','scrap','tires'],desert:['rock','cactus','bush']}[M.deco];
+ const decoT={site:['barrel','block','cone'],junk:['tires','scrap','tires'],desert:['rock','cactus','bush'],ice:['pine','snow','pine'],factory:['barrel','block','tires']}[M.deco];
  for(let i=0,t=0;i<R*1.4&&t<2000;t++){const x=rnd(-AR_EXT-14,AR_EXT+14),z=rnd(-AR_EXT-14,AR_EXT+14),sd=sdist(POLY,x,z).s;if(sd<5.5||sd>14)continue;i++;props.push({type:decoT[i%3],x,z,r:1.6,solid:false,h:1+(Math.random()*2|0),s:rnd(.8,1.3),seed:Math.random(),col:'#7f8c8d',deco:true})}
  // 场外装饰烘焙进地面
  const old=ctx;ctx=floor.getContext('2d');ctx.setTransform(FSC,0,0,FSC,floor.ox,floor.oy);props.filter(p=>p.deco).sort((a,b)=>a.x+a.z-b.x-b.z).forEach(p=>{drawProp(p);p.baked=true});ctx=old}
