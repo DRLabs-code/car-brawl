@@ -14,3 +14,4 @@
 - `node tests/v18.js`：花纹涂装（稀有度分组、试穿还原、购买扣费、传说仅抽奖+30 次保底、存档、8 车动态涂装 FPS、各车各涂装截图）。
 - `node tests/perf.js`：8 车 + 机关场景（工地/废车场/沙漠）每帧 render/step 耗时、FPS、堆；v19 起用于对比优化前后。
 - 模块文件（v19 起）：battle-extras.js（原 v11）、ui-shell.js（原 v15）、mode-team.js（原 v16）、map-hazards.js（原 v17）、skin-patterns.js（原 v18）；数值参数集中在 tune.js。
+- `node tests/v20.js`：车库可读性（844×390/667×375/1280×720 下部件图标 ≥36px 可见、名称说明字号、碎片进度条缩小、部件行不溢出）。

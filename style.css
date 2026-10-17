@@ -300,3 +300,13 @@ body #result .rcard.r15{display:flex;flex-direction:column;gap:8px;width:min(900
 #garage .sw2.rar-r{border-color:#3d8bff;box-shadow:0 0 0 2px #3d8bff66}#garage .sw2.rar-l{border-color:#ffb020;box-shadow:0 0 0 2px #ffb02088,0 0 10px #ffb02066;animation:legg 2s infinite alternate}@keyframes legg{to{box-shadow:0 0 0 2px #ff5ad888,0 0 14px #39f3ff88}}
 #garage .gcols>.gcol:last-child{overflow-y:auto;overscroll-behavior:contain}
 #garage .swatches[data-g]{gap:4px}#garage .swatches[data-g] .sw2{width:calc(12.5% - 6px);min-width:44px;padding:2px 1px}#garage .swatches[data-g] .sw2 i{width:20px;height:20px}#garage .swatches[data-g] .sw2 small{font-size:9px;white-space:nowrap}#garage .swatches[data-g] .rarh{margin:2px 0 -2px}#garage .swatches[data-g] .sw2 i{width:22px;height:22px}#garage .swatches[data-g] .sw2 em{font-size:9px}
+/* v20 车库可读性：手机横屏缩放约 0.58，图标/文字按此放大；碎片进度条缩小 */
+#garage .gsh .ic{width:64px;height:64px}#garage .gst2 b{font-size:20px}#garage .gst2 small{font-size:15px}
+#garage .gopts{flex-wrap:wrap}#garage .gopts .pchip{flex:0 0 calc(33.3% - 4px)}
+#garage .gopts .ic{width:68px;height:68px}#garage .pchip.ipc small{font-size:16px;font-weight:800;color:#fff}#garage .pchip.ipc .lk{font-size:16px}
+#garage .gdesc,#garage .gsb>small{font-size:16px;line-height:1.4}
+#garage .crow.ic2 .ic{width:68px;height:68px}#garage .crow.ic2 .ic b{font-size:13px}#garage .crow.ic2 .icw .lbl{font-size:12px;max-width:72px}
+#garage .crow.ic2 .cmid b{font-size:21px}#garage .crow.ic2 small{font-size:17px;line-height:1.35}#garage .crow .rar{font-size:12px;padding:1px 6px}
+#garage .crow .cbar{height:6px;max-width:150px;margin-top:4px}
+#garage .crow.ic2 .btn.sm{font-size:15px}#garage .crow.ic2 .lack,#garage .crow.ic2 .owned{font-size:15px}
+#garage .cmpbox{font-size:17px}#garage .cmpbox .ic{width:56px;height:56px}#garage .cmpbox small{font-size:15px}#garage .cmp{font-size:15px;padding:3px 8px}#garage .cmpbox .btn{font-size:16px}
