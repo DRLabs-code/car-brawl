@@ -298,3 +298,5 @@ body #result .rcard.r15{display:flex;flex-direction:column;gap:8px;width:min(900
 /* v18 稀有度分组 */
 #garage .swatches .rarh{flex-basis:100%;font:900 12px system-ui;margin:4px 0 0;text-align:left}.rarh.rar-r{color:#5fb8ff}.rarh.rar-l{color:#ffb020}
 #garage .sw2.rar-r{border-color:#3d8bff;box-shadow:0 0 0 2px #3d8bff66}#garage .sw2.rar-l{border-color:#ffb020;box-shadow:0 0 0 2px #ffb02088,0 0 10px #ffb02066;animation:legg 2s infinite alternate}@keyframes legg{to{box-shadow:0 0 0 2px #ff5ad888,0 0 14px #39f3ff88}}
+#garage .gcols>.gcol:last-child{overflow-y:auto;overscroll-behavior:contain}
+#garage .swatches[data-g]{gap:4px}#garage .swatches[data-g] .sw2{width:calc(12.5% - 6px);min-width:44px;padding:2px 1px}#garage .swatches[data-g] .sw2 i{width:20px;height:20px}#garage .swatches[data-g] .sw2 small{font-size:9px;white-space:nowrap}#garage .swatches[data-g] .rarh{margin:2px 0 -2px}#garage .swatches[data-g] .sw2 i{width:22px;height:22px}#garage .swatches[data-g] .sw2 em{font-size:9px}
