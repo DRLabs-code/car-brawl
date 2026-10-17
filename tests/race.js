@@ -16,9 +16,9 @@ ok(st.map==='track'&&st.allRc&&st.behind&&st.head,'发车格：全部在起跑�
 await auto(g);await W(9000);await g.screenshot({path:SH+'mob_race.png'});const hud=await g.evaluate(()=>document.getElementById('raceHud').textContent);ok(/圈/.test(hud)&&/名/.test(hud),'HUD 圈数/名次',hud);
 // 重生：撞毁一辆 AI，应在检查点重生
 const rs=await g.evaluate(async()=>{const c=__game.cars.find(q=>!q.isP&&q.alive);hurt(c,9999,null);const d=!c.alive;await new Promise(r=>setTimeout(r,2600));return{dead:d,back:c.alive,hp:+(c.hp/c.maxhp).toFixed(2),inv:c.invT>0||c.hp<c.maxhp}});ok(rs.dead&&rs.back&&rs.hp<=.61,'撞毁后重生（60% 耐久）',rs);
-const fin=await g.evaluate(async()=>{for(let i=0;i<120&&document.getElementById('result').classList.contains('hide');i++)await new Promise(r=>setTimeout(r,1000));await new Promise(r=>setTimeout(r,400));const S=__race.standings();
- return{done:!document.getElementById('result').classList.contains('hide'),t:__game.time|0,title:document.getElementById('rTitle').textContent,board:document.querySelectorAll('#rBoard .brow').length,mono:S.every((c,i)=>i===0||!c.rc.fin||(S[i-1].rc.fin&&S[i-1].rc.fin<c.rc.fin)),fins:S.filter(c=>c.rc.fin).length,RS:__race.RS,pkAI:__v11.stats.eaten-__v11.stats.eatenP,stats:document.getElementById('rStats').textContent}});
-ok(fin.done&&/名/.test(fin.title)&&fin.board>=4,'完赛进结算，名次榜',fin);ok(fin.mono,'完赛名次按冲线顺序');ok(/用时/.test(fin.stats),'结算显示用时');ok(fin.RS.boost>=2,'玩家吃到加速带',fin.RS);ok(fin.pkAI>=1,'AI 会吃道具',fin.pkAI);
+const fin=await g.evaluate(async()=>{for(let i=0;i<200&&document.getElementById('result').classList.contains('hide');i++)await new Promise(r=>setTimeout(r,1000));await new Promise(r=>setTimeout(r,400));const S=__race.standings();
+ return{done:!document.getElementById('result').classList.contains('hide'),t:__game.time|0,title:document.getElementById('rTitle').textContent,board:document.querySelectorAll('#rBoard .brow').length,mono:S.every((c,i)=>i===0||!c.rc.fin||(S[i-1].rc.fin&&S[i-1].rc.fin<c.rc.fin)),fins:S.filter(c=>c.rc.fin).length,RS:__race.RS,laps:TUNE.race.laps,pkAI:__v11.stats.eaten-__v11.stats.eatenP,stats:document.getElementById('rStats').textContent}});
+ok(fin.done&&/名/.test(fin.title)&&fin.board>=4,'完赛进结算，名次榜',fin);ok(fin.mono,'完赛名次按冲线顺序');ok(fin.laps===5&&fin.RS.laps>=3,'圈数 5（玩家至少跑完 3 圈）',[fin.laps,fin.RS.laps]);ok(/用时/.test(fin.stats),'结算显示用时');ok(fin.RS.boost>=2,'玩家吃到加速带',fin.RS);ok(fin.pkAI>=1,'AI 会吃道具',fin.pkAI);
 await W(800);await g.screenshot({path:SH+'mob_result.png'});
 const ev=await g.evaluate(()=>JSON.parse(localStorage.getItem('carbrawl_track')||'[]').map(e=>e.event));ok(['race_start','race_lap','race_end','mode_select'].every(e=>ev.includes(e)),'埋点 race_start/race_lap/race_end',[...new Set(ev.filter(e=>/race|mode/.test(e)))]);
 await g.close();
@@ -26,7 +26,7 @@ await g.close();
 g=await page({width:1280,height:720});
 const mech=await g.evaluate(async()=>{MODE='race';__game.noEnd=true;buildArena('track',arenaR(8));start('fang');await new Promise(r=>setTimeout(r,2500));const P=__game.player,A=__race;
  const res={};// 加速带：停在加速带前沿直线开过
- P.x=6;P.z=-31;P.h=Math.PI/2;P.vx=0;P.vz=12;P.vx=12;P.vz=0;__game.testInp=[1,0];let mx=0;for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,50));mx=Math.max(mx,Math.hypot(P.vx,P.vz))}res.boostTop=+mx.toFixed(1);res.base=P._spd0||P.spd;
+ for(const c of __game.cars)if(c!==P){c.x=-32;c.z=0;c.vx=c.vz=0}if(window.__items){__items.MS.length=0;__items.MN.length=0;__items.OIL.length=0}__v11.PK.length=0;P.x=6;P.z=-31;P.h=Math.PI/2;P.vx=0;P.vz=12;P.vx=12;P.vz=0;__game.testInp=[1,0];let mx=0;for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,50));mx=Math.max(mx,Math.hypot(P.vx,P.vz))}res.boostTop=+mx.toFixed(1);res.base=P._spd0||P.spd;
  // 跳台（捷径内）：速度 20 → 腾空
  P.x=44;P.z=-14;P.h=0;P.vx=0;P.vz=20;P.boostT=0;__game.testInp=[0,1];let air=0;for(let i=0;i<20;i++){await new Promise(r=>setTimeout(r,30));air=Math.max(air,P.air||0)}res.air=+air.toFixed(2);
  // AI 走捷径计数：看 2 圈内是否有 AI 进入捷径通道

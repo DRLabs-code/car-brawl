@@ -95,11 +95,13 @@ const rh=document.createElement('div');rh.id='raceHud';rh.className='hide';$('ap
 // ---------- 结算 ----------
 const _f=finish;finish=function(){if(!isR())return _f.apply(this,arguments);const st=standings(),rank=st.indexOf(player)+1,P=player,was=P.alive,n=st.length,t=P.rc.fin?P.rc.finT:time;
  P.alive=rank===1;if(rank>1){aliveAtDeath=rank;deadTime=time}let r;try{r=_f.apply(this,arguments)}finally{P.alive=was}
- track('race_end',{rank,n,t:+t.toFixed(1),fin:!!P.rc.fin,kills,car:playerKey,...RS});
+ dcAdd('racePlay');if(rank<=3)dcAdd('raceTop3');track('race_end',{rank,n,t:+t.toFixed(1),fin:!!P.rc.fin,kills,car:playerKey,...RS});
  const mmss=v=>Math.floor(v/60)+':'+(v%60).toFixed(1).padStart(4,'0');
  const patch=()=>{if($('result').classList.contains('hide'))return;$('rTitle').textContent=P.rc.fin?`🏁 第 ${rank} / ${n} 名 · 用时 ${mmss(t)}`:`🏁 未完赛 · 第 ${rank} / ${n} 名`;$('rRank').textContent=rank===1?'🏆':'#'+rank;$('rRank').className=rank===1?'':'lose';
   const sd=[...$('rStats').children].find(e=>e.textContent.includes('存活'));if(sd)sd.innerHTML=`<b>${mmss(t)}</b>用时`;
   $('rBoard').innerHTML=st.map((c,i)=>`<div class="brow ${c.isP?'me':''}"><span class="bp">${i===0?'🏆':'#'+(i+1)}</span><span class="bf" style="--f:${c.frame||'#fff'}"></span><b>${esc(c.nick||'')}</b><small>${c.s.name} Lv.${c.lv}</small><span class="bk">${c.rc.fin?mmss(c.rc.finT):Math.min(T.laps,c.rc.lap+1)+'/'+T.laps+' 圈'}</span></div>`).join('');
   const s=document.querySelector('#result details summary');if(s)s.textContent='🏁 比赛名次 ▾';window.fitAll&&fitAll()};const d=rank===1?600:300;setTimeout(patch,d);setTimeout(patch,d+140);return r};// 与核心结算同一时刻改写，避免闪一下旧标题
+// 追赶机制：落后的车捡道具更可能变成强道具
+window.pkRoll=(c,k)=>{if(!isR()||!c.rc)return k;const C=TUNE.catchUp,n=cars.filter(q=>!q.dummy).length,f=n>1?(posOf(c)-1)/(n-1):0;if(f<C.from||Math.random()>C.up*f)return k;const s=C.strong[Math.random()*C.strong.length|0];if(s!==k){RS.lucky=(RS.lucky||0)+1;if(c.isP)ft(c.x,c.z,4.2,'追赶道具！','#7df9ff',24,true)}return s};
 window.__race={WP,SW,PADS,RAMPS,MUD,iA,iB,N,standings,posOf,get RS(){return RS},get FIN(){return FIN}};
 })();

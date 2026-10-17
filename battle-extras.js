@@ -19,7 +19,7 @@ function pkPos(near){for(let k=0;k<60;k++){let x,z;if(near&&k<30){const a=Math.r
  if(!inPoly(ZPOLY,x,z)||sdist(ZPOLY,x,z).s>-3||!openCell(x,z,2))continue;{const[ci,cj]=cellOf(x,z);if(!GRID.ok[cj*GRID.n+ci])continue}/* v14：只刷在车能开到的主战场格（以前会刷进封闭工棚/坑/台地里，吃不到又占满 3 个名额） */if(PK.some(p=>Math.hypot(p.x-x,p.z-z)<8)||cars.some(c=>c.alive&&Math.hypot(c.x-x,c.z-z)<3))continue;return[x,z]}return null}
 function pkSpawn(){const low=cars.filter(c=>c.alive&&!c.dummy&&c.hp<c.maxhp*.4);let k=pkType(),near=null;if(low.length&&Math.random()<.4){k='heal';near=low[Math.random()*low.length|0]}
  const p=pkPos(near);if(!p)return;PK.push({k,x:p[0],z:p[1],t:0,life:25});PKS.spawn++;track('pickup_spawn',{type:k,mode:MODE,lowHp:!!near})}
-const PKS={eaten:0,eatenP:0,spawn:0};function applyPK(c,k,src){const T=PKT[k],full=k==='heal'&&c.hp>=c.maxhp-.5,again=(k==='atk'&&c.atkT>0)||(k==='shield'&&c.shT>0);if(src!=='revive'){PKS.eaten++;if(c.isP)PKS.eatenP++}
+const PKS={eaten:0,eatenP:0,spawn:0};function applyPK(c,k,src){if(window.onPK)onPK(c,k,src);const T=PKT[k],full=k==='heal'&&c.hp>=c.maxhp-.5,again=(k==='atk'&&c.atkT>0)||(k==='shield'&&c.shT>0);if(src!=='revive'){PKS.eaten++;if(c.isP)PKS.eatenP++}
  if(k==='heal'){c.hp=Math.min(c.maxhp,c.hp+c.maxhp*.3)}else if(k==='atk')c.atkT=8;else if(k==='shield')c.shT=8;else if(k==='boost'){c.dcd=0}
  else if(k==='spring'){for(const o of cars){if(o===c||!o.alive||o.dummy)continue;const dx=o.x-c.x,dz=o.z-c.z,d=Math.hypot(dx,dz);if(d<9&&d>.01){const im=(26*(1-d/9)+10)/Math.sqrt(o.mass);o.vx+=dx/d*im;o.vz+=dz/d*im;o.lastBy=c;o.lastByT=time;o.flash=.12}}
   parts.push({k:'ring',x:c.x,z:c.z,y:0,t:0,life:.5});spark(c.x,c.z,14,T.col);if(nearP(c.x,c.z)>0)shake=Math.max(shake,8)}
@@ -69,10 +69,10 @@ function doRevive(){const p=player;let best=[ZC[0],ZC[1]],bs=-1;for(let i=0;i<50
  if(MODE==='ring')best=[ZC[0],ZC[1]];p.alive=true;p.hp=p.maxhp*.5;p.x=best[0];p.z=best[1];p.vx=p.vz=0;p.fwd=0;p.deadT=0;p.fell=false;p.fallT=0;p.place=undefined;p.invT=2;p.dcd=0;deadTime=0;
  const k=pkType();applyPK(p,k,'revive');ft(p.x,p.z,4,'复活！','#ffd23f',32,true);sfx('good');RV.pending=false;RV.ok=true;camSnap=true;track('revive_done',{mode:MODE,gift:k})}
 // ---------- 每日挑战 ----------
-const DCP={dashKill:{n:'冲撞击杀',d:'冲刺中撞毁对手',ic:'💥',g:2,r:{coins:80}},kill:{n:'撞毁对手',d:'任意模式撞毁对手',ic:'🚗',g:5,r:{coins:60}},play:{n:'完成对局',d:'完成任意对局',ic:'🎮',g:3,r:{coins:50}},
+const DCP={dashKill:{n:'冲撞击杀',d:'冲刺中撞毁对手',ic:'💥',g:2,r:{coins:80}},kill:{n:'撞毁对手',d:'任意模式撞毁对手',ic:'🚗',g:5,r:{coins:60}},play:{n:'完成对局',d:'完成任意对局',ic:'🎮',g:3,r:{coins:50}},racePlay:{n:'完成竞速',d:'完成一场竞速赛',ic:'🏁',g:2,r:{coins:60}},raceTop3:{n:'竞速前三',d:'竞速赛跑进前三名',ic:'🥉',g:1,r:{coins:80}},
  pickup:{n:'拾取道具',d:'对战中拾取道具',ic:'🎁',g:4,r:{shards:3}},win:{n:'乱斗夺冠',d:'在乱斗模式获得第一',ic:'👑',g:1,r:{shards:4}},ringWin:{n:'擂台称王',d:'在推出擂台获胜',ic:'⭕',g:1,r:{coins:120}},ringFall:{n:'推下擂台',d:'把对手推下擂台',ic:'🌀',g:3,r:{coins:80}}};
 Object.assign(DCP,{teamWin:{n:'队伍获胜',d:'在队伍乱斗中赢下一局',ic:'👥',g:1,r:{coins:100}},teamPlay:{n:'并肩作战',d:'完成队伍乱斗对局',ic:'🤝',g:2,r:{shards:3}},teamAssist:{n:'协同集火',d:'队伍乱斗中撞毁队友正在攻击的对手',ic:'🎯',g:2,r:{coins:80}}});/* v16 队伍任务（定义放这里，避免读档时先于 v16 加载） */
-const DC_SLOTS=BUILD.modes.includes('team')?[['dashKill','kill','play','teamPlay'],['pickup','win','teamWin'],['ringWin','ringFall','teamAssist']]:[['dashKill','kill','play'],['pickup','win'],['ringWin','ringFall']],DC_CHEST={coins:150,shards:5};
+const DC_SLOTS=BUILD.modes.includes('team')?[['dashKill','kill','play','teamPlay'],['pickup','win','teamWin'],['ringWin','ringFall','teamAssist']]:[['dashKill','kill','play'],['pickup','win'],['ringWin','ringFall']],DC_CHEST={coins:150,shards:5};if(BUILD.modes.includes('race')){DC_SLOTS[0].push('racePlay');DC_SLOTS[1].push('raceTop3')}
 function dcGet(){let d=L('carbrawl_dc',null);const td=today();if(!d||d.d!==td){let h=0;for(const ch of String(td))h=(h*31+ch.charCodeAt(0))>>>0;d={d:td,t:DC_SLOTS.map((s,i)=>({id:s[(h>>(i*3))%s.length],p:0,c:0})),chest:0,seen:0};S('carbrawl_dc',d);track('dc_new_day',{tasks:d.t.map(t=>t.id).join(',')})}d.t=d.t.filter(t=>DCP[t.id]);return d}
 window.dcAdd=(id,n=1)=>{const d=dcGet();for(const t of d.t){if(t.id!==id||t.p>=DCP[id].g)continue;t.p=Math.min(DCP[id].g,t.p+n);if(t.p>=DCP[id].g){toast(`📋 挑战完成：${DCP[id].n}，去领奖！`);track('dc_complete',{id})}}S('carbrawl_dc',d);dcDot()};
 const dcBadge=()=>{const d=dcGet();d.t=d.t.filter(t=>DCP[t.id]);return!d.seen||d.t.some(t=>t.p>=DCP[t.id].g&&!t.c)||(d.t.every(t=>t.c)&&!d.chest)};
@@ -136,7 +136,7 @@ const _start=start;start=function(k,opt){opt=opt||{};if(HL.rec){try{HL.rec.stop(
 const _step=step;step=function(dt){if(HL.play&&!running){hlStep(dt);return}_step(dt);if(!running||tut)return;
  for(const c of cars){if(c.atkT>0)c.atkT-=dt;if(c.shT>0)c.shT-=dt;if(c.invT>0)c.invT-=dt}
  if(time>=pkNext&&PK.length<3){pkSpawn();pkNext=time+4+Math.random()*3}
- for(let i=PK.length-1;i>=0;i--){const p=PK[i];p.t+=dt;if(p.t>p.life||!inPoly(ZPOLY,p.x,p.z)){PK.splice(i,1);continue}for(const c of cars)if(c.alive&&!c.dummy&&Math.hypot(c.x-p.x,c.z-p.z)<2.6){PK.splice(i,1);applyPK(c,p.k);if(c.isP)pkN++;break}}
+ for(let i=PK.length-1;i>=0;i--){const p=PK[i];p.t+=dt;if(p.t>p.life||!inPoly(ZPOLY,p.x,p.z)){PK.splice(i,1);continue}for(const c of cars)if(c.alive&&!c.dummy&&Math.hypot(c.x-p.x,c.z-p.z)<2.6){PK.splice(i,1);applyPK(c,window.pkRoll?pkRoll(c,p.k):p.k);if(c.isP)pkN++;break}}
  HL.acc+=dt;if(HL.acc>=1/30){HL.acc=0;hlRecord()}buffHud()};
 const _fin=finish;finish=function(){const win=player.alive;clearInterval(RV.tm);show('revive',0);RV.pending=false;_fin();if(tut)return;
  dcAdd('play');if(win)dcAdd(MODE==='ring'?'ringWin':'win');PK=[];bf.innerHTML='';bfS='';

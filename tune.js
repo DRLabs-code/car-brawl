@@ -17,7 +17,11 @@ window.TUNE={
  // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI
- race:{laps:3,respawn:1.6,respawnHp:.6,respawnInv:1.5,boostT:1.4,boostMul:1.38,boostKick:6,jumpMin:9,jumpK:.045,jumpMax:.95,jumpH:46,lateT:20,maxT:240,aiShortcut:.55,aiRam:.5},
+ race:{laps:5,respawn:1.6,respawnHp:.6,respawnInv:1.5,boostT:1.4,boostMul:1.38,boostKick:6,jumpMin:9,jumpK:.045,jumpMax:.95,jumpH:46,lateT:20,maxT:240,aiShortcut:.55,aiRam:.5},
+ // 新道具（拾取即用）：w 为刷新权重（原有道具各约 1）
+ items:{missile:{w:.7,dmg:22,spd:32,turn:3.2,life:2.6,range:40,kick:14},mine:{w:.7,dmg:26,arm:.7,life:20,r:2.4,kick:18},oil:{w:.6,life:10,r:3.6},magnet:{w:.5,t:4,r:16,pull:22}},
+ // 竞速追赶：名次在后 from 比例之后的车，拾取时按 up×落后程度 的概率升级为强道具
+ catchUp:{from:.4,up:.8,strong:['missile','magnet','boost']},
  // 商店：看广告领金币
  coinAd:{max:3,v:100}
 };
