@@ -11,7 +11,7 @@ let g=await page(mob);
 const btn=await g.evaluate(()=>{const b=document.querySelector('#modeSel [data-mode=race]');if(!b)return null;b.click();return{on:b.classList.contains('on'),hint:document.getElementById('modeHint').textContent,mode:MODE}});
 ok(btn&&btn.on&&btn.mode==='race'&&/竞速/.test(btn.hint),'模式按钮/说明',btn);await g.screenshot({path:SH+'mob_menu.png'});
 await g.evaluate(()=>document.getElementById('mStart').click());await W(500);const mt=await g.evaluate(()=>document.querySelector('#match .msub')&&document.querySelector('#match .msub').textContent);ok(/环形赛道/.test(mt||''),'开始匹配直接进赛道（不选地图）',mt);
-await W(4200);const st=await g.evaluate(()=>{const cs=__game.cars.filter(c=>!c.dummy);return{map:mapKey,n:cs.length,allRc:cs.every(c=>c.rc),behind:cs.every(c=>c.x<-8&&Math.abs(c.z+31)<8),head:cs.every(c=>Math.abs(c.h-Math.PI/2)<.01),zone:zoneR===AR}});
+const st=await g.evaluate(async()=>{for(let i=0;i<150&&!(mapKey==='track'&&__game.cars.length>1&&__game.cars.every(c=>c.dummy||c.rc));i++)await new Promise(r=>setTimeout(r,50));const cs=__game.cars.filter(c=>!c.dummy);return{map:mapKey,n:cs.length,allRc:cs.every(c=>c.rc),behind:cs.every(c=>c.x<-8&&Math.abs(c.z+31)<8),head:cs.every(c=>Math.abs(c.h-Math.PI/2)<.01),zone:zoneR===AR}});
 ok(st.map==='track'&&st.allRc&&st.behind&&st.head,'发车格：全部在起跑线后、朝前',st);ok(st.zone,'竞速不缩电网');await g.screenshot({path:SH+'mob_start.png'});
 await auto(g);await W(9000);await g.screenshot({path:SH+'mob_race.png'});const hud=await g.evaluate(()=>document.getElementById('raceHud').textContent);ok(/圈/.test(hud)&&/名/.test(hud),'HUD 圈数/名次',hud);
 // 重生：撞毁一辆 AI，应在检查点重生
