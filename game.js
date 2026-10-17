@@ -116,11 +116,16 @@ function splitLines(k){if(LSPLIT[k])return LSPLIT[k];const im=LINES[k],w=im.widt
  for(let i=0;i<D.data.length;i+=4){if(!D.data[i+3])continue;const T=D.data[i]>128?Hh:Dd;for(let j=0;j<4;j++)T.data[i+j]=D.data[i+j]}
  const[d,dx]=mk(),[hc,hx]=mk(),[dl,lx]=mk();dx.putImageData(Dd,0,0);hx.putImageData(Hh,0,0);lx.putImageData(Dd,0,0);lx.globalCompositeOperation='source-in';lx.fillStyle='#7a7290';lx.fillRect(0,0,w,h);
  return LSPLIT[k]={d,h:hc,dl}}
-function compose(k,color,liv){const key=k+'|'+color+'|'+(liv||'');if(SKIN.has(key))return SKIN.get(key);const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d');x.drawImage(BASE[k],0,0);
+// 涂装缓存 LRU：命中移到队尾，超上限淘汰最久未用；手机（粗指针）按体积限（对局中车辆自己持有贴图，不受缓存淘汰影响）
+const MOBC=!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches),SKIN_MAX=MOBC?1e9:TUNE.skin.cacheDesk,SKIN_MB=MOBC?TUNE.skin.cacheMobMB:1e9;
+const skinMB=()=>{let b=0;for(const o of SKIN.values())b+=o.width*o.height*4;return b/1048576};
+function skinGet(key){const o=SKIN.get(key);if(o){SKIN.delete(key);SKIN.set(key,o)}return o}
+function skinPut(key,o){SKIN.set(key,o);while(SKIN.size>1&&(SKIN.size>SKIN_MAX||skinMB()>SKIN_MB))SKIN.delete(SKIN.keys().next().value);return o}
+function compose(k,color,liv){const key=k+'|'+color+'|'+(liv||'');if(SKIN.has(key))return skinGet(key);const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d');x.drawImage(BASE[k],0,0);
  const t=mkC(W4,W4),tx=t.getContext('2d');tx.drawImage(PAINT[k],0,0);tx.globalCompositeOperation='multiply';tx.fillStyle=COLORS[color].c;tx.fillRect(0,0,W4,W4);tx.globalCompositeOperation='destination-in';tx.drawImage(PAINT[k],0,0);x.drawImage(t,0,0);
  if(liv&&LIVS[liv]&&LAYI[k+'_liv_'+(LIVS[liv].src||liv)]){const lc=LIVS[liv].c||(lum(COLORS[color].c)>.55?'#1b1420':'#ffffff'),L=LAYI[k+'_liv_'+(LIVS[liv].src||liv)],l=mkC(W4,W4),lx=l.getContext('2d');lx.drawImage(L,0,0,W4,W4);lx.globalCompositeOperation='source-in';lx.fillStyle=lc;lx.fillRect(0,0,W4,W4);x.drawImage(l,0,0)}
  if(LINES[k]){const sp=splitLines(k),dk=lum(COLORS[color].c)<.3;x.drawImage(dk?sp.dl:sp.d,0,0);x.drawImage(sp.h,0,0);if(dk)x.drawImage(sp.h,0,0)}
- if(SKIN.size>32)SKIN.delete(SKIN.keys().next().value);SKIN.set(key,o);return o}
+ return skinPut(key,o)}
 function lum(h){const n=parseInt(h.slice(1),16);return(.299*(n>>16)+.587*(n>>8&255)+.114*(n&255))/255}
 function loadImg(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=src})}
 function tint(img,col,alpha){const c=mkC(img.width,img.height),x=c.getContext('2d');x.drawImage(img,0,0);x.globalCompositeOperation='source-atop';x.globalAlpha=alpha;x.fillStyle=col;x.fillRect(0,0,c.width,c.height);return c}

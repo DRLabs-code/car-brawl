@@ -13,7 +13,7 @@ window.TUNE={
   sandR:4.6,sandPull:18,sandDps:4,stormFirst:[20,26],stormGap:[22,30],stormDur:7,
   barrelR:6.5,barrelDmg:[8,26],barrelKick:18,crateCoin:.3,crateCoinV:[5,10],crateDrop:.15,hzMargin:2.6,creditWin:4},
  // 涂装：传说保底与概率、动态叠加缓存上限
- skin:{legPity:30,legSpin:.03,legChest:.06,dynCache:96},
+ skin:{legPity:30,legSpin:.03,legChest:.06,dynCache:96,cacheDesk:32,cacheMobMB:22,dynCacheMob:16},// 涂装缓存（LRU）：整车 16 向贴图每张约 5.3MB（1152²）；桌面按张数 cacheDesk，手机按体积 cacheMobMB（≈4 张）+ 动态格 16×0.15MB≈2.4MB，合计 <25MB
  // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI

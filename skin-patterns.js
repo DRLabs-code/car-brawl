@@ -17,11 +17,11 @@ function patSheet(k,id){const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d'),T=tex(id)
  for(let i=0;i<16;i++){const cx=(i%4)*F+F/2,cy=(i>>2)*F+F/2,a=i/16*Math.PI*2;x.save();x.beginPath();x.rect((i%4)*F,(i>>2)*F,F,F);x.clip();x.translate(cx,cy);x.scale(1,.55);x.rotate(Math.PI/2-a);x.scale(.9,.9);x.fillStyle=pt;x.fillRect(-F*1.5,-F*1.5,F*3,F*3);x.restore()}return o}
 // ---- compose：保持原流程（底→涂装→livery→线稿），涂装步可换成图案 ----
 const _comp=compose;
-compose=function(k,color,liv){const C=COLORS[color];if(!C||!C.pat||C.dyn)return tag(_comp(k,color,liv),C);const key=k+'|'+color+'|'+(liv||'');if(SKIN.has(key))return SKIN.get(key);
+compose=function(k,color,liv){const C=COLORS[color];if(!C||!C.pat||C.dyn)return tag(_comp(k,color,liv),C);const key=k+'|'+color+'|'+(liv||'');if(SKIN.has(key))return skinGet(key);
  const W4=F*4,o=mkC(W4,W4),x=o.getContext('2d');x.drawImage(BASE[k],0,0);const t=mkC(W4,W4),tx=t.getContext('2d');tx.drawImage(PAINT[k],0,0);tx.globalCompositeOperation='multiply';tx.drawImage(patSheet(k,color),0,0);tx.globalCompositeOperation='destination-in';tx.drawImage(PAINT[k],0,0);x.drawImage(t,0,0);
  if(liv&&LIVS[liv]&&LAYI[k+'_liv_'+(LIVS[liv].src||liv)]){const lc=LIVS[liv].c||(lum(C.c)>.55?'#1b1420':'#ffffff'),L=LAYI[k+'_liv_'+(LIVS[liv].src||liv)],l=mkC(W4,W4),lx=l.getContext('2d');lx.drawImage(L,0,0,W4,W4);lx.globalCompositeOperation='source-in';lx.fillStyle=lc;lx.fillRect(0,0,W4,W4);x.drawImage(l,0,0)}
  if(LINES[k]){const sp=splitLines(k),dk=lum(C.c)<.3;x.drawImage(dk?sp.dl:sp.d,0,0);x.drawImage(sp.h,0,0);if(dk)x.drawImage(sp.h,0,0)}
- if(SKIN.size>24)SKIN.delete(SKIN.keys().next().value);SKIN.set(key,o);return o};
+ return skinPut(key,o)};
 function tag(o,C){if(C&&C.dyn)o._dyn=C.dyn;return o}
 // ---- 传说动态：绘制时在涂装区叠加（只处理当前格 192px；色板相位帧缓存）----
 const PH=12,GR={};function grad(mode,ph){const key=mode+ph;if(GR[key])return GR[key];const S=192,c=mkC(S,S),x=c.getContext('2d'),f=ph/PH;
@@ -32,7 +32,7 @@ const PH=12,GR={};function grad(mode,ph){const key=mode+ph;if(GR[key])return GR[
  return GR[key]=c}
 let dynKey=null;const DC=new Map();
 // 缓存帧：车型×方向×相位的叠加层；shortcut: 上限 96 张(~14MB)，超出按最早淘汰
-function dynCell(mode,k,i,ph){const key=mode+k+i+'|'+ph;let c=DC.get(key);if(c)return c;const S=192;c=mkC(S,S);const x=c.getContext('2d'),sh=mode==='iri'?(i*PH/16|0):0;x.drawImage(PAINT[k],(i%4)*F,(i>>2)*F,F,F,0,0,S,S);x.globalCompositeOperation='source-in';x.drawImage(grad(mode,(ph+sh)%PH),0,0);if(DC.size>=TUNE.skin.dynCache)DC.delete(DC.keys().next().value);DC.set(key,c);return c}
+function dynCell(mode,k,i,ph){const key=mode+k+i+'|'+ph;let c=DC.get(key);if(c)return c;const S=192;c=mkC(S,S);const x=c.getContext('2d'),sh=mode==='iri'?(i*PH/16|0):0;x.drawImage(PAINT[k],(i%4)*F,(i>>2)*F,F,F,0,0,S,S);x.globalCompositeOperation='source-in';x.drawImage(grad(mode,(ph+sh)%PH),0,0);if(DC.size>=(MOBC?TUNE.skin.dynCacheMob:TUNE.skin.dynCache))DC.delete(DC.keys().next().value);DC.set(key,c);return c}
 const _dcs=drawCarSprite;drawCarSprite=function(c2d,img,i,x,y,s){_dcs(c2d,img,i,x,y,s);if(!img||!img._dyn||!PAINT[dynKey])return;const mode=img._dyn,ph=((performance.now()/(mode==='iri'?140:mode==='lava'?120:90))|0)%PH,S=192;
  const oc=dynCell(mode,dynKey,i,ph);
  c2d.save();c2d.globalCompositeOperation=mode==='chrome'?'overlay':mode==='lava'?'source-atop':'color';c2d.globalAlpha=mode==='chrome'?.8:mode==='lava'?.85:.75;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s);if(mode==='neon'){c2d.globalCompositeOperation='lighter';c2d.globalAlpha=.35;c2d.drawImage(oc,0,0,S,S,x-F/2*s,y-F*AY*s,F*s,F*s)}c2d.restore()};
