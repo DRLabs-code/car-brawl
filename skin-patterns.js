@@ -54,3 +54,7 @@ function groupSw(){const box=document.querySelector('#garage .swatches');if(!box
 {const _rg=renderGarage;renderGarage=function(){_rg.apply(this,arguments);groupSw();const pv=window.__pv&&__pv();if(pv&&pv.t==='color'&&COLORS[pv.id].lim&&!save.colors[pv.id]){const bar=document.querySelector('#garage .trybar');if(bar){bar.querySelectorAll('#tryBuy,#coinAdBtn,button[disabled]').forEach(e=>e.remove());const s=document.createElement('button');s.className='btn sm adbtn';s.id='tryDaily';s.textContent='🎰 每日抽奖/宝箱获得';s.onclick=()=>{track('legend_skin_goto',{id:pv.id});openDaily()};bar.insertBefore(s,bar.querySelector('#tryX'))}}}}
 window.__v18={tex,patSheet,legRoll,LEG,LP_N};
 })();
+// v26.1 车库重渲染保持滚动位置：试穿/购买/装备/切换车辆等操作后各栏 scrollTop 不变；右栏切页签（外观↔合成）时右栏回顶部
+{let lastTab=null;const SEL='#garage .gpane,#garage .gcols>.gcol';const key=e=>{const cols=[...document.querySelectorAll('#garage .gcols>.gcol')],c=e.closest('.gcols>.gcol');return cols.indexOf(c)+'|'+(e.classList.contains('gpane')?'p':'c')};
+ const _rg=renderGarage;renderGarage=function(){const keep=[...document.querySelectorAll(SEL)].filter(e=>e.scrollTop>0).map(e=>[key(e),e.scrollTop]),tabChg=lastTab!==null&&lastTab!==gTab;lastTab=gTab;
+  const r=_rg.apply(this,arguments);for(const[k,t]of keep){if(tabChg&&k[0]==='2')continue;const e=[...document.querySelectorAll(SEL)].find(e=>key(e)===k);if(e)e.scrollTop=t}return r}}

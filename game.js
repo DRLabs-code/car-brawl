@@ -69,7 +69,8 @@ const defSave=()=>({v:SAVE_V,cars:{tyrant:defCar(),fang:defCar(),beast:defCar()}
 function badWords(){return['傻逼','傻b','煞笔','sb','nmsl','fuck','shit','bitch','操你','草泥马','尼玛','妈的','他妈','去死','色情','黄片','约炮','赌博','博彩','毒品','习近平','共产党','法轮','台独','官方','客服','管理员','admin','gm']}
 function checkName(raw,max){const v=String(raw==null?'':raw).replace(/^[\s\u3000]+|[\s\u3000]+$/g,'');if(!v)return{ok:false,v,err:'名字不能为空'};
  if([...v].length>max)return{ok:false,v,err:`最多 ${max} 个字`};if(!/^[\u4e00-\u9fa5A-Za-z0-9 _\-·.!?~@#&*+=()（）！？。、★☆♥♪]+$/.test(v))return{ok:false,v,err:'只能用中英文、数字和常用符号'};
- const n=v.toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9]/g,'');if(badWords().some(w=>n.includes(w)))return{ok:false,v,err:'包含不允许的词，请换一个'};return{ok:true,v}}
+ const n=v.toLowerCase().replace(/[^\u4e00-\u9fa5a-z0-9]/g,''),hit=badWords().filter(w=>n.includes(w));if(hit.length){let m=v;for(const w of hit)m=m.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),'*'.repeat([...w].length));return{ok:false,v,err:`包含敏感词：${m}，请修改`}}
+ if(window.tt&&/\*{1,}/.test(v))return{ok:false,v,err:'包含敏感词（已被屏蔽为 *），请修改'};return{ok:true,v}}
 function sanitize(o){const d=defSave();if(!o||typeof o!=='object'||!o.cars)throw new Error('bad');
  if(!o.v||o.v<2){for(const k of KEYS){const c=o.cars[k];if(c){d.cars[k].lv=clampInt(c.lv,1,MAXLV,1);d.cars[k].xp=clampInt(c.xp,0,1e6,0)}}
   for(const [nm,v] of Object.entries(o.shards||{})){const id=NAME2ID[String(nm).replace(/\(.*\)/,'')];if(id)d.shards[id]=clampInt(v,0,9999,0)}return d}
@@ -93,7 +94,9 @@ const ptsUsed=cs=>Object.values(cs.pts).reduce((a,b)=>a+b,0),ptsFree=cs=>cs.lv-1
 // 本局参赛车数 / 初始圈：随玩家车等级递增
 const roster=lv=>({n:lv>=10?8:lv>=5?6:4});
 // AI 难度：设置档位 + 等级逐步提升 → 0..1
-function aiSkill(lv){return Math.min(1,{easy:.12,normal:.42,hard:.72}[save.settings.diff]+(lv-1)*.015)}
+// v26.1 不再提供难度设置：每个对手按 TUNE.opp 比例随机为 高手/普通/菜鸟，玩家等级越高高手越多（参数见 tune.js）
+function aiTier(lv){const O=TUNE.opp,sh=Math.min(O.lvShiftMax,(lv-1)*O.lvShift),w={pro:O.mix.pro+sh,mid:O.mix.mid,rookie:Math.max(0,O.mix.rookie-sh)},t=w.pro+w.mid+w.rookie;let r=Math.random()*t;for(const k of['pro','mid','rookie']){if((r-=w[k])<0)return k}return'mid'}
+function aiSkill(lv){const k=aiTier(lv);return clamp(TUNE.opp.sk[k]+(lv-1)*TUNE.opp.lvSk+rnd(-1,1)*TUNE.opp.jit,0,1)}
 // ================= 画布 / 画质 =================
 const cv=document.getElementById('cv');let ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1,Z=1,QL=save.settings.quality==='low'?'low':'high',PM=1;
@@ -179,7 +182,7 @@ function start(k,opt){opt=opt||{};playerKey=k;cars=[];fts=[];parts=[];pairCD.cle
   const sp=spawnPts(ro.n);cars.forEach((c,i)=>{c.x=sp[i][0];c.z=sp[i][1];c.h=Math.atan2(ZC[0]-c.x,ZC[1]-c.z)});updZone()}
  time=0;kills=0;activeT=0;deadTime=0;shake=0;hitstop=0;running=true;resetView();introT=opt.tutorial?0:2.2;
  hideAll();show('hud',1);$('hpName').textContent=CARS[k].name;$('lvTag').textContent='Lv.'+cs.lv;drawThumb(document.querySelector('#avatar canvas'),k,3,.42);
- if(!opt.tutorial){$('intro').innerHTML=`<b>${nCars}</b> 辆车参战<small>Lv.${cs.lv} · ${ {easy:'简单',normal:'普通',hard:'困难'}[save.settings.diff]} · 存活到最后！</small>`;show('intro',1);setTimeout(()=>show('intro',0),2000)}
+ if(!opt.tutorial){$('intro').innerHTML=`<b>${nCars}</b> 辆车参战<small>Lv.${cs.lv} · 存活到最后！</small>`;show('intro',1);setTimeout(()=>show('intro',0),2000)}
  updTut()}
 // ================= 输入（屏幕方向 → 世界方向）=================
 const keys={};let jx=0,jy=0,jid=null,dashReq=false;
@@ -645,7 +648,7 @@ function openSettings(from){settingsFrom=from;show('settings',1);const s=save.se
 function updMute(){const s=save.settings,off=s.mute||s.vol<=0||!s.music&&!s.sfx;['muteM','muteH'].forEach(i=>{const e=$(i);if(e){e.textContent=off?'🔇':'🔊';e.classList.toggle('off',off);e.title=off?'已静音（点我开启）':'声音开（点我静音）'}})}
 ['muteM','muteH'].forEach(i=>$(i).addEventListener('click',e=>{e.stopPropagation();const s=save.settings;const off=s.mute||!s.music&&!s.sfx;if(off){s.mute=false;if(!s.music&&!s.sfx){s.music=true;s.sfx=true}if(s.vol<=0)s.vol=.7}else s.mute=true;persist();auUnlock();auApply();updMute();auStatus();if(!s.mute)setTimeout(()=>sfx('ui'),50);toast(s.mute?'已静音':'声音已开启')}));
 setTimeout(updMute,0);
-$('sTest').onclick=()=>{if(save.settings.mute){save.settings.mute=false;persist();updMute()}auUnlock();auApply();setTimeout(()=>{sfx('ui');sfx('hit',1);setTimeout(()=>sfx('crit'),250)},60);setTimeout(()=>{$('sAuSt').textContent=AU.ctx?('音频：'+AU.ctx.state+(save.settings.sfx?'':' · 音效已关')+' · iPhone 静音键开启时无声'):'音频不可用'},150)};
+// v26.1 删除「测试声音」调试按钮；音频仍由首次触摸/点击 auUnlock 解锁
 $('sVol').oninput=e=>{save.settings.vol=e.target.value/100;$('sVolV').textContent=e.target.value+'%';auInit();auApply();persist()};
 ['music','sfx','vibrate'].forEach(k=>$('s_'+k).onchange=e=>{save.settings[k]=e.target.checked;if(k!=='vibrate'&&e.target.checked)save.settings.mute=false;updMute();auInit();auApply();persist();if(k==='vibrate'&&e.target.checked)vib('mid')});
 document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{setQuality(b.dataset.q);openSettings(settingsFrom)});
@@ -749,5 +752,5 @@ function menu(){hideAll();if(!save.nick){save.nick=randNick();persist()}$('nickT
  $('menuCoins').innerHTML=icCoin(save.coins)+icUni(save.uni);show('menu',1);if(window.menuRefresh)menuRefresh();if(saveWarn){toast(saveWarn);saveWarn=''}}
 $('again').onclick=()=>{buildArena(mapKey,arenaR(roster(save.cars[playerKey].lv).n));start(playerKey)};$('back').onclick=()=>{cars=[];player=null;menu()};$('toGarage').onclick=()=>{cars=[];player=null;openGarage(playerKey)};
 (async()=>{for(const k of KEYS){[BASE[k],PAINT[k],WHL[k],LINES[k]]=await Promise.all(['base','paint','wheels','lines'].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png?v='+ASSET_V)));await Promise.all([...Object.keys(PARTS).map(p=>'part_'+p),...Object.keys(LIVS).filter(l=>!LIVS[l].src).map(l=>'liv_'+l)].map(n=>loadImg('sprites/car_'+k+'_'+n+'.png?v='+ASSET_V).then(im=>LAYI[k+'_'+n]=im)));const hb=mkC(F*2,F*2);hb.getContext('2d').drawImage(BASE[k],0,0,F*2,F*2);WHITE[k]=tint(hb,'#ffffff',.85);DARK[k]=tint(hb,'#1b1420',.6)}
- buildArena('site',38);show('loading',0);if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
+ buildArena('site',38);if(BUILD.regNo)$('regNo').textContent='著作权登记号：'+BUILD.regNo;setTimeout(()=>show('loading',0),Math.max(0,TUNE.boot.splashMin*1000-performance.now()));if(!save.tutorialDone){hideAll();start('beast',{tutorial:true})}else menu();requestAnimationFrame(loop)})();
 window.__game={get DPR(){return DPR},get Z(){return Z},get camX(){return camX},FEEL,get camZ(){return camZ},keys,NICKS,randNick,get lastMatch(){return lastMatch},matchThenStart,editNick,get nick(){return save.nick},audioLevel,sfx,get AU(){return AU},auUnlock,AB,track,openChest,spinOnce,renderGarage,openDaily,showRewardedAd,daily,openCell,sdist,arenaR,get GRID(){return GRID},get rescueLog(){return rescueLog},get ZC(){return ZC},get ZPOLY(){return ZPOLY},cellOf,set noEnd(v){noEnd=v},set testInp(v){testInp=v},get player(){return player},get stuckLog(){return stuckLog},get props(){return props},get POLY(){return POLY},start,finish,openGarage,openMaps,buildArena,get cars(){return cars},get time(){return time},set time(v){time=v},get save(){return save},get tut(){return tut},get QL(){return QL}};

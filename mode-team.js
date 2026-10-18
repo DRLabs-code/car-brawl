@@ -6,7 +6,7 @@ const isT=()=>MODE==='team'&&!tut;
 const mates=(c,alive=true)=>cars.filter(q=>q!==c&&!q.dummy&&q.team===c.team&&(!alive||q.alive)),foes=c=>cars.filter(q=>!q.dummy&&q.alive&&q.team!==c.team);
 const teamAlive=t=>cars.filter(c=>!c.dummy&&c.alive&&c.team===t).length;
 // 模式页签说明
-const tHint=()=>{const h=$('modeHint');if(h&&MODE==='team')h.textContent='👥 队伍乱斗：和 AI 队友组队，全灭对面即胜'};document.querySelectorAll('#modeSel [data-mode]').forEach(b=>b.addEventListener('click',tHint));{const _m=menu;menu=function(){_m.apply(this,arguments);__v11.modeUI();tHint()}}
+const tHint=()=>{const h=$('modeHint');if(h&&MODE==='team')h.textContent='👥 队伍乱斗：和队友组队，全灭对面即胜'};document.querySelectorAll('#modeSel [data-mode]').forEach(b=>b.addEventListener('click',tHint));{const _m=menu;menu=function(){_m.apply(this,arguments);__v11.modeUI();tHint()}}
 // 每日挑战：队伍任务
 
 {const _a=window.dcAdd;window.dcAdd=dcAdd=(id,n)=>_a(MODE==='team'&&id==='win'?'teamWin':id,n)}

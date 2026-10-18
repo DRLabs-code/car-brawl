@@ -5,6 +5,10 @@ window.TUNE={
   accK:1.8,accPow:1.6,accMin:.12,coast:.9,gripG:7,slideLo:3,slideHi:8,slideCut:.45,
   dashT:.55,dashKick:.7,dashTop:1.85,dashGrip:1.1,dashYaw:.85,dashCd:2.5,dashOut:2.9,dashDmg:1.5,dashPush:1.4,
   camK:10,camLead:.35,camLeadMax:6,camLeadK:4,camDead:.5,shakeDecay:25,shakeMax:16,zoomIn:.04,zoomOut:.10},
+ // v26.1 对手构成（无难度设置）：mix 为 高手/普通/菜鸟 基础比例；玩家每升 1 级把 lvShift 从菜鸟挪给高手（上限 lvShiftMax）；sk 为各档技巧值（0..1），每级 +lvSk，个体随机 ±jit
+ opp:{mix:{pro:.2,mid:.5,rookie:.3},sk:{pro:.74,mid:.44,rookie:.16},lvShift:.008,lvShiftMax:.12,lvSk:.01,jit:.06},
+ // 开始画面（健康游戏忠告）最少显示秒数
+ boot:{splashMin:1.5},
  // 队伍乱斗
  team:{mvpCoins:30},
  // 地图机关

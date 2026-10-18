@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <link rel="icon" href="data:,"><title>车手大作战</title>
-<link rel="stylesheet" href="style.css?v=26"></head><body><div id="app">
+<link rel="stylesheet" href="style.css?v=27"></head><body><div id="app">
 <canvas id="cv"></canvas>
 <div id="hud" class="hide">
  <div id="hudTop"><div id="avatar"><canvas width="96" height="96"></canvas><span id="lvTag">Lv.1</span></div>
@@ -20,7 +20,7 @@
  <div class="mtop"><button id="menuNick" class="mnick" aria-label="改昵称"><span class="mav">🏁</span><b id="nickTxt"></b><small id="mLv"></small><i>✏️</i></button><div class="mlogo"><span>车手</span>大作战</div><div class="mres"><span class="coinchip" id="menuCoins"></span><button id="muteM" class="mute">🔊</button></div></div>
  <div class="mside"><button id="menuGarage" class="sbtn"><span>🔧</span><small>车库</small><i class="rdot hide" id="garDot"></i></button><button id="menuDC" class="sbtn"><span>📋</span><small>挑战</small><i class="rdot hide" id="dcDot"></i></button><button id="menuDaily" class="sbtn"><span>🎁</span><small>福利</small><i class="rdot hide" id="dailyDot"></i></button><button id="menuSet" class="sbtn"><span>⚙️</span><small>设置</small></button></div>
  <div class="mcar"><button class="marr" id="mPrev" aria-label="上一辆">‹</button><div class="mstage" id="mStage"><canvas id="mCarCv" width="560" height="360"></canvas><div class="mname"><b id="mCarName"></b><small id="mCarType"></small><span id="mCarLv"></span></div><div class="mdots" id="mDots"></div></div><button class="marr" id="mNext" aria-label="下一辆">›</button></div>
- <div class="mplay"><div class="modesel" id="modeSel"><button data-mode="brawl" class="on">🚗 乱斗</button><button data-mode="ring">⭕ 擂台</button><button data-mode="team">👥 队伍</button><button data-mode="race">🏁 竞速</button></div><button id="mStart" class="btn mstart">开始匹配</button></div>
+ <div class="mplay"><div class="modesel" id="modeSel"><button data-mode="brawl" class="on">🚗 乱斗</button><button data-mode="ring">⭕ 擂台</button><button data-mode="team">👥 队伍</button><button data-mode="race">🏁 竞速</button></div><button id="mStart" class="btn mstart">开始战斗</button></div>
  <div id="cards" class="hide"></div><div id="auHint" class="hide">🔈 点击开启声音</div><div id="mGuide" class="hide"></div></div>
 <div id="maps" class="panel hide"><div class="ptitle">选择地图</div><div id="mapsSub" class="psub"></div><div id="mapList"></div><button class="btn ghost" id="mapsBack">← 返回</button></div>
 <div id="garage" class="panel hide"></div>
@@ -34,13 +34,11 @@
  <label class="srow2"><span>主音量</span><input type="range" id="sVol" min="0" max="100"><b id="sVolV"></b></label>
  <label class="srow2"><span>音乐</span><input type="checkbox" id="s_music" class="sw"></label>
  <label class="srow2"><span>音效</span><input type="checkbox" id="s_sfx" class="sw"></label>
- <div class="srow2"><span>声音</span><button class="btn sm" id="sTest">🔊 测试声音</button><small id="sAuSt"></small></div>
  <label class="srow2"><span>震动</span><input type="checkbox" id="s_vibrate" class="sw"></label>
  <div class="srow2"><span>画质</span><div class="seg"><button data-q="auto">自动</button><button data-q="high">高</button><button data-q="low">低</button></div><small id="sQNow"></small></div>
- <div class="srow2"><span>AI 难度</span><div class="seg"><button data-diff="easy">简单</button><button data-diff="normal">普通</button><button data-diff="hard">困难</button></div></div>
  <div class="col"><button class="btn ghost sm" id="sHelp">📖 操作说明</button><button class="btn ghost sm" id="sTut">重玩新手引导</button><button class="btn" id="sClose">完成</button></div></div></div>
 <div id="toast" class="hide"></div>
-<div id="loading" class="panel">加载中…</div>
+<div id="loading" class="panel"><div class="hadv"><b>健康游戏忠告</b><p>抵制不良游戏，拒绝盗版游戏。</p><p>注意自我保护，谨防受骗上当。</p><p>适度游戏益脑，沉迷游戏伤身。</p><p>合理安排时间，享受健康生活。</p><small id="regNo">著作权登记号：登记中</small></div><div class="ldt">加载中…</div></div>
 </div><!-- 加载顺序：配置 → 参数 → 广告适配 → 核心 → 功能模块（各模块只包裹核心函数，顺序即依赖） -->
-<script src="config.js?v=26"></script><script src="tune.js?v=26"></script><script src="ads.js?v=26"></script><script src="game.js?v=26"></script>
-<script src="battle-extras.js?v=26"></script><script src="ui-shell.js?v=26"></script><script src="mode-team.js?v=26"></script><script src="map-hazards.js?v=26"></script><script src="skin-patterns.js?v=26"></script><script src="maps-plus.js?v=26"></script><script src="items-plus.js?v=26"></script><script src="mode-race.js?v=26"></script><script src="parts-plus.js?v=26"></script></body></html>
+<script src="config.js?v=27"></script><script src="tune.js?v=27"></script><script src="ads.js?v=27"></script><script src="game.js?v=27"></script>
+<script src="battle-extras.js?v=27"></script><script src="ui-shell.js?v=27"></script><script src="mode-team.js?v=27"></script><script src="map-hazards.js?v=27"></script><script src="skin-patterns.js?v=27"></script><script src="maps-plus.js?v=27"></script><script src="items-plus.js?v=27"></script><script src="mode-race.js?v=27"></script><script src="parts-plus.js?v=27"></script></body></html>

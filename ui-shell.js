@@ -1,17 +1,17 @@
 // ===== 模块 ui-shell（原 v15）：车辆命名 + 游戏内输入框组件 + 首页精简 =====
 // ---------- 输入框组件（DOM 绘制，跟随 #app 旋转；支持中文输入法；抖音走 tt.showKeyboard） ----------
 window.TextInput=(()=>{let cur=null;
- function close(){if(!cur)return;cur.el.remove();if(cur.tt){try{tt.hideKeyboard();tt.offKeyboardInput&&tt.offKeyboardInput(cur.ttIn);tt.offKeyboardConfirm&&tt.offKeyboardConfirm(cur.ttOk)}catch(e){}}cur=null}
+ function close(){if(!cur)return;cur.el.remove();if(cur.tt){try{tt.hideKeyboard();tt.offKeyboardInput&&tt.offKeyboardInput(cur.ttIn);tt.offKeyboardConfirm&&tt.offKeyboardConfirm(cur.ttOk);tt.offKeyboardComplete&&tt.offKeyboardComplete(cur.ttOk)}catch(e){}}cur=null}
  function open(o){close();const max=o.max||12,el=document.createElement('div');el.id='tinput';el.className='tin';
   el.innerHTML=`<div class="tinbox"><div class="ptitle">${o.title}</div><small class="tinh">${o.hint||''}</small><div class="tinrow"><input id="tinI" type="text" autocomplete="off" spellcheck="false" enterkeyhint="done"><span id="tinN"></span></div><div class="tinerr" id="tinE"></div>${o.priceHtml?`<div class="tinprice">${o.priceHtml}</div>`:''}<div class="btns"><button class="btn ghost" id="tinX">取消</button><button class="btn" id="tinOk">${o.okText||'确认'}</button></div></div>`;
   $('app').appendChild(el);const I=el.querySelector('#tinI'),N=el.querySelector('#tinN'),E=el.querySelector('#tinE'),OK=el.querySelector('#tinOk');I.value=o.value||'';let comp=false;
-  const upd=()=>{const r=o.validate(I.value);N.textContent=`${[...r.v].length}/${max}`;N.classList.toggle('over',[...r.v].length>max);E.textContent=I.value&&!r.ok?r.err:'';OK.disabled=!r.ok||!!o.blocked;if(o.blocked)E.textContent=o.blocked;return r};
+  const upd=()=>{const r=o.validate(I.value);N.textContent=`${[...r.v].length}/${max}`;N.classList.toggle('over',[...r.v].length>max);E.textContent=I.value&&!r.ok?r.err:'';const dirty=cur&&cur.ttDirty;OK.disabled=!r.ok||!!o.blocked||dirty;if(o.blocked)E.textContent=o.blocked;else if(dirty&&r.ok)E.textContent='请在键盘上点「完成」';return r};
   I.addEventListener('compositionstart',()=>comp=true);I.addEventListener('compositionend',()=>{comp=false;upd()});I.addEventListener('input',()=>{if(!comp)upd()});
   I.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter'&&!comp)OK.click();if(e.key==='Escape')close()});I.addEventListener('keyup',e=>e.stopPropagation());
   el.querySelector('#tinX').onclick=()=>{close();o.onCancel&&o.onCancel()};
-  OK.onclick=()=>{const r=upd();if(!r.ok||o.blocked)return;close();o.onOk(r.v)};
+  OK.onclick=()=>{const r=upd();if(!r.ok||o.blocked||cur&&cur.ttDirty)return;close();o.onOk(r.v)};
   cur={el,o};upd();
-  if(window.tt&&tt.showKeyboard){cur.tt=true;I.readOnly=true;cur.ttIn=r=>{I.value=r.value;upd()};cur.ttOk=r=>{I.value=r.value;upd()};tt.onKeyboardInput(cur.ttIn);tt.onKeyboardConfirm(cur.ttOk);
+  if(window.tt&&tt.showKeyboard){cur.tt=true;I.readOnly=true;cur.ttIn=r=>{I.value=r.value;cur.ttDirty=true;upd()};cur.ttOk=r=>{I.value=r.value;cur.ttDirty=false;upd()};tt.onKeyboardInput(cur.ttIn);tt.onKeyboardConfirm(cur.ttOk);tt.onKeyboardComplete&&tt.onKeyboardComplete(cur.ttOk);
    const sk=()=>tt.showKeyboard({defaultValue:I.value,maxLength:max*2,multiple:false,confirmHold:false,confirmType:'done'});I.onclick=sk;sk()}
   else setTimeout(()=>{I.focus();I.setSelectionRange(I.value.length,I.value.length)},50);
   return el}
@@ -45,7 +45,7 @@ $('mStart').onclick=()=>{track('menu_start',{car:gKey,mode:__v11.MODE});openMaps
 window.menuRefresh=()=>{menuCar();$('mLv').textContent='Lv.'+Math.max(...KEYS.map(k=>save.cars[k].lv));
  $('garDot').classList.toggle('hide',!KEYS.some(k=>ptsFree(save.cars[k])>0)&&!Object.keys(PARTS).some(id=>!save.owned[id]&&canCraft(id)));
  const d=daily();$('dailyDot').classList.toggle('hide',!(d.free>0));
- if(!localStorage.getItem('carbrawl_menuGuide')&&save.tutorialDone){const g=$('mGuide');g.classList.remove('hide');g.innerHTML='<div class="mg1">👉 点这里开始匹配</div><div class="mg2">👈 车库改装、挑战、福利都在这</div>';g.onclick=()=>{g.classList.add('hide');localStorage.setItem('carbrawl_menuGuide','1')};setTimeout(()=>{if(!g.classList.contains('hide'))g.onclick()},6000)}};
+ if(!localStorage.getItem('carbrawl_menuGuide')&&save.tutorialDone){const g=$('mGuide');g.classList.remove('hide');g.innerHTML='<div class="mg1">👉 点这里开始战斗</div><div class="mg2">👈 车库改装、挑战、福利都在这</div>';g.onclick=()=>{g.classList.add('hide');localStorage.setItem('carbrawl_menuGuide','1')};setTimeout(()=>{if(!g.classList.contains('hide'))g.onclick()},6000)}};
 // 操作说明（从首页移到设置）
 $('sHelp').onclick=()=>{const el=document.createElement('div');el.className='tin';el.innerHTML=`<div class="tinbox"><div class="ptitle">📖 操作说明</div><div class="helpx">📱 <b>手机</b>：左半屏按住拖动 = 浮动摇杆（推得越远油门越大）· 右下「冲刺」冲刺 ·「倒车」倒车<br>⌨️ <b>键盘</b>：W 前进 · S 刹车/倒车 · A/D 转向（方向键同）· 空格冲刺 · Esc 暂停<br>💥 用<b>车头</b>撞对手<b>侧面</b>打出暴击，冲刺中撞击伤害 ×1.5<br>🎁 场上道具：修复包 / 狂暴 / 护盾 / 氮气 / 弹簧，碰到就吃<br>⭕ 推出擂台：圆台缩小，掉下去就淘汰</div><div class="btns"><button class="btn">知道了</button></div></div>`;$('app').appendChild(el);el.querySelector('button').onclick=()=>el.remove();track('help_open',{})};
 // 开局前随机小贴士（匹配界面）
