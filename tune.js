@@ -17,7 +17,8 @@ window.TUNE={
   sandR:4.6,sandPull:18,sandDps:4,stormFirst:[20,26],stormGap:[22,30],stormDur:7,
   barrelR:6.5,barrelDmg:[8,26],barrelKick:18,crateCoin:.3,crateCoinV:[5,10],crateDrop:.15,hzMargin:2.6,creditWin:4},
  // 涂装：传说保底与概率、动态叠加缓存上限
- skin:{legPity:30,legSpin:.03,legChest:.06,dynCache:96,cacheDesk:32,cacheMobMB:22,dynCacheMob:16},// 涂装缓存（LRU）：整车 16 向贴图每张约 5.3MB（1152²）；桌面按张数 cacheDesk，手机按体积 cacheMobMB（≈4 张）+ 动态格 16×0.15MB≈2.4MB，合计 <25MB
+ // v29 涂装经济：普通/稀有金币购买（price，没列出的=不卖：传说动态与限定拉花只能抽奖/宝箱）；legSpin/legChest 每次抽奖/开箱出传说涂装概率，legPity 连续未出必出；livSpin 抽奖转盘里「限定拉花」格权重（其他格合计 97），livChest 开宝箱额外出限定拉花概率
+ skin:{price:{col:{red:120,blue:120,green:150,yellow:150,black:180,white:180,pink:200,orange:200,army:200,teal:220,grape:220,sakura:200,navy:200,camoJ:450,camoD:450,camoS:450,flame:600,zebra:550,carbon:650,digi:500,tiger:600,checker:550,leopard:600,hex:550},liv:{stripe:200,band:150,number:220,roof:150,redStripe:320,pinkBand:280,limeRoof:280}},livSpin:3,livChest:.05,legPity:30,legSpin:.03,legChest:.06,dynCache:96,cacheDesk:32,cacheMobMB:22,dynCacheMob:16,halfMob:true,halfPlayer:false,halfMax:10},// v29 halfMob 手机对局对手用半分辨率整车贴图（同车型同涂装共用，最多 halfMax 张×1.3MB）；halfPlayer 玩家自己的车也用半分辨率（默认否，2 倍屏上看得出变软）,// 涂装缓存（LRU）：整车 16 向贴图每张约 5.3MB（1152²）；桌面按张数 cacheDesk，手机按体积 cacheMobMB（≈4 张）+ 动态格 16×0.15MB≈2.4MB，合计 <25MB
  // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI

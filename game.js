@@ -4,13 +4,17 @@ const K=16;                    // 等距投影：1 世界单位 → 屏幕 x 16p
 const HK=K/Math.SQRT1_2*Math.cos(Math.PI/6); // 高度 1 单位 → 屏幕像素
 const F=288,FS=192/288,AY=0.58,WF=112,WS=192/112,LF=144,LS=192/144; // 车身 288、轮子 112、部件/涂装层 144（均绘制为 192 世界像素）
 
-const COLORS={gray:{n:'素灰',c:'#9aa0a8',p:0},red:{n:'烈焰红',c:'#e63946',p:120},blue:{n:'天际蓝',c:'#2e86de',p:120},green:{n:'荧光绿',c:'#7bd94f',p:150},yellow:{n:'柠檬黄',c:'#ffd23f',p:150},black:{n:'午夜黑',c:'#2b2d36',p:180},white:{n:'珍珠白',c:'#eeeeea',p:180},pink:{n:'霓虹粉',c:'#f0207f',p:200},orange:{n:'越野橙',c:'#ff7a1a',p:200},army:{n:'军绿',c:'#5d8f3f',p:200},teal:{n:'冰川青',c:'#2ec4c4',p:220},grape:{n:'葡萄紫',c:'#7b4fd6',p:220},
- camoJ:{n:'丛林迷彩',c:'#5d7a3a',p:450,rar:'r',pat:'camo',cols:['#7f9a52','#4f6a2e','#2f3f1c','#a8b47a']},camoD:{n:'沙漠迷彩',c:'#c9a46a',p:450,rar:'r',pat:'camo',cols:['#d8bb84','#b08a52','#8a6a3c','#efdcae']},camoS:{n:'雪地迷彩',c:'#d8dde4',p:450,rar:'r',pat:'camo',cols:['#eef1f5','#b9c2cc','#7d8894','#ffffff']},
- flame:{n:'火焰',c:'#ff5a1f',p:600,rar:'r',pat:'flame'},zebra:{n:'斑马条纹',c:'#cfcfcf',p:550,rar:'r',pat:'zebra'},carbon:{n:'碳纤维',c:'#33343b',p:650,rar:'r',pat:'carbon'},
- digi:{n:'数码迷彩',c:'#6b7f8f',p:500,rar:'r',pat:'digi',cols:['#8796a3','#5a6b78','#3a4650','#b6c2cc']},tiger:{n:'虎纹',c:'#ff9a1a',p:600,rar:'r',pat:'tiger'},
- iri:{n:'幻彩',c:'#c9a6ff',p:0,rar:'l',lim:true,dyn:'iri'},neonFlow:{n:'霓虹流光',c:'#3a2a66',p:0,rar:'l',lim:true,dyn:'neon'},chrome:{n:'金属电镀',c:'#c4cad4',p:0,rar:'l',lim:true,dyn:'chrome'},lava:{n:'熔岩流动',c:'#8a1a0a',p:0,rar:'l',lim:true,dyn:'lava'}};
-const LIVS={stripe:{n:'双赛道条纹',p:200},band:{n:'侧腰线',p:150},number:{n:'号码圆标',p:220},roof:{n:'撞色车顶',p:150},
- goldStripe:{n:'鎏金条纹',p:0,lim:true,src:'stripe',c:'#ffc300'},neonBand:{n:'霓虹腰线',p:0,lim:true,src:'band',c:'#39f3ff'},flameNum:{n:'烈焰号码',p:0,lim:true,src:'number',c:'#ff5a1f'},iceRoof:{n:'冰晶车顶',p:0,lim:true,src:'roof',c:'#7df9ff'}};// lim=限定，仅抽奖获得
+const COLORS={gray:{n:'素灰',c:'#9aa0a8'},red:{n:'烈焰红',c:'#e63946'},blue:{n:'天际蓝',c:'#2e86de'},green:{n:'荧光绿',c:'#7bd94f'},yellow:{n:'柠檬黄',c:'#ffd23f'},black:{n:'午夜黑',c:'#2b2d36'},white:{n:'珍珠白',c:'#eeeeea'},pink:{n:'霓虹粉',c:'#f0207f'},orange:{n:'越野橙',c:'#ff7a1a'},army:{n:'军绿',c:'#5d8f3f'},teal:{n:'冰川青',c:'#2ec4c4'},grape:{n:'葡萄紫',c:'#7b4fd6'},sakura:{n:'樱花粉',c:'#ffb3c7'},navy:{n:'深海蓝',c:'#1f3a68'},
+ camoJ:{n:'丛林迷彩',c:'#5d7a3a',rar:'r',pat:'camo',cols:['#7f9a52','#4f6a2e','#2f3f1c','#a8b47a']},camoD:{n:'沙漠迷彩',c:'#c9a46a',rar:'r',pat:'camo',cols:['#d8bb84','#b08a52','#8a6a3c','#efdcae']},camoS:{n:'雪地迷彩',c:'#d8dde4',rar:'r',pat:'camo',cols:['#eef1f5','#b9c2cc','#7d8894','#ffffff']},
+ flame:{n:'火焰',c:'#ff5a1f',rar:'r',pat:'flame'},zebra:{n:'斑马条纹',c:'#cfcfcf',rar:'r',pat:'zebra'},carbon:{n:'碳纤维',c:'#33343b',rar:'r',pat:'carbon'},
+ digi:{n:'数码迷彩',c:'#6b7f8f',rar:'r',pat:'digi',cols:['#8796a3','#5a6b78','#3a4650','#b6c2cc']},tiger:{n:'虎纹',c:'#ff9a1a',rar:'r',pat:'tiger'},checker:{n:'赛车格旗',c:'#cfcfcf',rar:'r',pat:'checker'},leopard:{n:'豹纹',c:'#e0a64a',rar:'r',pat:'leopard'},hex:{n:'蜂巢',c:'#f5b700',rar:'r',pat:'hex'},
+ iri:{n:'幻彩',c:'#c9a6ff',rar:'l',lim:true,dyn:'iri'},neonFlow:{n:'霓虹流光',c:'#3a2a66',rar:'l',lim:true,dyn:'neon'},chrome:{n:'金属电镀',c:'#c4cad4',rar:'l',lim:true,dyn:'chrome'},lava:{n:'熔岩流动',c:'#8a1a0a',rar:'l',lim:true,dyn:'lava'},galaxy:{n:'星空',c:'#1a1f4a',rar:'l',lim:true,dyn:'galaxy'}};
+const LIVS={stripe:{n:'双赛道条纹',rar:'n'},band:{n:'侧腰线',rar:'n'},number:{n:'号码圆标',rar:'n'},roof:{n:'撞色车顶',rar:'n'},
+ redStripe:{n:'赛道红条纹',rar:'r',src:'stripe',c:'#e63946'},pinkBand:{n:'樱粉腰线',rar:'r',src:'band',c:'#ff7ab6'},limeRoof:{n:'荧光车顶',rar:'r',src:'roof',c:'#b6ff3b'},
+ auroraStripe:{n:'极光条纹',rar:'l',lim:true,src:'stripe',c:'#5dffb0'},violetRoof:{n:'紫电车顶',rar:'l',lim:true,src:'roof',c:'#b26bff'},
+ goldStripe:{rar:'l',n:'鎏金条纹',lim:true,src:'stripe',c:'#ffc300'},neonBand:{rar:'l',n:'霓虹腰线',lim:true,src:'band',c:'#39f3ff'},flameNum:{rar:'l',n:'烈焰号码',lim:true,src:'number',c:'#ff5a1f'},iceRoof:{rar:'l',n:'冰晶车顶',lim:true,src:'roof',c:'#7df9ff'}};// lim=限定，仅抽奖获得
+// v29 价格统一在 TUNE.skin.price（颜色/图案 col、拉花 liv；0=免费或仅抽奖/宝箱）
+for(const k in COLORS)COLORS[k].p=TUNE.skin.price.col[k]||0;for(const k in LIVS)LIVS[k].p=TUNE.skin.price.liv[k]||0;
 const R0=38,DIRS=16;
 const CARS={
  tyrant:{name:'铁壁暴君',en:'IRON TYRANT',tag:'皮卡 · 重型',desc:'车重血厚，正面硬抗',col:'#5d8f3f',col2:'#2f4f22',hp:160,mass:2.0,spd:13,acc:12,turn:2.4,dmg:1.25,wb:3.0},
@@ -179,7 +183,10 @@ let cars=[],player=null,running=false,paused=false,time=0,zoneR=R0,zone0=R0,pair
 function aiCs(lv,sk){const cs=defCar();cs.lv=lv;const ids=Object.keys(PARTS).sort(()=>Math.random()-.5);let np=Math.min(4,Math.floor(lv/3)+(sk>.7?1:0));for(const id of ids){if(np<=0)break;if(!cs.equip[PARTS[id].slot]){cs.equip[PARTS[id].slot]=id;np--}}
  const ck=Object.keys(COLORS).filter(c=>c!=='gray'&&(!COLORS[c].rar||COLORS[c].rar==='r'&&lv>=5||COLORS[c].rar==='l'&&lv>=10&&Math.random()<.3));cs.paint={color:lv>=2?ck[Math.random()*ck.length|0]:'gray',livery:lv>=4?Object.keys(LIVS)[Math.random()*4|0]:null};let n=lv-1;const ks=Object.keys(STATS);while(n>0){const s=ks[Math.random()*6|0];if(cs.pts[s]<PT_MAX){cs.pts[s]++;n--}}
  return cs}
-function makeCar(k,isP,cs,sk){const st=carStats(k,cs),sm=isP?1:.86+sk*.2;return{id:ids++,k,s:CARS[k],isP,lv:cs.lv,sk:sk||0,skin:compose(k,cs.paint.color,cs.paint.livery),eq:Object.values(cs.equip).filter(Boolean),x:0,z:0,h:0,vx:0,vz:0,fwd:0,steer:0,yaw:0,hp:st.hp,maxhp:st.hp,spd:st.spd*sm,acc:st.acc*sm,turn:st.turn,dmg:st.dmg,mass:st.mass,push:st.push,sideBonus:st.sideBonus,rearRes:st.rearRes,critRes:st.critRes,thorns:st.thorns,dashCd:st.dashCd,dashPow:st.dashPow,terr:st.terr,iceGrip:st.iceGrip,r:1.8,
+// v29 手机对局皮肤半分辨率：对手车辆用整车贴图的半尺寸副本（玩家自己的车默认保持全分辨率，halfPlayer 可改；截图对比半分辨率在 2 倍屏上可见变软）（1152²→576²，每张 5.3MB→1.3MB），同车型同涂装共用；车库/菜单仍用全分辨率。TUNE.skin.halfMob 开关，halfMax 副本上限
+const HALF=new Map();function battleSkin(k,color,liv,isP){const full=compose(k,color,liv);if(!(MOBC||window.__halfForce)||!TUNE.skin.halfMob||(isP&&!TUNE.skin.halfPlayer))return full;const key=k+'|'+color+'|'+(liv||'');let h=HALF.get(key);if(h)return h;
+ h=mkC(full.width/2,full.height/2);const x=h.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(full,0,0,h.width,h.height);if(full._dyn)h._dyn=full._dyn;HALF.set(key,h);while(HALF.size>TUNE.skin.halfMax)HALF.delete(HALF.keys().next().value);return h}
+function makeCar(k,isP,cs,sk){const st=carStats(k,cs),sm=isP?1:.86+sk*.2;return{id:ids++,k,s:CARS[k],isP,lv:cs.lv,sk:sk||0,skin:battleSkin(k,cs.paint.color,cs.paint.livery,isP),eq:Object.values(cs.equip).filter(Boolean),x:0,z:0,h:0,vx:0,vz:0,fwd:0,steer:0,yaw:0,hp:st.hp,maxhp:st.hp,spd:st.spd*sm,acc:st.acc*sm,turn:st.turn,dmg:st.dmg,mass:st.mass,push:st.push,sideBonus:st.sideBonus,rearRes:st.rearRes,critRes:st.critRes,thorns:st.thorns,dashCd:st.dashCd,dashPow:st.dashPow,terr:st.terr,iceGrip:st.iceGrip,r:1.8,
  dash:0,dcd:0,alive:true,flash:0,deadT:0,smokeT:0,dustT:0,roll:0,sus:{px:0,py:0,vx:0,vy:0},bump:0,lastA:0,lastL:0,ai:{t:null,re:0,pers:['莽夫','刺客','苟王'][Math.random()*3|0]}}}
 function start(k,opt){opt=opt||{};playerKey=k;cars=[];fts=[];parts=[];pairCD.clear();skx.clearRect(0,0,skid.width,skid.height);paused=false;
  const cs=save.cars[k];player=makeCar(k,true,cs);if(!save.nick){save.nick=randNick();persist()}player.nick=save.nick;player.frame='#ffc300';cars.push(player);tut=null;
@@ -496,7 +503,7 @@ function finish(){running=false;const win=player.alive,rank=win?1:aliveAtDeath,s
   show('result',1);if(sc.lv>lv0)sfx('good');requestAnimationFrame(()=>requestAnimationFrame(()=>$('rXp').style.width=(sc.lv>=MAXLV?100:sc.xp/need(sc.lv)*100)+'%'))},win?600:300)}
 // ================= 渲染 =================
 function frameOf(h){let i=Math.round(h/(Math.PI*2)*DIRS)%DIRS;if(i<0)i+=DIRS;return i}
-function drawCarSprite(c2d,img,i,x,y,s){c2d.drawImage(img,(i%4)*F,(i>>2)*F,F,F,x-F/2*s,y-F*AY*s,F*s,F*s)}
+function drawCarSprite(c2d,img,i,x,y,s){const f=img.width/4;c2d.drawImage(img,(i%4)*f,(i>>2)*f,f,f,x-F/2*s,y-F*AY*s,F*s,F*s)}// v29 帧尺寸按贴图宽度取（对局半分辨率贴图 f=F/2）
 function drawHalf(c2d,img,i,x,y){const h=F/2;c2d.drawImage(img,(i%4)*h,(i>>2)*h,h,h,x-96,y-192*AY,192,192)}
 // v27 部件图层按需加载 + 软 LRU：用到才加载；手机超过 partMob 张时淘汰 2 秒内没画过的（正在用的不淘汰，避免反复加载）
 const PLU=new Map(),PL_MAX=MOBC?TUNE.mem.partMob:1e9;let plGC=0;
@@ -735,13 +742,15 @@ $('rDouble').onclick=()=>{if(!lastGot)return;showRewardedAd(ok=>{if(!ok){toast(a
 const DAY_FREE=3,DAY_AD_SPIN=5,DAY_CHEST=3;
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 function daily(){if(!save.daily||save.daily.d!==today())save.daily={d:today(),free:DAY_FREE,adSpin:0,chest:0,fill:0};return save.daily}
-const POOL=[{w:26,k:'coins',v:50},{w:14,k:'coins',v:120},{w:4,k:'coins',v:300},{w:18,k:'uni',v:3},{w:8,k:'uni',v:8},{w:22,k:'shard',v:2},{w:5,k:'shard',v:5},{w:3,k:'liv'}];
+const POOL=[{w:26,k:'coins',v:50},{w:14,k:'coins',v:120},{w:4,k:'coins',v:300},{w:18,k:'uni',v:3},{w:8,k:'uni',v:8},{w:22,k:'shard',v:2},{w:5,k:'shard',v:5},{w:TUNE.skin.livSpin,k:'liv'}];
+// 限定拉花：抽奖转盘「限定拉花」格、宝箱（TUNE.skin.livChest）共用；全部拥有时折 300 金币
+function livGrant(got){const lim=Object.keys(LIVS).filter(l=>LIVS[l].lim&&!save.livs[l]);if(lim.length){const l=lim[Math.random()*lim.length|0];save.livs[l]=true;got['liv:'+l]=1;track('lim_liv_get',{id:l})}else{save.coins+=300;got.coins=(got.coins||0)+300}}
 function wishOk(){return save.wish&&PARTS[save.wish]&&!save.owned[save.wish]}
 function pityPre(got){if(wishOk()&&(save.pity||0)>=AB.pityN-1){grantShards(save.wish,3,got);got._pity=1}}
 function pityPost(got){if(!wishOk())return;if(got[save.wish])save.pity=0;else save.pity=(save.pity||0)+1}
 function spinOnce(){let q=Math.random()*POOL.reduce((a,p)=>a+p.w,0),it=POOL[0];for(const p of POOL){q-=p.w;if(q<=0){it=p;break}}const got={};
  if(it.k==='coins'){save.coins+=it.v;got.coins=it.v}else if(it.k==='uni'){save.uni+=it.v;got.uni=it.v}else if(it.k==='shard')grantShards(rollPart(),it.v,got);
- else{const lim=Object.keys(LIVS).filter(l=>LIVS[l].lim&&!save.livs[l]);if(lim.length){const l=lim[Math.random()*lim.length|0];save.livs[l]=true;got['liv:'+l]=1}else{save.coins+=300;got.coins=300}}
+ else livGrant(got);
  if(!got._pity)pityPre(got);pityPost(got);persist();return got}
 function openChest(){const got={},n=5+(Math.random()*4|0);pityPre(got);for(let i=0;i<n;i++)grantShards(rollPart(),1,got);pityPost(got);persist();return got}
 function openDaily(){hideAll();show('daily',1);renderDaily()}

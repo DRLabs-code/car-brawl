@@ -7,7 +7,7 @@ for(const vp of [{width:844,height:390,deviceScaleFactor:2,isMobile:true,hasTouc
  await g.evaluate(()=>{const s=__game.save;s.tut=true;s.tutorialDone=true;s.owned.spike=true;s.owned.ram=true;s.colors.flame=true;persist();openGarage()});await W(600);
  // 外观页尺寸
  const m=await g.evaluate(async()=>{document.querySelector('[data-gtab=look]').click();await new Promise(r=>setTimeout(r,400));const k=document.querySelector('#garage .gstage').getBoundingClientRect().width/1200;
-  const sw=[...document.querySelectorAll('#garage .sw2')],lv=[...document.querySelectorAll('#garage .lv2')],box=document.querySelector('#garage .swatches');
+  const sw=[...document.querySelectorAll('#garage .sw2')].filter(e=>e.offsetParent)/* v29 只量当前页签 */,lv=[...document.querySelectorAll('#garage .lv2')],box=document.querySelector('#garage .swatches');
   const fs=e=>parseFloat(getComputedStyle(e).fontSize)*k;
   return{k:+k.toFixed(3),n:sw.length,ic:Math.min(...sw.map(e=>e.querySelector(':scope>i').getBoundingClientRect().width)),name:Math.min(...sw.map(e=>fs(e.querySelector('small')))),st:Math.min(...sw.map(e=>fs(e.querySelector('em')))),lv:Math.min(...lv.map(fs)),
    cut:sw.filter(e=>{const s=e.querySelector('small');return s.scrollWidth>s.clientWidth+1}).map(e=>e.dataset.col),over:box.scrollWidth>box.clientWidth+1,price:Math.min(...[...document.querySelectorAll('#garage .swatches em .ic b')].map(fs)),coin:Math.max(...sw.map(e=>{const i=e.querySelector('em .ic i');return i?i.getBoundingClientRect().width:0}))}});
