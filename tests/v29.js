@@ -45,11 +45,11 @@ const L=[];const ok=(c,n,d)=>{L.push((c?'✓ ':'✗ ')+n+(d!==undefined?' '+JSON
  for(const [tag,vp] of [['mob',{width:844,height:390,deviceScaleFactor:2,isMobile:true,hasTouch:true}],['desk',{width:1280,height:720}]]){const q=await open(vp,tag);
   const r=await q.evaluate(async()=>{const S=ms=>new Promise(r=>setTimeout(r,ms));const s=__game.save;s.colors.galaxy=true;s.livs.auroraStripe=true;s.cars.beast.paint={color:'galaxy',livery:'auroraStripe'};persist();
    const opp=['iri','checker','lava','leopard','hex','sakura','navy'];hideAll();MODE='brawl';__game.noEnd=true;buildArena('junk',arenaR(8));start('beast');await S(400);const cs=__game.cars.filter(c=>!c.isP);
-   cs.forEach((c,i)=>{c.skin=battleSkin(c.k,opp[i%opp.length],i%2?'pinkBand':null,false)});for(const c of __game.cars){c.invT=99}
+   TUNE.skin.nearN=0;TUNE.skin.engageT=0;/* v30：这里只测对手默认档，升级见 v30.js */cs.forEach((c,i)=>{c.skinK=[opp[i%opp.length],i%2?'pinkBand':null];c.skin=battleSkin(c.k,...c.skinK,false)});for(const c of __game.cars){c.invT=99}
    let f=0;const t0=performance.now();await new Promise(res=>{const tick=()=>{f++;if(performance.now()-t0<4000)requestAnimationFrame(tick);else res()};requestAnimationFrame(tick)});const fps=f/((performance.now()-t0)/1000);
    const P=__game.player,uniq=new Set(__game.cars.map(c=>c.skin)),mb=[...uniq].reduce((a,o)=>a+o.width*o.height*4,0)/1048576,full=__game.cars.length*1152*1152*4/1048576;
-   return{mobc:matchMedia('(pointer:coarse)').matches,pW:P.skin.width,oW:[...new Set(cs.map(c=>c.skin.width))],dyn:cs.some(c=>c.skin._dyn),fps:+fps.toFixed(1),mb:+mb.toFixed(1),fullMB:+full.toFixed(1),n:__game.cars.length}});
-  if(tag==='mob')ok(r.mobc&&r.pW===1152&&r.oW.join()==='576'&&r.dyn,'手机：玩家全分辨率 1152²，对手半分辨率 576²（动态涂装保留）',r);else ok(r.pW===1152&&r.oW.join()==='1152','桌面：全部全分辨率',r);
-  if(tag==='mob'){const exp=(1152*1152*4+(r.n-1)*576*576*4)/1048576;ok(Math.abs(r.mb-exp)<.2&&r.mb<r.fullMB*.5,`手机：${r.n} 车对局贴图内存 = 1 张全分辨率 + ${r.n-1} 张半分辨率（8 车时约为全分辨率的 34%）`,{mb:r.mb,exp:+exp.toFixed(1),full:r.fullMB})}
+   return{mobc:matchMedia('(pointer:coarse)').matches,pW:P.skin.width,oW:[...new Set(cs.map(c=>c.skin.width))],dyn:cs.some(c=>c.skin._dyn),opx:TUNE.skin.oppPx,fps:+fps.toFixed(1),mb:+mb.toFixed(1),fullMB:+full.toFixed(1),n:__game.cars.length}});
+  if(tag==='mob')ok(r.mobc&&r.pW===1152&&r.oW.join()===String(r.opx)&&r.dyn,'手机：玩家全分辨率 1152²，对手默认档 oppPx²（v30 起 672²，动态涂装保留）',r);else ok(r.pW===1152&&r.oW.join()==='1152','桌面：全部全分辨率',r);
+  if(tag==='mob'){const exp=(1152*1152*4+(r.n-1)*r.opx*r.opx*4)/1048576;ok(Math.abs(r.mb-exp)<.2&&r.mb<r.fullMB*.6,`手机：${r.n} 车对局贴图内存 = 1 张全分辨率 + ${r.n-1} 张对手档`,{mb:r.mb,exp:+exp.toFixed(1),full:r.fullMB})}
   ok(r.fps>=50,tag+' 8 车新涂装（星空/格旗/豹纹/蜂巢/幻彩/熔岩 + 拉花）FPS',r.fps);await q.screenshot({path:`${SH}v29_battle_${tag}.png`});await q.close()}
  ok(!errs.length,'无页面报错',errs.slice(0,3));await b.close();const f=L.filter(l=>l[0]==='✗').length;console.log(f?`FAIL ${f}`:'ALL OK');process.exit(f?1:0)})().catch(e=>{console.log('✗ 异常 '+e.stack);process.exit(1)});
