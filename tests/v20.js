@@ -3,7 +3,7 @@ const p=require('/tmp/pt/node_modules/puppeteer-core');const W=ms=>new Promise(r
 (async()=>{const b=await p.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});
 for(const vp of [{width:844,height:390,deviceScaleFactor:2,isMobile:true,hasTouch:true},{width:667,height:375,deviceScaleFactor:2,isMobile:true,hasTouch:true},{width:1280,height:720}]){const g=await b.newPage();const errs=[];g.on('pageerror',e=>errs.push(e.message));await g.setViewport(vp);
  await g.goto(URL);await g.evaluate(()=>localStorage.clear());await g.reload();await W(1500);
- await g.evaluate(()=>{const s=__game.save;s.tut=true;s.tutorialDone=true;s.shards.ram=7;persist();openGarage()});await W(700);
+ await g.evaluate(()=>{const s=__game.save;s.tut=true;s.tutorialDone=true;s.shards.ram=7;s.owned.spike=true;persist();openGarage()});await W(700);
  await g.evaluate(()=>{const b=document.querySelector('#garage .pchip.ipc[data-id=spike]');b&&b.click()});await W(400);
  const m=await g.evaluate(()=>{const R=s=>{const e=document.querySelector(s);return e?e.getBoundingClientRect():null},F=s=>{const e=document.querySelector(s);return e?parseFloat(getComputedStyle(e).fontSize):0};
   const st=document.querySelector('#garage .gstage'),k=st.getBoundingClientRect().width/1200;

@@ -326,3 +326,17 @@ body.land .mapc small{font-size:9.5px}body.land .mapc .rnd{height:auto;aspect-ra
 /* v24 双冲刺引擎：冲刺键显示可用次数 */
 #dash[data-ch]::after{content:'×' attr(data-ch);position:absolute;right:-4px;top:-6px;background:#1b1420;color:#ffd23f;border-radius:9px;padding:1px 6px;font:900 14px system-ui;border:2px solid #ffd23f}
 #dash[data-ch="0"]::after{color:#888;border-color:#888}
+/* v26 车库外观页可读性（同 v20 部件标准）：色块 4 列大图标、名称/状态放大；涂装按钮放大 */
+#garage .swatches[data-g]{gap:8px}#garage .swatches[data-g] .sw2{width:calc(25% - 6px);min-width:0;padding:6px 2px 5px;gap:3px}
+#garage .swatches[data-g] .sw2>i{width:70px;height:70px}#garage .swatches[data-g] .sw2 small{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#garage .swatches[data-g] .sw2 em{font-size:13px}#garage .sw2 em .ic,#garage .lv2 em .ic{display:inline-flex;align-items:center;gap:2px;width:auto;height:auto}#garage .sw2 em .ic i,#garage .lv2 em .ic i{width:18px;height:18px;margin-right:3px;border:0;box-shadow:none;border-radius:0}#garage .sw2 em .ic b,#garage .lv2 em .ic b{position:static;font-size:14px;color:#ffd23f;background:none;padding:0}#garage .swatches[data-g] .rarh{font-size:17px;margin:6px 0 0}
+#garage .gst{font-size:17px}#garage .gst span{font-size:13px}
+#garage .lv2{width:calc(33.3% - 6px);font-size:16px;padding:8px 4px;gap:2px}#garage .lv2 em,#garage .limt{font-size:13px}
+/* v26 槽位「去合成 →」入口 */
+#garage .pchip.gocraft{border:2px dashed #ffd23f88;background:#ffd23f14}#garage .gcic{display:flex;align-items:center;justify-content:center;background:#00000040;border-radius:10px}#garage .gcic i{font-style:normal;font-size:34px;background:none!important;width:auto!important;height:auto!important;position:static!important}
+#garage .pchip.gocraft small{color:#ffd23f}#garage .pchip.gocraft .gcn{font-style:normal;font-size:13px;color:#ddd}
+#garage .crow.flash{animation:crflash .5s 3 alternate}@keyframes crflash{to{background:#ffd23f33;box-shadow:0 0 0 3px #ffd23f}}
+/* v26 外观页文字再放大：手机实际 ≥11px（缩放≈0.56 → 20px CSS） */
+#garage .swatches[data-g] .sw2 small,#garage .swatches[data-g] .sw2 em,#garage .lv2,#garage .lv2 em,#garage .limt{font-size:20px;line-height:1.2}
+#garage .swatches[data-g] .rarh{font-size:20px}#garage .gst{font-size:20px}#garage .gst span{font-size:16px}
+#garage .swatches .sw2 em .ic.cur.mini,#garage .swatches .lv2 em .ic.cur.mini{display:inline-flex;align-items:center;gap:3px}#garage .swatches em .ic.cur.mini i{width:20px;height:20px;position:static;flex:none}#garage .swatches em .ic.cur.mini b{position:static;margin:0;transform:none;font-size:20px;padding:0;border:0;background:none;color:#ffd23f}
