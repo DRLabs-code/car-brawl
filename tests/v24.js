@@ -6,14 +6,14 @@ const FX=['drill','shockRam','shieldGen','magShell','twinDash','regenEngine','bo
 for(const [vn,vp] of [['desk',{width:1280,height:720}],['mob',{width:844,height:390,deviceScaleFactor:2,isMobile:true,hasTouch:true}]]){
  const g=await b.newPage();g.on('pageerror',e=>errs.push(e.message));await g.setViewport(vp);await g.goto(URL);await g.evaluate(()=>localStorage.clear());await g.reload();await W(2500);
  await g.evaluate(FX=>{const s=__game.save;s.tut=true;s.tutorialDone=true;s.coins=99999;for(const id in PARTS)s.owned[id]=true;s.cars.beast.lv=10;s.cars.beast.equip={front:'drill',armor:'shieldGen',engine:'twinDash',tire:'boostTire'};persist()},FX);
- if(vn==='desk'){const d=await g.evaluate(FX=>{const per={};for(const id of FX){const p=PARTS[id];per[p.slot]=(per[p.slot]||0)+1}const lay=['tyrant','fang','beast'].every(k=>FX.every(id=>{const im=LAYI[k+'_part_'+id];return im&&im.complete&&im.naturalWidth===512}));
+ if(vn==='desk'){const d=await g.evaluate(async FX=>{const per={};for(const id of FX){const p=PARTS[id];per[p.slot]=(per[p.slot]||0)+1}for(const k of['tyrant','fang','beast'])for(const id of FX)partImg(k,id);await new Promise(r=>setTimeout(r,1500));const lay=['tyrant','fang','beast'].every(k=>FX.every(id=>{const im=LAYI[k+'_part_'+id];return im&&im.complete&&im.naturalWidth===512}));
    return{per,rar:FX.map(id=>PARTS[id].r).join(''),fx:FX.every(id=>/✦/.test(PARTS[id].desc)),lay,tune:FX.every(id=>TUNE.parts[id])}},FX);
   ok(Object.values(d.per).every(n=>n>=2)&&Object.keys(d.per).length===4&&d.fx&&d.tune,'每槽位 ≥2 个特效部件，说明含效果，参数在 TUNE.parts',d);ok(d.lay,'3 台车 × 8 个新部件图层已加载');ok(/b/.test(d.rar)&&/p/.test(d.rar)&&/g/.test(d.rar),'稀有度分布 稀有/史诗/传说',d.rar)}
  // 车库：图标 + 说明
  const gar=await g.evaluate(async()=>{const S=ms=>new Promise(r=>setTimeout(r,ms));openGarage();await S(700);const ch=document.querySelector('#garage .pchip.ipc[data-id=shockRam]');ch&&ch.click();await S(400);
   const box=document.querySelector('#garage .cmpbox'),ic=document.querySelector('#garage .pchip.ipc[data-id=shockRam] .ic i');const bp=ic?getComputedStyle(ic).backgroundPosition:'';const r=ic?ic.getBoundingClientRect():{width:0};
   return{cmp:box?box.textContent:'',bp,icw:Math.round(r.width),txt:(document.querySelector('#garage').textContent.match(/✦/g)||[]).length,over:[...document.querySelectorAll('#garage .gopts')].some(e=>e.scrollWidth>e.clientWidth+1)}});
- ok(/电击撞角/.test(gar.cmp)&&/✦ 撞击让对手失控/.test(gar.cmp)&&/14\.2857%\s+100%|14.2857% 100%/.test(gar.bp)&&gar.icw>=30&&!gar.over,vn+' 车库：特效部件图标（第 4 行）+ 效果说明，部件行不溢出',gar);await g.screenshot({path:SH+vn+'_garage_front.png'});
+ ok(/电击撞角/.test(gar.cmp)&&/✦ 撞击让对手失控/.test(gar.cmp)&&/14\.2857%\s+75%/.test(gar.bp)&&gar.icw>=30&&!gar.over,vn+' 车库：特效部件图标（第 4 行）+ 效果说明，部件行不溢出',gar);await g.screenshot({path:SH+vn+'_garage_front.png'});
  await g.evaluate(async()=>{const e=[...document.querySelectorAll('#garage .crow')].find(e=>/吸血钻头/.test(e.textContent));e&&e.scrollIntoView({block:'center'})});await W(400);await g.screenshot({path:SH+vn+'_garage_craft.png'});
  const sw=await g.evaluate(async()=>{const t=document.querySelector('[data-gtab="look"]');t&&t.click();await new Promise(r=>setTimeout(r,400));const ids=[...document.querySelectorAll('#garage [data-col]')].map(b=>b.dataset.col);const lv=[...document.querySelectorAll('#garage [data-liv]')].map(b=>b.dataset.liv);return{ids,lv}});
  ok(['teal','grape','digi','tiger','lava'].every(i=>sw.ids.includes(i))&&sw.lv.includes('iceRoof'),vn+' 车库有新皮肤（普通/稀有/传说/限定涂装）',sw);await g.screenshot({path:SH+vn+'_garage_skins.png'});
@@ -28,7 +28,7 @@ for(const [vn,vp] of [['desk',{width:1280,height:720}],['mob',{width:844,height:
    {const pr=__game.props;for(let i=pr.length-1;i>=0;i--){const q=pr[i];if(q.solid&&!q.wall&&q.x>-30&&q.x<30&&q.z>-30&&q.z<-8)pr.splice(i,1)}buildGrid()}
    R.eq=P.eq.slice();
    // 吸血钻头 + 电击撞角：P 高速撞 E
-   P.eq=['drill','shockRam'];P.hp=P.maxhp*.5;E.hp=E.maxhp;E.invT=0;P.invT=0;at(P,0,-20,0);at(E,0,-16.6,0);P.vz=20;const hp0=P.hp,s0=ST.steal,k0=ST.shock;await S(250);R.drill={steal:+(ST.steal-s0).toFixed(1),dealt:Math.round(E.maxhp-E.hp),hpUp:+(P.hp-hp0).toFixed(1)};R.shock={n:ST.shock-k0,stun:+(E.stunT||0).toFixed(2)};
+   P.eq=['drill','shockRam'];P.hp=P.maxhp*.5;E.hp=E.maxhp;E.invT=0;P.invT=0;at(P,0,-20,0);at(E,0,-16.6,0);P.vz=20;const hp0=P.hp,s0=ST.steal,k0=ST.shock;let selfD=0;const _hu=hurt;hurt=function(c,d,by){const h=c.hp,r=_hu.apply(this,arguments);if(c===P)selfD+=Math.max(0,h-c.hp);return r};await S(250);hurt=_hu;R.drill={steal:+(ST.steal-s0).toFixed(1),dealt:Math.round(E.maxhp-E.hp),selfD:+selfD.toFixed(1),hpUp:+(P.hp-hp0).toFixed(1)};R.shock={n:ST.shock-k0,stun:+(E.stunT||0).toFixed(2)};
    // 护盾发生器
    P.eq=['shieldGen'];P.shT=0;P.sgT=.05;await S(200);R.shield={shT:+P.shT.toFixed(1)};
    // 磁力外壳：道具被吸过来
@@ -41,7 +41,7 @@ for(const [vn,vp] of [['desk',{width:1280,height:720}],['mob',{width:844,height:
    P.eq=['boostTire'];at(P,-10,-20,0);__v11.PK.push({k:'boost',x:-10,z:-20,t:0,life:25});await S(250);R.boostB={btT:+(P.btT||0).toFixed(1)};
    // 双冲刺引擎：连按两次冲刺
    P.eq=['twinDash'];P.ch=1;P.dcd=0;at(P,0,-24,0);__game.testInp=[0,1];return R},FX);
-  ok(fx.drill.steal>=2&&fx.drill.hpUp>=2,'吸血钻头：撞击回血',fx.drill);ok(fx.shock.n>=1&&fx.shock.stun>0,'电击撞角：撞击让对手失控',fx.shock);ok(fx.shield.shT>0,'护盾发生器：定时自动护盾',fx.shield);ok(fx.mag.eaten||fx.mag.d<6,'磁力外壳：吸来道具',fx.mag);ok(fx.regen>=1,'回收引擎：脱战回血',fx.regen);ok(fx.drift.dDrift>fx.drift.dBase*1.5,'漂移胎：漂移时冷却更快',fx.drift);ok(fx.boostB.btT>0,'加速带轮胎（对战）：加速道具额外加速',fx.boostB);
+  ok(fx.drill.steal>=2&&Math.abs(fx.drill.steal-fx.drill.selfD-fx.drill.hpUp)<.6&&fx.drill.steal<=fx.drill.dealt*.3+.5,'吸血钻头：撞击回血（回血 = 30%×伤害；净耐久 = 回血 − 自伤）',fx.drill);ok(fx.shock.n>=1&&fx.shock.stun>0,'电击撞角：撞击让对手失控',fx.shock);ok(fx.shield.shT>0,'护盾发生器：定时自动护盾',fx.shield);ok(fx.mag.eaten||fx.mag.d<6,'磁力外壳：吸来道具',fx.mag);ok(fx.regen>=1,'回收引擎：脱战回血',fx.regen);ok(fx.drift.dDrift>fx.drift.dBase*1.5,'漂移胎：漂移时冷却更快',fx.drift);ok(fx.boostB.btT>0,'加速带轮胎（对战）：加速道具额外加速',fx.boostB);
   await g.keyboard.press('Space');await W(650);const tw1=await g.evaluate(()=>({dcd:+__game.player.dcd.toFixed(2),ch:__game.player.ch,badge:document.getElementById('dash').dataset.ch}));await g.keyboard.press('Space');await W(80);
   const tw=await g.evaluate(t=>({...t,dash2:__game.player.dash>0,dcd2:+__game.player.dcd.toFixed(2),n:__parts.ST.dash2}),tw1);ok(tw.ch===0&&tw.dash2&&tw.dcd2>1&&tw.n>=1,'双冲刺引擎：0.35 秒后可再冲一次',tw);
   // 竞速：加速带轮胎过加速带更快

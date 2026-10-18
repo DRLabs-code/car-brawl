@@ -31,7 +31,12 @@ window.TUNE={
  fac:{belts:2,beltL:16,beltW:2.6,beltSpd:7,pads:[2,3],padR:3,idle:[4,7],warn:1.2,on:2.2,dps:24,slow:2.5},
  // v24 特效部件：drill 撞击伤害转回血比例；shockRam 撞击≥min 伤害时对手失控 t 秒；shieldGen 每 cd 秒自动护盾 t 秒；magShell 吸附 r 米内道具；
  // twinDash 第 2 次充能间隔 gap 秒；regenEngine 未受伤 wait 秒后每秒回 hps；boostTire 加速带/加速道具 速度×mul、额外推力 kick、对战加速 t 秒；driftTire 侧滑速度>lat 时冲刺冷却额外 ×k 速度恢复
- parts:{drill:{steal:.3},shockRam:{t:.7,min:6},shieldGen:{cd:14,t:3},magShell:{r:11,spd:16},twinDash:{gap:.35},regenEngine:{wait:3,hps:1.6},boostTire:{mul:1.18,kick:4,t:2.5},driftTire:{lat:4,k:1.2}},
+ parts:{quakeRam:{r:6,kick:14},blastArmor:{cut:.4},lastStand:{hp:.3,spd:1.15,dmg:1.2},anchorTire:{cut:.35},drill:{steal:.3},shockRam:{t:.7,min:6},shieldGen:{cd:14,t:3},magShell:{r:11,spd:16},twinDash:{gap:.35},regenEngine:{wait:3,hps:1.6},boostTire:{mul:1.18,kick:4,t:2.5},driftTire:{lat:4,k:1.2}},
+ // v27 新部件：quakeRam 冲刺撞击震开 r 米内其他车（速度 kick）；blastArmor 非撞击伤害（道具/爆炸/机关/电网）×(1-cut)；lastStand 耐久<hp 比例时 速度×spd 撞击×dmg；anchorTire 被撞速度变化 ×(1-cut)
+ // 部件经济：合成所需碎片（按稀有度）、掉落稀有度概率（结算/宝箱/抽奖碎片共用）
+ // 内存：部件图层（每张 512² ≈1MB 解码）手机端软上限
+ mem:{partMob:24},
+ eco:{need:{w:10,b:20,p:30,g:40},drop:{w:.6,b:.28,p:.09,g:.03}},
  // 商店：看广告领金币
  coinAd:{max:3,v:100}
 };

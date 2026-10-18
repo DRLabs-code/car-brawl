@@ -63,7 +63,7 @@ let RV={used:false,pending:false,ok:false,tm:null};
 window.reviveHold=()=>{if(tut||!running||!AB.revive)return false;if(RV.pending)return true;if(RV.used)return false;
  if(cars.filter(c=>c.alive&&!c.dummy&&c!==player).length<2)return false;RV.used=true;RV.pending=true;let n=6;track('revive_offer',{mode:MODE,t:Math.round(time)});
  const el=$('revive');const draw=()=>{el.innerHTML=`<div class="rcard rvc"><div class="ptitle">💥 被撞毁了！</div><div class="rvt">看视频立即复活<br><small>恢复 50% 耐久 · 2 秒无敌 · 随机送 1 个道具</small></div><div class="rvcd">${n}</div><div class="col"><button class="btn adbtn" id="rvAd">📺 看视频复活</button><button class="btn ghost" id="rvNo">放弃</button></div><small class="rvn">每局限 1 次</small></div>`;
-  $('rvAd').onclick=()=>{clearInterval(RV.tm);show('revive',0);showRewardedAd(ok=>{if(ok)doRevive();else{toast('未看完，无法复活');RV.pending=false}},'revive')};$('rvNo').onclick=()=>{clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_skip',{})}};
+  $('rvAd').onclick=()=>{clearInterval(RV.tm);show('revive',0);showRewardedAd(ok=>{if(ok)doRevive();else{toast(adNoTxt('未看完，无法复活'));RV.pending=false}},'revive')};$('rvNo').onclick=()=>{clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_skip',{})}};
  draw();show('revive',1);RV.tm=setInterval(()=>{if(paused)return;n--;if(n<=0){clearInterval(RV.tm);show('revive',0);RV.pending=false;track('revive_timeout',{})}else{const e=el.querySelector('.rvcd');if(e)e.textContent=n}},1000);return true};
 function doRevive(){const p=player;let best=[ZC[0],ZC[1]],bs=-1;for(let i=0;i<50;i++){const q=randIn(4);if(!inPoly(ZPOLY,q[0],q[1])||sdist(ZPOLY,q[0],q[1]).s>-5||!openCell(q[0],q[1],3))continue;const m=Math.min(...cars.filter(c=>c.alive&&c!==p).map(c=>Math.hypot(c.x-q[0],c.z-q[1])));if(m>bs){bs=m;best=q}}
  if(MODE==='ring')best=[ZC[0],ZC[1]];p.alive=true;p.hp=p.maxhp*.5;p.x=best[0];p.z=best[1];p.vx=p.vz=0;p.fwd=0;p.deadT=0;p.fell=false;p.fallT=0;p.place=undefined;p.invT=2;p.dcd=0;deadTime=0;
@@ -142,7 +142,9 @@ const _fin=finish;finish=function(){const win=player.alive;clearInterval(RV.tm);
  dcAdd('play');if(win)dcAdd(MODE==='ring'?'ringWin':'win');PK=[];bf.innerHTML='';bfS='';
  track('match_end_v11',{mode:MODE,win,kills,pickups:pkN,revived:RV.ok,t:Math.round(time)});
  const w=hlPick();if(w){HL.t0=w.t0;HL.t1=w.t1;HL.tt=0;HL.fi=0;HL.play=true;$('hl').classList.remove('hide');$('hlTxt').textContent='生成中…';track('hl_build',{score:w.score,dur:+(w.t1-w.t0).toFixed(1)});
-  TTREC.clip(Math.ceil(time-w.t0)+1,0,p=>{HL.ttPath=p})}};
+  TTREC.clip(Math.ceil(time-w.t0)+1,0,p=>{HL.ttPath=p;if(!window.tt)return;if(p){$('hlShare').disabled=false;$('hlTxt').textContent='录屏已生成 · 可分享到抖音'}else $('hlTxt').textContent='本局录屏不可用'})}};
+// v28 抖音没有 MediaRecorder：分享走录屏剪辑（上面 TTREC.clip 回调里启用），「下载」无意义，隐藏
+if(window.tt)$('hlDl').classList.add('hide');
 window.__v11={DC_SLOTS,modeUI,stats:PKS,get PK(){return PK},set pkNext(v){pkNext=v},applyPK,pkSpawn,RV:()=>RV,doRevive,dcGet,DCP,HL,hlPick,get MODE(){return MODE},set MODE(v){MODE=v}};
 dcDot();modeUI();
 })();

@@ -17,9 +17,9 @@ const _mts=matchThenStart;matchThenStart=function(k,m){if(MODE!=='team')return _
  hideAll();show('match',1);const el=$('match'),dur=1000+Math.random()*2000;lastMatch={dur,at:[]};
  const card=(o,me)=>`<div class="mcard ${me?'me':'wait'}" style="--f:${me?'#ffc300':TC[0]}">${me?`<canvas width="96" height="72"></canvas><b>${esc(save.nick)}</b><small>Lv.${cs.lv}</small>`:'<div class="spin"></div><b>…</b>'}</div>`;
  el.innerHTML=`<div class="mt">匹配队友与对手中<span class="dots"></span></div><div class="msub">${MAPS[m].name} · 队伍乱斗 ${ts}v${ts}</div><div class="mteams"><div class="mteam t0"><div class="mth">🔵 ${TN[0]}</div><div class="mcards">${card(null,1)}${opps.slice(0,ts-1).map(()=>card()).join('')}</div></div><div class="mvs">VS</div><div class="mteam t1"><div class="mth">🔴 ${TN[1]}</div><div class="mcards">${opps.slice(ts-1).map(()=>card()).join('')}</div></div></div><div class="mtip">💡 小贴士：${['友军撞击不掉血，放心挤','和队友一起撞同一个目标最快','队友被围攻时去支援！','全队都被撞毁才算输，被撞毁后可观战'][Math.random()*4|0]}</div>`;
- drawFull(el.querySelector('.me canvas').getContext('2d'),k,cs,3,48,52,.32);
+ drawFullReady(el.querySelector('.me canvas').getContext('2d'),k,cs,3,48,52,.32);
  const cards=[...el.querySelectorAll('.mcard.wait')],ts2=opps.map(()=>dur*(.08+Math.random()*.8)).sort((a,b)=>a-b);lastMatch.at=ts2;
- opps.forEach((o,i)=>setTimeout(()=>{const c=cards[i];c.className='mcard in';c.style.setProperty('--f',o.frame);c.innerHTML=`<canvas width="96" height="72"></canvas><b>${esc(o.nick)}</b><small>Lv.${o.lv}</small>`;drawFull(c.querySelector('canvas').getContext('2d'),o.k,o.cs,3,48,52,.32);sfx('ui')},ts2[i]));
+ opps.forEach((o,i)=>setTimeout(()=>{const c=cards[i];c.className='mcard in';c.style.setProperty('--f',o.frame);c.innerHTML=`<canvas width="96" height="72"></canvas><b>${esc(o.nick)}</b><small>Lv.${o.lv}</small>`;drawFullReady(c.querySelector('canvas').getContext('2d'),o.k,o.cs,3,48,52,.32);sfx('ui')},ts2[i]));
  track('team_match',{n:ts});
  matchTimer=setTimeout(()=>{el.querySelector('.mt').innerHTML='匹配成功！';sfx('good');setTimeout(()=>{show('match',0);buildArena(m,arenaR(n));start(k,{opps})},600)},dur)};
 {const _om=openMaps;openMaps=function(k){if(MODE==='team'&&mapKey==='ring')mapKey=MAPK[0];return _om(k)}}
