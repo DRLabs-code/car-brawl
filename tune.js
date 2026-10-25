@@ -19,6 +19,16 @@ window.TUNE={
  // 涂装：传说保底与概率、动态叠加缓存上限
  // v29 涂装经济：普通/稀有金币购买（price，没列出的=不卖：传说动态与限定拉花只能抽奖/宝箱）；legSpin/legChest 每次抽奖/开箱出传说涂装概率，legPity 连续未出必出；livSpin 抽奖转盘里「限定拉花」格权重（其他格合计 97），livChest 开宝箱额外出限定拉花概率
  skin:{price:{col:{red:120,blue:120,green:150,yellow:150,black:180,white:180,pink:200,orange:200,army:200,teal:220,grape:220,sakura:200,navy:200,camoJ:450,camoD:450,camoS:450,flame:600,zebra:550,carbon:650,digi:500,tiger:600,checker:550,leopard:600,hex:550},liv:{stripe:200,band:150,number:220,roof:150,redStripe:320,pinkBand:280,limeRoof:280}},livSpin:3,livChest:.05,legPity:30,legSpin:.03,legChest:.06,dynCache:96,cacheDesk:32,cacheMobMB:22,dynCacheMob:16,lodMob:true,lodPlayer:false,oppPx:672,midMax:10,nearN:2,fullMax:2,nearR:18,engageT:2.5,holdT:3,promoteGap:.5},// v30 手机对局对手涂装分级：对手 oppPx² 档（须为 4 的倍数；672≈0.58 倍）；最近 nearN 辆（nearR 米内）或 engageT 秒内与玩家碰撞的对手升全分辨率；连续 holdT 秒不满足才降级；每 promoteGap 秒最多升 1 辆；fullMax 同时全分辨率对手硬上限（满了等滞后到期腾位）；midMax 中档副本上限；lodPlayer 玩家也降档（默认否）
+ // v31 地图耐玩 + 画面（map-live.js）。shrink：缩圈（on=false 关闭；start 秒后开始，dur 秒缩到半径 min）；
+ //  ev：每张图一个局中事件（first/gap 为秒区间，max 每局最多次数，minLv 玩家车等级低于它不触发（新手期不加混乱）；site 钢梁雨 n 根/间隔 stagger/瞄准玩家概率 aim；junk 磁吊车 warn 预警+dur 吸引秒数/pull 吸力速度 m/s（直接挪位置，车的抓地会吃掉侧向速度）/reach 影响半径/blast 爆开半径/kick；desert 新增流沙坑 n 个持续 dur；ice 额外冰窟窿 extra 个；factory 预告 delay 秒后换向；ring 强风 wind 风速 m/s/dur；track 暴雨 dur/drops 雨线数/gripMul 抓地倍数（路面按油污算，×4 后只是偏滑，不影响加速带冲速））；
+ //  drop：补给空投（first/gap 秒，life 存活，dist 与玩家的刷新距离区间，coins 玩家抢到的金币区间（每局最多 maxCoin 次给金币，防通胀），shield 护盾秒，aiRange+sk×aiSk AI 追空投距离）；
+ //  amb 环境粒子（desk/mob 数量，par 视差）；fx 暗角 vig/色调 tint[r,g,b,a]/斜光 sun/场地光斑 pool+light 色/tick 世界特效间隔；hit 撞障碍碎屑（v 速度阈值、cd 冷却、dust 尘土数、deb 碎屑数）；detail 地面细节密度；lm 标志建筑（sd 离场地边缘距离、gap 间距）
+ live:{on:true,shrink:{on:true,start:25,min:10,dur:100},
+  ev:{on:true,minLv:3,first:[18,24],gap:[26,36],max:3,site:{n:5,stagger:.45,aim:.55},junk:{warn:1.2,dur:3.2,pull:6,reach:24,blast:7,kick:14},desert:{n:2,dur:9},ice:{extra:2},factory:{delay:2.5},ring:{wind:4.5,dur:6},track:{dur:8,drops:70,gripMul:4}},
+  drop:{on:true,first:[14,20],gap:[22,32],life:16,dist:[12,32],coins:[20,40],maxCoin:3,shield:4,aiRange:20,aiSk:14},
+  amb:{on:true,desk:36,mob:18,par:.5},
+  fx:{on:true,vig:.34,sun:.07,pool:.16,tick:.4,light:{site:'255,238,200',junk:'255,214,170',desert:'255,240,200',ice:'225,243,255',factory:'210,240,255'},tint:{site:[255,208,138,.06],junk:[255,154,90,.07],desert:[255,179,71,.07],ice:[159,212,255,.09],factory:[122,200,255,.06],ring:[80,40,160,.10],track:[255,255,255,.0]}},
+  hit:{v:6,cd:.35,dust:4,deb:5},detail:{on:true,density:1},lm:{on:true,sd:[7,12],gap:16}},
  // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI

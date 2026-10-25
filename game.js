@@ -467,7 +467,7 @@ function unstick(c){let nx=0,nz=0;for(const o of props){if(!o.solid)continue;con
  const sd=sdist(POLY,c.x,c.z);if(sd.s>-3){nx-=sd.nx*.6;nz-=sd.nz*.6}let L=Math.hypot(nx,nz);if(L<1e-3){nx=-Math.sin(c.h);nz=-Math.cos(c.h);L=1}nx/=L;nz/=L;
  c.vx=nx*7;c.vz=nz*7;c.x+=nx*.6;c.z+=nz*.6;smoke(c.x,c.z,3)}
 // ================= 模拟 =================
-function step(dt){time+=dt;zoneR=tut||MODE==='race'?AR:MODE==='ring'?ringZone():Math.max(10,zone0-Math.max(0,time-25)*(zone0-10)/100);updZone();if(introT>0)introT-=dt;
+function step(dt){time+=dt;zoneR=tut||MODE==='race'?AR:MODE==='ring'?ringZone():TUNE.live.shrink.on?Math.max(TUNE.live.shrink.min,zone0-Math.max(0,time-TUNE.live.shrink.start)*(zone0-TUNE.live.shrink.min)/TUNE.live.shrink.dur):zone0;updZone();if(introT>0)introT-=dt;
  for(const c of cars){if(!c.alive){c.deadT+=dt;c.vx*=.96;c.vz*=.96;if(Math.random()<dt*6)smoke(c.x,c.z,1,true);continue}
   let ix=0,iz=0,dsh=false;
   if(c.isP){const kW=keys.KeyW||keys.ArrowUp?1:0,kS=keys.KeyS||keys.ArrowDown?1:0,kT=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);let sx=jx,sy=jy;
@@ -603,7 +603,7 @@ function drawFts(){ctx.textAlign='center';ctx.textBaseline='middle';for(const f 
 const $=id=>document.getElementById(id);
 function hud(){if(!player||!running)return;const f=Math.max(0,player.hp/player.maxhp);
  $('hpFill').style.width=f*100+'%';$('hpFill').classList.toggle('low',f<.3);$('hpLag').style.width=f*100+'%';$('hpTxt').textContent=Math.ceil(player.hp)+' / '+Math.round(player.maxhp);
- $('aliveN').textContent=cars.filter(c=>c.alive&&!c.dummy).length+'/'+nCars;$('killN').textContent=kills;$('timeN').textContent=time.toFixed(0);$('zoneWarn').classList.toggle('hide',!(!tut&&time>25&&zoneR>10));
+ $('aliveN').textContent=cars.filter(c=>c.alive&&!c.dummy).length+'/'+nCars;$('killN').textContent=kills;$('timeN').textContent=time.toFixed(0);$('zoneWarn').classList.toggle('hide',!(!tut&&MODE!=='ring'&&TUNE.live.shrink.on&&time>TUNE.live.shrink.start&&zoneR>TUNE.live.shrink.min));
  const e=$('dashCd'),cd=Math.max(0,player.dcd/(player.dcdMax||FEEL.dashCd));const db=$('dash'),rdy=player.dcd<=0;if(rdy&&db._cd){db.classList.remove('ready');void db.offsetWidth;db.classList.add('ready');sfx('ui')}db._cd=!rdy;db.classList.toggle('cooling',!rdy);e.setAttribute('r',23);e.style.stroke='#1b142077';e.style.strokeWidth=46;e.style.fill='none';e.style.strokeDasharray=`${cd*2*Math.PI*23} 999`}
 const PANELS=['match','daily','menu','result','hud','garage','settings','pause','maps','tutBox','intro'];
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
