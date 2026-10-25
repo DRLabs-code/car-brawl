@@ -29,6 +29,8 @@ window.TUNE={
   amb:{on:true,desk:36,mob:18,par:.5},
   fx:{on:true,vig:.34,sun:.07,pool:.16,tick:.4,light:{site:'255,238,200',junk:'255,214,170',desert:'255,240,200',ice:'225,243,255',factory:'210,240,255'},tint:{site:[255,208,138,.06],junk:[255,154,90,.07],desert:[255,179,71,.07],ice:[159,212,255,.09],factory:[122,200,255,.06],ring:[80,40,160,.10],track:[255,255,255,.0]}},
   hit:{v:6,cd:.35,dust:4,deb:5},detail:{on:true,density:1},lm:{on:true,sd:[7,12],gap:16}},
+ // v32 界面皮肤（icons.js + ui-v32.css）：on 总开关（false=回到系统 emoji）；rip 点击高光；fly 奖励金币飞入；flyN 飞入金币最多颗数
+ ui:{on:true,rip:true,fly:true,flyN:8},
  // 撞击平衡：对撞时按各自接近速度分摊伤害（快的一方伤害多、自伤少）；侧/尾撞的攻击方自伤封顶
  hit:{headOnSpeedW:.8,selfCap:24},
  // 竞速模式：圈数、重生、加速带、跳台、AI

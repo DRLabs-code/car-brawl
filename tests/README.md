@@ -27,3 +27,4 @@
 
 - `v31.js [URL]`：地图耐玩 + 画面（局中事件×7、补给空投、缩圈开关、标志建筑、撞障碍碎屑、粒子上限、7 图 FPS）。事件/空投暂停后手动 step，确定性。
 - `shots-v31.js <before|after> [URL]`：7 图×手机/桌面对战截图（写 `<tag>_<map>_<vp>.png`）；`shots-v31-detail.js [URL]`：标志建筑/事件/空投特写。
+- `v32.js [URL]`：界面皮肤（emoji→SVG 图标、textContent 不变、点击高光、金币飞入、危险按钮、触控高度、无“真人/在线”字样、对局 FPS）；`shots-v32.js <before|after> [URL]`：全部界面 30 个状态手机/桌面截图，并检查有无遗留 emoji。

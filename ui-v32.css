@@ -1,0 +1,100 @@
+/* v32 界面皮肤：统一按钮/图标/动效。只覆盖外观，不改布局结构。参数见 tune.js ui.*（ui.on=false 时 icons.js 不加载，图标回到 emoji）。
+   动效只用 transform/opacity，且只出现在菜单/面板（对局中 HUD 无持续动画）。 */
+:root{--ink:#1b1420;--gold1:#ffe670;--gold2:#ffb300;--goldd:#b86e00;--ease:cubic-bezier(.2,.9,.3,1.35)}
+/* ---------- 图标 ---------- */
+.em{--s:var(--s2,currentColor);--f:var(--f2,currentColor);--fo:.3;display:inline-block;width:1.2em;height:1.2em;vertical-align:-.26em;position:relative;line-height:1;flex:none;font-style:normal}
+.em eg,.em .eg{display:inline;position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;font-size:0}
+.em svg{display:block;width:100%;height:100%;fill:none;stroke:var(--s);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;overflow:visible;filter:drop-shadow(0 1px 0 rgba(0,0,0,.35))}
+.em .f{fill:var(--f);fill-opacity:var(--fo)}.em .k{fill:var(--s);stroke:none}
+.btn .em,.modesel button .em,.seg .em,.mini .em,.rt .em,.tab .em,.lv2 .em{--s:currentColor;--f:currentColor;--fo:.22}
+.btn .em svg,.modesel button .em svg,.seg .em svg{filter:none}
+.btn .em{width:1.15em;height:1.15em;vertical-align:-.22em}
+.sbtn span{display:flex;align-items:center;justify-content:center;height:26px}.sbtn span .em{width:26px;height:26px;font-size:22px;vertical-align:0}
+.marr .em{width:26px;height:26px;font-size:26px;vertical-align:0;display:block;margin:auto;--s:#ffd23f}
+.mute .em{width:22px;height:22px;font-size:18px;vertical-align:-.3em;--s:#1b1420;--f:#1b1420;--fo:.18}.mute.off .em{--s:#3a3f55}
+#pauseBtn .em{width:20px;height:20px;font-size:16px;vertical-align:0;--s:#1b1420}
+.mnick .mav .em{width:20px;height:20px;vertical-align:-.3em}.mnick i .em{width:13px;height:13px}
+.chip .em{width:15px;height:15px;font-size:12px;vertical-align:-.3em}
+#itemBtn i .em{width:40px;height:40px;font-size:30px;vertical-align:0;--s:#fff;--f:#fff;--fo:.3}
+#itemBtn.empty i::before{content:'';display:block;width:30px;height:30px;opacity:.7;filter:none;font-size:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='10.5' width='16' height='10' rx='2' fill='%23fff' fill-opacity='.25'/%3E%3Crect x='3' y='7' width='18' height='4' rx='1.5' fill='%23fff' fill-opacity='.25'/%3E%3Cpath d='M12 7v13.5M12 7C10.2 3 6 3.8 8 6.6M12 7c1.8-4 6-3.2 4-.4'/%3E%3C/svg%3E") center/contain no-repeat}
+.ptitle .em{width:1.05em;height:1.05em;vertical-align:-.15em}
+.chest .em{width:56px;height:56px;font-size:44px}
+/* ---------- 按钮 ---------- */
+.btn{--b1:var(--gold1);--b2:var(--gold2);--bd:var(--goldd);position:relative;overflow:hidden;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-align:center;line-height:1.15;border:3px solid var(--ink);border-radius:16px;
+ background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.12) 46%,rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--b1),var(--b2));color:#3a2300;text-shadow:0 1px 0 rgba(255,255,255,.55);
+ box-shadow:inset 0 -4px 0 var(--bd),inset 0 2px 0 rgba(255,255,255,.75),0 5px 0 var(--ink),0 10px 16px rgba(0,0,0,.35);transition:transform .09s var(--ease),box-shadow .09s,filter .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn:active:not(:disabled){transform:translateY(4px) scale(.97);box-shadow:inset 0 -2px 0 var(--bd),inset 0 2px 0 rgba(255,255,255,.75),0 1px 0 var(--ink),0 3px 6px rgba(0,0,0,.3)}
+.btn,.btn.ghost,.btn.danger,.btn.adbtn,.adbtn{background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.12) 46%,rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--b1),var(--b2))}
+.btn.sm{min-height:34px;border-radius:12px;padding:5px 12px;box-shadow:inset 0 -3px 0 var(--bd),inset 0 2px 0 rgba(255,255,255,.7),0 4px 0 var(--ink),0 8px 12px rgba(0,0,0,.3)}
+.btn.sm:active:not(:disabled){transform:translateY(3px) scale(.97)}
+.btn.ghost{--b1:#8590f5;--b2:#4752c9;--bd:#2c3693;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.btn.danger{--b1:#ff8c8c;--b2:#e23a4c;--bd:#9c1b30;color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.adbtn{--b1:#86f7a0;--b2:#27ae52;--bd:#177536;color:#06310f;background:linear-gradient(180deg,rgba(255,255,255,.62) 0,rgba(255,255,255,.12) 46%,rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--b1),var(--b2))}
+.btn:disabled{opacity:.55;filter:grayscale(.6);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 var(--ink)}
+.btn:focus-visible,.sbtn:focus-visible,.tab:focus-visible,.rt:focus-visible,.modesel button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+/* 点击高光（icons.js 加 .rp） */
+.rp::after{content:'';position:absolute;left:var(--rx,50%);top:var(--ry,50%);width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:rgba(255,255,255,.75);transform:scale(0);opacity:.9;animation:rip .46s ease-out forwards;pointer-events:none}
+@keyframes rip{to{transform:scale(22);opacity:0}}
+.tab,.rt,.seg button,.lv2,.sw2,.gsh,.pchip,.marr,.modesel button{position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+/* 开始战斗：光泽扫过 */
+.mstart::before{content:'';position:absolute;top:-10%;bottom:-10%;left:0;width:34%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-140%) skewX(-20deg);animation:sheen 3.2s ease-in-out infinite;pointer-events:none}
+@keyframes sheen{0%,55%{transform:translateX(-140%) skewX(-20deg)}100%{transform:translateX(420%) skewX(-20deg)}}
+/* ---------- 页签 / 分段 / 开关 / 滑条 ---------- */
+.tab{min-height:40px;background:linear-gradient(180deg,#3b3278,#2a2350);box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 3px 0 var(--ink);transition:transform .1s var(--ease),background .15s}
+.tab:active{transform:translateY(2px) scale(.97)}.tab.on{background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 52%),var(--c);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25),0 3px 0 var(--ink);animation:tabOn .22s var(--ease)}
+@keyframes tabOn{0%{transform:scale(.92)}100%{transform:scale(1)}}
+.rtabs{gap:6px}.rt{min-height:36px;border-radius:12px;border:3px solid var(--ink);background:linear-gradient(180deg,#3b3278,#2a2350);color:#e8e4ff;font-weight:900;box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 3px 0 var(--ink);transition:transform .1s var(--ease)}
+.rt:active{transform:translateY(2px) scale(.97)}.rt.on{color:#3a2300;background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:inset 0 -3px 0 var(--goldd),0 3px 0 var(--ink)}
+.gcol.gr .gpane{animation:paneIn .16s ease-out}@keyframes paneIn{from{opacity:.2}to{opacity:1}}
+.modesel button{min-height:42px;border-radius:14px;background:linear-gradient(180deg,#3b3278,#241d47);color:#cfc9ff;box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 3px 0 var(--ink);transition:transform .1s var(--ease),background .15s;display:inline-flex;align-items:center;gap:5px}
+.modesel button:active{transform:translateY(2px) scale(.96)}
+.modesel button.on{color:#3a2300;background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:inset 0 -3px 0 var(--goldd),0 3px 0 var(--ink);animation:tabOn .22s var(--ease)}
+.seg button{min-height:32px;background:linear-gradient(180deg,#3b3278,#2a2350);transition:transform .1s var(--ease)}.seg button:active{transform:scale(.94)}.seg button.on{background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 50%),linear-gradient(180deg,var(--gold1),var(--gold2));box-shadow:inset 0 -2px 0 var(--goldd)}
+.sw{height:30px;width:54px;background:linear-gradient(180deg,#4a4d63,#62667f);box-shadow:inset 0 2px 4px rgba(0,0,0,.45);transition:background .18s}
+.sw::after{width:22px;height:22px;box-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .2s var(--ease),left .2s var(--ease)}.sw:checked{background:linear-gradient(180deg,#5cf07c,#27b150);box-shadow:inset 0 2px 4px rgba(0,0,0,.3),0 0 10px #3fe06a66}
+input[type=range]{-webkit-appearance:none;appearance:none;height:28px;background:transparent;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:6px;background:linear-gradient(90deg,#ffc300 var(--pv,70%),#3a3560 var(--pv,70%));border:2px solid var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-11px;border-radius:50%;border:3px solid var(--ink);background:radial-gradient(circle at 35% 30%,#fff,#d8dcf0);box-shadow:0 3px 0 rgba(0,0,0,.4)}
+input[type=range]::-moz-range-track{height:10px;border-radius:6px;background:#3a3560;border:2px solid var(--ink)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;border:3px solid var(--ink);background:#fff}
+/* ---------- 面板 / 卡片 ---------- */
+.panel{background:radial-gradient(circle at 50% 24%,rgba(86,68,170,.92),rgba(18,15,31,.96) 72%),repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 2px,transparent 2px 16px)}
+.panel:not(.hide){animation:pIn .18s ease-out}@keyframes pIn{from{opacity:0}to{opacity:1}}
+.rcard{background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,0) 22%),linear-gradient(170deg,#4d4291,#2a2350);border-radius:22px;box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -3px 0 rgba(0,0,0,.2),0 8px 0 rgba(0,0,0,.55),0 22px 40px rgba(0,0,0,.45)}
+.panel:not(.hide) .rcard{animation:cIn .26s var(--ease)}@keyframes cIn{0%{transform:scale(.86) translateY(10px);opacity:0}100%{transform:none;opacity:1}}
+.ptitle{letter-spacing:.04em;text-shadow:0 3px 0 var(--ink),0 0 18px rgba(255,210,63,.25)}
+.chip{background:linear-gradient(180deg,rgba(60,50,110,.85),rgba(27,20,32,.85));border:2px solid rgba(255,255,255,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.coinchip{background:linear-gradient(180deg,rgba(255,210,63,.22),rgba(27,20,32,.85));border-radius:999px;box-shadow:inset 0 2px 0 rgba(255,255,255,.2),0 3px 0 var(--ink)}
+.coinchip.bump,.uni.bump{animation:bump .3s var(--ease) 2}@keyframes bump{50%{transform:scale(1.14)}}
+#toast{border-radius:999px;background:linear-gradient(180deg,rgba(46,38,90,.96),rgba(27,20,32,.96));border:2px solid #ffd23f;box-shadow:0 6px 18px rgba(0,0,0,.5);animation:tIn .22s var(--ease)}
+@keyframes tIn{from{opacity:0;transform:translate(-50%,10px) scale(.9)}to{opacity:1;transform:translateX(-50%)}}
+/* ---------- 菜单侧栏 / 箭头 / 红点 ---------- */
+.sbtn{width:60px;height:60px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.2) 0,rgba(255,255,255,0) 48%),linear-gradient(170deg,#5547a8,#2a2350);box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -3px 0 rgba(0,0,0,.25),0 4px 0 var(--ink);transition:transform .1s var(--ease)}
+.sbtn:active{transform:translateY(3px) scale(.95)}
+.marr{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0) 50%),rgba(42,35,64,.82);box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 4px 0 var(--ink);transition:transform .1s var(--ease)}.marr:active{transform:translateY(3px) scale(.94)}
+.rdot{animation:rdot 1.4s ease-in-out infinite}@keyframes rdot{50%{transform:scale(1.25)}}
+.mute,#pauseBtn{background:linear-gradient(180deg,#fff,#c9cfe6);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 3px 0 rgba(0,0,0,.55);transition:transform .09s var(--ease);display:inline-flex;align-items:center;justify-content:center}
+.mute:active,#pauseBtn:active{transform:translateY(2px) scale(.94)}
+.mini{width:30px;height:28px;border-radius:9px;background:linear-gradient(180deg,#fff0a0,#ffb703);box-shadow:inset 0 -2px 0 #b86e00,0 2px 0 var(--ink);font-size:15px;transition:transform .08s var(--ease)}.mini:active:not(:disabled){transform:translateY(2px) scale(.92)}
+.mini:disabled{background:#4a4d63;box-shadow:0 2px 0 var(--ink);color:#8a8ea5}
+/* ---------- 对局 HUD 按钮 ---------- */
+#dash{background:radial-gradient(circle at 35% 28%,#fffbd0,#ffd21a 42%,#e58a00);box-shadow:inset 0 -6px 0 rgba(150,80,0,.45),inset 0 3px 0 rgba(255,255,255,.7),0 6px 0 #0008}
+#itemBtn{box-shadow:inset 0 -6px 0 rgba(120,40,0,.4),inset 0 3px 0 rgba(255,255,255,.55),0 5px 0 #0008}
+#dash:active,#itemBtn:active{transform:translateY(3px) scale(.96)}
+#joyRing{box-shadow:inset 0 0 0 2px rgba(255,255,255,.25),0 0 18px rgba(0,0,0,.25)}
+#rev{background:linear-gradient(180deg,#8590f5,#4752c9);color:#fff;border:3px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 4px 0 #0008}
+/* ---------- 奖励金币飞入 ---------- */
+.flyc{position:fixed;inset:0;z-index:200;pointer-events:none}
+.flyc i{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6b0,#ffc700 55%,#d98a00);border:2px solid var(--ink);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28),0 2px 0 rgba(0,0,0,.4);opacity:0;animation:fly .8s cubic-bezier(.5,0,.3,1) both}
+.flyc i::after{content:'';position:absolute;inset:4px;border-radius:50%;border:2px solid rgba(160,90,0,.6)}
+@keyframes fly{0%{opacity:0;transform:translate(0,0) scale(.4)}12%{opacity:1;transform:translate(var(--ox),var(--oy)) scale(1.15)}100%{opacity:1;transform:translate(var(--dx),var(--dy)) scale(.55)}}
+@media (prefers-reduced-motion:reduce){.panel:not(.hide),.panel:not(.hide) .rcard,.mstart::before,.rdot,.tab.on,.modesel button.on{animation:none}}
+/* 关键帧里的 box-shadow 会替换整套阴影，这里补回内高光/底边，避免呼吸/发光时按钮变扁 */
+@keyframes breath{50%{transform:scale(1.04);box-shadow:inset 0 -4px 0 var(--bd),inset 0 2px 0 rgba(255,255,255,.75),0 0 0 6px rgba(255,210,63,.35),0 5px 0 var(--ink)}}
+@keyframes glow{50%{box-shadow:inset 0 -4px 0 var(--bd,#b86e00),inset 0 2px 0 rgba(255,255,255,.75),0 0 0 6px #ffd23f,0 0 24px 8px #ffd23f}}
+#menu .modesel button{flex-direction:column;gap:1px;padding:5px 2px;line-height:1.1;white-space:nowrap;min-height:46px;justify-content:center}
+#menu .modesel button .em{width:20px;height:20px;font-size:14px;vertical-align:0}
+.modesel button{white-space:nowrap}
+
+.em[data-e='▲'],.em[data-e='▼'],.em[data-e='▾']{width:.8em;height:.8em;vertical-align:-.05em}
+.gsh>em .em{width:14px;height:14px;font-size:12px;--s:#ffd23f;vertical-align:0}

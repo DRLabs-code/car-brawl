@@ -36,7 +36,7 @@ const TUNE_GAP=[26,36],TUNE_COIN=40,TUNE_GRIP=4;
     // 补给空投（非赛道）
     if(map!=='track'){P.alive=true;P.hp=P.maxhp;P.fell=false;P.fallT=0;cs.forEach(c=>{c.alive=true;c.fell=false;c.fallT=0});const c0=save.coins,PK=__v11.PK;PK.length=0;__live.dropSpawn();const d=PK.find(p=>p.big);out.drop=!!d;if(d){const dp=Math.hypot(d.x-P.x,d.z-P.z);out.dropDist=Math.round(dp);P.x=d.x;P.z=d.z;P.vx=P.vz=0;P.shT=0;st(2);out.dropGone=!PK.some(p=>p.big);out.coin=save.coins-c0;out.shield=P.shT>0;out.dropP=__live.stats().dropP}
      PK.length=0;__live.dropSpawn();const d2=PK.find(p=>p.big);if(d2){d2.t=d2.life+1;const ai=cs[0];ai.x=d2.x+10;ai.z=d2.z;st(2);out.expire=!PK.some(p=>p.big)&&save.coins-c0===out.coin}
-     PK.length=0;__live.dropSpawn();const d3=PK.find(p=>p.big);if(d3){const ai=cs[1];ai.x=d3.x;ai.z=d3.z;P.x=d3.x+20;P.z=d3.z;st(2);out.dropAI=__live.stats().dropAI}}
+     PK.length=0;__live.dropSpawn();const d3=PK.find(p=>p.big);if(d3){const ai=cs[1];ai.alive=true;ai.fell=false;ai.fallT=0;ai.hp=ai.maxhp;ai.x=d3.x;ai.z=d3.z;ai.vx=ai.vz=0;P.x=d3.x+20;P.z=d3.z;st(2);out.dropAI=__live.stats().dropAI}}
     if(map==='site'){P.lv=1;__live.S().nEv=0;time=__live.S().next+.1;st(2);out.lowLv=__live.state().ev;P.lv=10;const ST2=__live.stats(),pk=__v11.PK;ST2.dropP=0;const cA=save.coins;for(let i=0;i<4;i++){pk.length=0;__live.dropSpawn();const d=pk.find(p=>p.big);P.x=d.x;P.z=d.z;P.vx=P.vz=0;st(2)}out.capCoins=save.coins-cA;out.capN=ST2.dropP}
     // 缩圈开关（非赛道）
     if(map==='site'){time=60;TUNE.live.shrink.on=true;st(2);const on=zoneR;TUNE.live.shrink.on=false;st(2);const off=zoneR;TUNE.live.shrink.on=true;out.shrink=[+on.toFixed(1),+off.toFixed(1),+AR.toFixed(1)]}
